@@ -1,59 +1,179 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Burg Login</title>
+    <title>Burg Hochosterwitz - Login</title>
     <style>
-        body { 
-            background: #4A4A4A; 
-            font-family: Arial; 
-            margin: 40px; 
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
         }
-        .login { 
-            background: #F5E6D3; 
-            padding: 20px; 
-            border-radius: 8px; 
-            max-width: 300px; 
-            margin: 0 auto; 
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--stein-grau);
         }
-        h1 { 
-            color: #8B0000; 
-            text-align: center; 
+
+        .login-container {
+            background-color: var(--pergament);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
         }
-        input { 
-            width: 100%; 
-            padding: 8px; 
-            margin: 8px 0; 
+
+        h1 {
+            color: var(--burg-rot);
+            text-align: center;
+            margin-bottom: 2rem;
         }
-        button { 
-            width: 100%; 
-            padding: 10px; 
-            background: #8B0000; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--stein-grau);
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .version {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--stein-grau);
+            font-size: 0.9rem;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--stein-grau);
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
-    <div class="login">
-        <h1>Burg Login</h1>
+    <div class="login-container">
+        <h1>Burg Hochosterwitz</h1>
         <form onsubmit="return login(event)">
-            <input type="text" id="user" placeholder="Benutzername"><br>
-            <input type="password" id="pass" placeholder="Passwort"><br>
-            <button type="submit">Login</button>
+            <div class="form-group">
+                <label for="username">Benutzername</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Passwort</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Anmelden</button>
         </form>
+        <div class="version">Version 2025.1</div>
+        <div class="copyright">&copy; 2025 Programiert Martin Steindorfer</div>
     </div>
+
     <script>
+        // Benutzer-Rollen
+        const ROLES = {
+            KASTELLAN: 'kastellan',
+            HAUSMEISTER: 'hausmeister',
+            SHOP: 'shop',
+            MUSEUMSFUEHRER: 'museumsfuehrer'
+        };
+
+        // Test-Benutzer erstellen
+        function initializeUsers() {
+            const users = [
+                {
+                    username: 'kastellan',
+                    password: 'burg2025',
+                    role: ROLES.KASTELLAN
+                },
+                {
+                    username: 'hausmeister',
+                    password: 'burg2025',
+                    role: ROLES.HAUSMEISTER
+                },
+                {
+                    username: 'shop',
+                    password: 'burg2025',
+                    role: ROLES.SHOP
+                },
+                {
+                    username: 'museumsfuehrer',
+                    password: 'burg2025',
+                    role: ROLES.MUSEUMSFUEHRER
+                }
+            ];
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Beim Laden Test-Benutzer erstellen
+        window.addEventListener('load', initializeUsers);
+
+        // Login-Handler
         function login(e) {
             e.preventDefault();
-            var user = document.getElementById('user').value;
-            var pass = document.getElementById('pass').value;
             
-            if(user === 'kastellan' && pass === 'burg2025') {
-                alert('Login erfolgreich!');
-                localStorage.setItem('user', 'kastellan');
-                window.location.href = 'dashboard.html';
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Benutzer prüfen
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                // Benutzer speichern
+                localStorage.setItem('user', user.role);
+                
+                // Zum richtigen Dashboard weiterleiten
+                switch(user.role) {
+                    case ROLES.KASTELLAN:
+                        window.location.href = 'dashboard-kastellan.html';
+                        break;
+                    case ROLES.HAUSMEISTER:
+                        window.location.href = 'dashboard-hausmeister.html';
+                        break;
+                    case ROLES.SHOP:
+                        window.location.href = 'dashboard-shop.html';
+                        break;
+                    case ROLES.MUSEUMSFUEHRER:
+                        window.location.href = 'dashboard-museumsfuehrer.html';
+                        break;
+                }
             } else {
                 alert('Falscher Benutzername oder Passwort');
             }
