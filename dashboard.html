@@ -46,6 +46,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 1rem;
+            transition: background-color 0.2s;
         }
 
         button:hover {
@@ -54,28 +55,68 @@
 
         .dashboard-menu {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
         }
 
         .menu-item {
             background: white;
-            padding: 1.5rem;
+            padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .menu-item h3 {
             color: var(--burg-rot);
-            margin-top: 0;
+            margin: 0 0 1rem 0;
+            font-size: 1.4rem;
+        }
+
+        .menu-item p {
+            margin: 0 0 1.5rem 0;
+            line-height: 1.5;
+        }
+
+        .menu-item ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .menu-item li {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .menu-item li:before {
+            content: "•";
+            color: var(--burg-rot);
+            position: absolute;
+            left: 0;
         }
 
         .copyright {
             text-align: center;
-            margin-top: 2rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(0,0,0,0.1);
             color: var(--stein-grau);
-            font-size: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .welcome-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .welcome-box h2 {
+            color: var(--burg-rot);
+            margin: 0 0 1rem 0;
         }
     </style>
 </head>
@@ -86,42 +127,69 @@
     </div>
 
     <div class="content">
-        <h2>Dashboard</h2>
-        <div id="welcomeMessage"></div>
+        <div class="welcome-box">
+            <h2>Dashboard</h2>
+            <div id="welcomeMessage"></div>
+        </div>
 
+        <!-- Kastellan Menü -->
         <div class="dashboard-menu" id="adminMenu" style="display: none;">
             <div class="menu-item">
-                <h3>Mitarbeiter</h3>
-                <p>Mitarbeiter verwalten und Zugänge vergeben</p>
-                <button onclick="window.location.href='#mitarbeiter'">Verwalten</button>
+                <h3>Mitarbeiter-Verwaltung</h3>
+                <p>Verwalten Sie hier alle Mitarbeiter der Burg Hochosterwitz.</p>
+                <ul>
+                    <li>Neue Mitarbeiter anlegen</li>
+                    <li>Mitarbeiter bearbeiten</li>
+                    <li>Mitarbeiter entfernen</li>
+                </ul>
+                <button onclick="window.location.href='mitarbeiter.html'">Verwalten</button>
             </div>
+
             <div class="menu-item">
                 <h3>Dienstplan</h3>
-                <p>Dienstplan erstellen und bearbeiten</p>
-                <button onclick="window.location.href='#dienstplan'">Öffnen</button>
+                <p>Erstellen und verwalten Sie den Dienstplan für alle Positionen.</p>
+                <ul>
+                    <li>Saisonkalender (1. April - 1. November)</li>
+                    <li>Feiertage und Ruhetage</li>
+                    <li>Schichtplanung</li>
+                </ul>
+                <button onclick="window.location.href='dienstplan.html'">Öffnen</button>
             </div>
+
             <div class="menu-item">
-                <h3>Aufgaben</h3>
-                <p>Aufgaben zuweisen und verwalten</p>
-                <button onclick="window.location.href='#aufgaben'">Verwalten</button>
+                <h3>Hausmeister-Aufgaben</h3>
+                <p>Verwalten Sie die Aufgaben für den Hausmeister.</p>
+                <ul>
+                    <li>Neue Aufgaben erstellen</li>
+                    <li>Aufgaben zuweisen</li>
+                    <li>Status überprüfen</li>
+                </ul>
+                <button onclick="window.location.href='aufgaben.html'">Verwalten</button>
             </div>
+
             <div class="menu-item">
-                <h3>Lift & Lager</h3>
-                <p>Lift-Status und Lagerverwaltung</p>
-                <button onclick="window.location.href='#lift'">Öffnen</button>
+                <h3>Lift & Material</h3>
+                <p>Verwalten Sie den Lift-Status und das Materiallager.</p>
+                <ul>
+                    <li>Lift-Status prüfen</li>
+                    <li>Materialbestand verwalten</li>
+                    <li>Bestellungen planen</li>
+                </ul>
+                <button onclick="window.location.href='lift.html'">Öffnen</button>
             </div>
         </div>
 
+        <!-- Mitarbeiter Menü -->
         <div class="dashboard-menu" id="mitarbeiterMenu" style="display: none;">
             <div class="menu-item">
                 <h3>Mein Dienstplan</h3>
-                <p>Ihren aktuellen Dienstplan ansehen</p>
-                <button onclick="window.location.href='#meinplan'">Anzeigen</button>
-            </div>
-            <div class="menu-item">
-                <h3>Meine Aufgaben</h3>
-                <p>Ihre zugewiesenen Aufgaben</p>
-                <button onclick="window.location.href='#aufgaben'">Anzeigen</button>
+                <p>Sehen Sie hier Ihren aktuellen Dienstplan ein.</p>
+                <ul>
+                    <li>Aktuelle Schichten</li>
+                    <li>Kommende Dienste</li>
+                    <li>Urlaubszeiten</li>
+                </ul>
+                <button onclick="window.location.href='dienstplan.html'">Anzeigen</button>
             </div>
         </div>
 
@@ -139,22 +207,20 @@
 
             // Willkommensnachricht
             const welcomeMessage = document.getElementById('welcomeMessage');
-            welcomeMessage.textContent = `Willkommen, ${user.role === 'kastellan' ? 'Kastellan' : 'Mitarbeiter'}!`;
+            welcomeMessage.textContent = `Willkommen ${user.username}!`;
 
-            // Menü anzeigen
+            // Menü anzeigen basierend auf Rolle
+            const adminMenu = document.getElementById('adminMenu');
+            const mitarbeiterMenu = document.getElementById('mitarbeiterMenu');
+
             if (user.role === 'kastellan') {
-                document.getElementById('adminMenu').style.display = 'grid';
+                adminMenu.style.display = 'grid';
+                mitarbeiterMenu.style.display = 'none';
             } else {
-                document.getElementById('mitarbeiterMenu').style.display = 'grid';
+                adminMenu.style.display = 'none';
+                mitarbeiterMenu.style.display = 'grid';
             }
         });
-
-        // Regelmäßig Login prüfen
-        setInterval(() => {
-            if (!localStorage.getItem('currentUser')) {
-                window.location.href = 'index.html';
-            }
-        }, 2000);
 
         // Abmelden
         function logout() {
