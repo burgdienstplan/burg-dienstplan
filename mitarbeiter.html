@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Mitarbeiter</title>
+    <style>
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--stein-grau);
+        }
+
+        .header {
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            background-color: var(--pergament);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: var(--stein-grau);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .mitarbeiter-liste {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .mitarbeiter-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .mitarbeiter-item:last-child {
+            border-bottom: none;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .edit-btn {
+            background-color: #0056b3;
+        }
+
+        .edit-btn:hover {
+            background-color: #004494;
+        }
+
+        .back-btn {
+            background-color: var(--stein-grau);
+        }
+
+        .back-btn:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mitarbeiter-Verwaltung</h1>
+        <div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
+            <button onclick="logout()">Abmelden</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <h2>Neuen Mitarbeiter anlegen</h2>
+        <form id="mitarbeiterForm">
+            <div class="form-group">
+                <label for="vorname">Vorname</label>
+                <input type="text" id="vorname" required>
+            </div>
+            <div class="form-group">
+                <label for="nachname">Nachname</label>
+                <input type="text" id="nachname" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Benutzername</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Passwort</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Mitarbeiter anlegen</button>
+        </form>
+
+        <div class="mitarbeiter-liste">
+            <h2>Mitarbeiter</h2>
+            <div id="mitarbeiterListe"></div>
+        </div>
+    </div>
+
+    <script>
+        // Beim Laden prüfen ob Kastellan
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'kastellan') {
+                window.location.href = 'index.html';
+                return;
+            }
+            loadMitarbeiter();
+        });
+
+        // Mitarbeiter laden
+        function loadMitarbeiter() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const mitarbeiter = users.filter(u => u.role !== 'kastellan');
+            const liste = document.getElementById('mitarbeiterListe');
+            
+            liste.innerHTML = '';
+            mitarbeiter.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'mitarbeiter-item';
+                div.innerHTML = `
+                    <div>${m.vorname || ''}</div>
+                    <div>${m.nachname || ''}</div>
+                    <button class="edit-btn" onclick="editMitarbeiter('${m.username}')">Bearbeiten</button>
+                    <button class="delete-btn" onclick="deleteMitarbeiter('${m.username}')">Löschen</button>
+                `;
+                liste.appendChild(div);
+            });
+        }
+
+        // Mitarbeiter anlegen
+        document.getElementById('mitarbeiterForm').onsubmit = (e) => {
+            e.preventDefault();
+            
+            const mitarbeiter = {
+                vorname: document.getElementById('vorname').value,
+                nachname: document.getElementById('nachname').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                role: 'mitarbeiter'
+            };
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            // Prüfen ob Benutzername existiert
+            if (users.some(u => u.username === mitarbeiter.username)) {
+                alert('Dieser Benutzername existiert bereits!');
+                return;
+            }
+
+            users.push(mitarbeiter);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Form zurücksetzen und Liste neu laden
+            e.target.reset();
+            loadMitarbeiter();
+        };
+
+        // Mitarbeiter löschen
+        function deleteMitarbeiter(username) {
+            if (!confirm('Mitarbeiter wirklich löschen?')) return;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const newUsers = users.filter(u => u.username !== username);
+            localStorage.setItem('users', JSON.stringify(newUsers));
+            loadMitarbeiter();
+        }
+
+        // Mitarbeiter bearbeiten
+        function editMitarbeiter(username) {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const mitarbeiter = users.find(u => u.username === username);
+            
+            if (mitarbeiter) {
+                document.getElementById('vorname').value = mitarbeiter.vorname || '';
+                document.getElementById('nachname').value = mitarbeiter.nachname || '';
+                document.getElementById('username').value = mitarbeiter.username;
+                document.getElementById('password').value = mitarbeiter.password;
+            }
+        }
+
+        // Abmelden
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

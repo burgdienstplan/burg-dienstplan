@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Aufgaben</title>
+    <style>
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--stein-grau);
+        }
+
+        .header {
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            background-color: var(--pergament);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: var(--stein-grau);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .back-btn {
+            background-color: var(--stein-grau);
+        }
+
+        .back-btn:hover {
+            background-color: #333;
+        }
+
+        .task-list {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .task-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .status-offen {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-inarbeit {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .status-erledigt {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .priority-hoch {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .priority-mittel {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .priority-niedrig {
+            color: #28a745;
+        }
+
+        .task-date {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Hausmeister-Aufgaben</h1>
+        <div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
+            <button onclick="logout()">Abmelden</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="adminControls" style="display: none;">
+            <h2>Neue Aufgabe erstellen</h2>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="title">Titel</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Beschreibung</label>
+                    <textarea id="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Priorität</label>
+                    <select id="priority" required>
+                        <option value="niedrig">Niedrig</option>
+                        <option value="mittel">Mittel</option>
+                        <option value="hoch">Hoch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dueDate">Fällig bis</label>
+                    <input type="date" id="dueDate" required>
+                </div>
+                <button type="submit">Aufgabe erstellen</button>
+            </form>
+        </div>
+
+        <div class="task-list">
+            <h2>Aufgaben</h2>
+            <div id="taskList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Beim Laden prüfen
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Admin-Controls anzeigen
+            if (user.role === 'kastellan') {
+                document.getElementById('adminControls').style.display = 'block';
+            }
+
+            loadTasks();
+        });
+
+        // Aufgaben laden
+        function loadTasks() {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const taskList = document.getElementById('taskList');
+            
+            taskList.innerHTML = '';
+            tasks.sort((a, b) => {
+                // Erst nach Status (offen vor inarbeit vor erledigt)
+                const statusOrder = { 'offen': 0, 'inarbeit': 1, 'erledigt': 2 };
+                if (statusOrder[a.status] !== statusOrder[b.status]) {
+                    return statusOrder[a.status] - statusOrder[b.status];
+                }
+                // Dann nach Priorität (hoch vor mittel vor niedrig)
+                const priorityOrder = { 'hoch': 0, 'mittel': 1, 'niedrig': 2 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                }
+                // Dann nach Fälligkeitsdatum
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            }).forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'task-item';
+                
+                const statusClass = `status-${task.status}`;
+                const priorityClass = `priority-${task.priority}`;
+                
+                div.innerHTML = `
+                    <span class="task-status ${statusClass}">${task.status}</span>
+                    <div>
+                        <div class="${priorityClass}">${task.title}</div>
+                        <div>${task.description}</div>
+                        <div class="task-date">Fällig bis: ${new Date(task.dueDate).toLocaleDateString('de-DE')}</div>
+                    </div>
+                    <span class="${priorityClass}">Priorität: ${task.priority}</span>
+                `;
+
+                // Status-Buttons nur für Hausmeister
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user.role !== 'kastellan') {
+                    if (task.status === 'offen') {
+                        div.innerHTML += `
+                            <button onclick="updateTaskStatus('${task.id}', 'inarbeit')">Annehmen</button>
+                        `;
+                    } else if (task.status === 'inarbeit') {
+                        div.innerHTML += `
+                            <button onclick="updateTaskStatus('${task.id}', 'erledigt')">Erledigt</button>
+                        `;
+                    }
+                }
+
+                // Löschen-Button nur für Kastellan
+                if (user.role === 'kastellan') {
+                    div.innerHTML += `
+                        <button onclick="deleteTask('${task.id}')">Löschen</button>
+                    `;
+                }
+
+                taskList.appendChild(div);
+            });
+        }
+
+        // Aufgabe erstellen
+        document.getElementById('taskForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const task = {
+                id: Date.now().toString(),
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                priority: document.getElementById('priority').value,
+                dueDate: document.getElementById('dueDate').value,
+                status: 'offen',
+                createdAt: new Date().toISOString()
+            };
+
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            
+            e.target.reset();
+            loadTasks();
+        });
+
+        // Aufgaben-Status aktualisieren
+        function updateTaskStatus(taskId, newStatus) {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = newStatus;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                loadTasks();
+            }
+        }
+
+        // Aufgabe löschen
+        function deleteTask(taskId) {
+            if (!confirm('Aufgabe wirklich löschen?')) return;
+
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            const newTasks = tasks.filter(t => t.id !== taskId);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            loadTasks();
+        }
+
+        // Abmelden
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

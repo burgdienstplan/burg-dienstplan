@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Dienstplan</title>
+    <style>
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--stein-grau);
+        }
+
+        .header {
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            background-color: var(--pergament);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: var(--stein-grau);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .back-btn {
+            background-color: var(--stein-grau);
+        }
+
+        .back-btn:hover {
+            background-color: #333;
+        }
+
+        .calendar {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calendar-day {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            min-height: 100px;
+            background: white;
+        }
+
+        .calendar-day.today {
+            background-color: #e8f4ff;
+        }
+
+        .calendar-day.outside-season {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
+        .calendar-day.holiday {
+            background-color: #ffebee;
+        }
+
+        .calendar-day.ruhetag {
+            background-color: #fff3e0;
+        }
+
+        .calendar-day-header {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .shift {
+            font-size: 0.9rem;
+            margin: 0.2rem 0;
+            padding: 0.2rem;
+            border-radius: 3px;
+        }
+
+        .shift.shop {
+            background-color: #e3f2fd;
+        }
+
+        .shift.kasse {
+            background-color: #f3e5f5;
+        }
+
+        .shift.fuehrung {
+            background-color: #e8f5e9;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        select, input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dienstplan</h1>
+        <div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
+            <button onclick="logout()">Abmelden</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div id="adminControls" style="display: none;">
+            <div class="controls">
+                <select id="mitarbeiter">
+                    <option value="">Mitarbeiter auswählen...</option>
+                </select>
+                <select id="position">
+                    <option value="shop">Shop Eingang</option>
+                    <option value="shop_museum">Shop Museum</option>
+                    <option value="kasse">Kasse</option>
+                    <option value="fuehrung">Führung</option>
+                </select>
+                <input type="date" id="datum">
+                <button onclick="addShift()">Schicht hinzufügen</button>
+                <button onclick="markRuhetag()">Als Ruhetag markieren</button>
+            </div>
+        </div>
+
+        <div class="calendar">
+            <div class="calendar-header">
+                <button onclick="prevMonth()">&lt;</button>
+                <h2 id="currentMonth"></h2>
+                <button onclick="nextMonth()">&gt;</button>
+            </div>
+            
+            <div class="calendar-grid" id="calendar"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #e3f2fd;"></div>
+                <span>Shop</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #f3e5f5;"></div>
+                <span>Kasse</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #e8f5e9;"></div>
+                <span>Führung</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ffebee;"></div>
+                <span>Feiertag</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #fff3e0;"></div>
+                <span>Ruhetag</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        const FEIERTAGE = [
+            '2025-01-01', // Neujahr
+            '2025-01-06', // Heilige Drei Könige
+            '2025-04-21', // Ostermontag
+            '2025-05-01', // Staatsfeiertag
+            '2025-05-29', // Christi Himmelfahrt
+            '2025-06-09', // Pfingstmontag
+            '2025-06-19', // Fronleichnam
+            '2025-08-15', // Mariä Himmelfahrt
+            '2025-10-26', // Nationalfeiertag
+            '2025-11-01', // Allerheiligen
+            '2025-12-08', // Mariä Empfängnis
+            '2025-12-25', // Weihnachten
+            '2025-12-26'  // Stefanitag
+        ];
+
+        // Beim Laden prüfen
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Admin-Controls anzeigen
+            if (user.role === 'kastellan') {
+                document.getElementById('adminControls').style.display = 'block';
+                loadMitarbeiter();
+            }
+
+            renderCalendar();
+        });
+
+        // Mitarbeiter laden
+        function loadMitarbeiter() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const mitarbeiter = users.filter(u => u.role !== 'kastellan');
+            const select = document.getElementById('mitarbeiter');
+            
+            select.innerHTML = '<option value="">Mitarbeiter auswählen...</option>';
+            mitarbeiter.forEach(m => {
+                const option = document.createElement('option');
+                option.value = m.username;
+                option.textContent = `${m.vorname} ${m.nachname}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Kalender rendern
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            const monthYear = document.getElementById('currentMonth');
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // Monat und Jahr anzeigen
+            monthYear.textContent = new Date(year, month).toLocaleDateString('de-DE', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            // Kalender leeren
+            calendar.innerHTML = '';
+
+            // Wochentage
+            const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+            weekdays.forEach(day => {
+                const div = document.createElement('div');
+                div.className = 'calendar-day-header';
+                div.textContent = day;
+                calendar.appendChild(div);
+            });
+
+            // Tage generieren
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            
+            // Leere Tage am Anfang
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendar.appendChild(createDayElement());
+            }
+
+            // Tage des Monats
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(year, month, day);
+                calendar.appendChild(createDayElement(date));
+            }
+        }
+
+        // Tag erstellen
+        function createDayElement(date) {
+            const div = document.createElement('div');
+            div.className = 'calendar-day';
+
+            if (!date) return div;
+
+            const day = date.getDate();
+            const month = date.getMonth();
+            const year = date.getFullYear();
+            const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            // Header mit Datum
+            const header = document.createElement('div');
+            header.className = 'calendar-day-header';
+            header.textContent = day;
+            div.appendChild(header);
+
+            // Prüfen ob außerhalb der Saison
+            const isOutsideSeason = month < 3 || month > 10;
+            if (isOutsideSeason) {
+                div.classList.add('outside-season');
+            }
+
+            // Prüfen ob Feiertag
+            if (FEIERTAGE.includes(dateString)) {
+                div.classList.add('holiday');
+            }
+
+            // Prüfen ob heute
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                div.classList.add('today');
+            }
+
+            // Schichten laden
+            const shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+            if (shifts[dateString]) {
+                shifts[dateString].forEach(shift => {
+                    const shiftDiv = document.createElement('div');
+                    shiftDiv.className = `shift ${shift.position}`;
+                    shiftDiv.textContent = `${shift.position}: ${shift.name}`;
+                    div.appendChild(shiftDiv);
+                });
+            }
+
+            return div;
+        }
+
+        // Schicht hinzufügen
+        function addShift() {
+            const mitarbeiter = document.getElementById('mitarbeiter');
+            const position = document.getElementById('position');
+            const datum = document.getElementById('datum');
+
+            if (!mitarbeiter.value || !position.value || !datum.value) {
+                alert('Bitte alle Felder ausfüllen!');
+                return;
+            }
+
+            const shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+            const dateString = datum.value;
+
+            if (!shifts[dateString]) {
+                shifts[dateString] = [];
+            }
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.username === mitarbeiter.value);
+
+            shifts[dateString].push({
+                name: `${user.vorname} ${user.nachname}`,
+                position: position.value
+            });
+
+            localStorage.setItem('shifts', JSON.stringify(shifts));
+            renderCalendar();
+        }
+
+        // Ruhetag markieren
+        function markRuhetag() {
+            const datum = document.getElementById('datum').value;
+            if (!datum) {
+                alert('Bitte Datum auswählen!');
+                return;
+            }
+
+            const ruhetage = JSON.parse(localStorage.getItem('ruhetage')) || [];
+            if (!ruhetage.includes(datum)) {
+                ruhetage.push(datum);
+                localStorage.setItem('ruhetage', JSON.stringify(ruhetage));
+            }
+
+            renderCalendar();
+        }
+
+        // Navigation
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // Abmelden
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

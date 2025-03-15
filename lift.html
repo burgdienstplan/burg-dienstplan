@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Lift & Material</title>
+    <style>
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--stein-grau);
+        }
+
+        .header {
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .content {
+            background-color: var(--pergament);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: var(--stein-grau);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .back-btn {
+            background-color: var(--stein-grau);
+        }
+
+        .back-btn:hover {
+            background-color: #333;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: var(--burg-rot);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-ok {
+            background-color: #28a745;
+        }
+
+        .status-warning {
+            background-color: #ffc107;
+        }
+
+        .status-error {
+            background-color: #dc3545;
+        }
+
+        .lift-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+        }
+
+        .material-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .material-item:last-child {
+            border-bottom: none;
+        }
+
+        .material-name {
+            font-weight: bold;
+        }
+
+        .material-amount {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .material-low {
+            color: #dc3545;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .maintenance-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .maintenance-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .maintenance-date {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lift & Material</h1>
+        <div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
+            <button onclick="logout()">Abmelden</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="grid">
+            <!-- Lift Status -->
+            <div class="panel">
+                <h2>Lift Status</h2>
+                <div id="liftStatus" class="lift-status">
+                    <div class="status-indicator status-ok"></div>
+                    <div>
+                        <strong>Betriebsbereit</strong><br>
+                        <small>Letzte Wartung: 15.03.2025</small>
+                    </div>
+                </div>
+                <div>
+                    <h3>Wartungsprotokoll</h3>
+                    <ul class="maintenance-list" id="maintenanceList">
+                        <li class="maintenance-item">
+                            <div>Routinewartung</div>
+                            <div class="maintenance-date">15.03.2025</div>
+                        </li>
+                        <li class="maintenance-item">
+                            <div>Sicherheitscheck</div>
+                            <div class="maintenance-date">01.03.2025</div>
+                        </li>
+                    </ul>
+                    <button onclick="addMaintenance()">Wartung eintragen</button>
+                </div>
+            </div>
+
+            <!-- Material Verwaltung -->
+            <div class="panel">
+                <h2>Material Bestand</h2>
+                <div id="materialList" class="material-list">
+                    <!-- Wird durch JavaScript gefüllt -->
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button onclick="showAddMaterial()">Material hinzufügen</button>
+                </div>
+            </div>
+
+            <!-- Bestellungen -->
+            <div class="panel">
+                <h2>Bestellungen</h2>
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="material">Material</label>
+                        <select id="material" required>
+                            <!-- Wird durch JavaScript gefüllt -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Menge</label>
+                        <input type="number" id="amount" min="1" required>
+                    </div>
+                    <button type="submit">Bestellen</button>
+                </form>
+                <div id="orderList" style="margin-top: 1rem;">
+                    <!-- Wird durch JavaScript gefüllt -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Beispiel-Material
+        const defaultMaterial = [
+            { id: 1, name: 'Reinigungsmittel', amount: 15, minAmount: 10 },
+            { id: 2, name: 'Handschuhe', amount: 50, minAmount: 20 },
+            { id: 3, name: 'Desinfektionsmittel', amount: 8, minAmount: 10 },
+            { id: 4, name: 'Toilettenpapier', amount: 100, minAmount: 50 },
+            { id: 5, name: 'Papierhandtücher', amount: 200, minAmount: 100 }
+        ];
+
+        // Beim Laden
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'kastellan') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Material initialisieren wenn noch nicht vorhanden
+            if (!localStorage.getItem('material')) {
+                localStorage.setItem('material', JSON.stringify(defaultMaterial));
+            }
+
+            loadMaterial();
+            updateMaterialSelect();
+        });
+
+        // Material laden
+        function loadMaterial() {
+            const material = JSON.parse(localStorage.getItem('material')) || [];
+            const list = document.getElementById('materialList');
+            
+            list.innerHTML = '';
+            material.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'material-item';
+                
+                const isLow = item.amount <= item.minAmount;
+                const amountClass = isLow ? 'material-low' : '';
+                
+                div.innerHTML = `
+                    <span class="material-name">${item.name}</span>
+                    <div class="material-amount">
+                        <span class="${amountClass}">Bestand: ${item.amount}</span>
+                        <button onclick="updateAmount(${item.id}, 1)">+</button>
+                        <button onclick="updateAmount(${item.id}, -1)">-</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Material Select aktualisieren
+        function updateMaterialSelect() {
+            const material = JSON.parse(localStorage.getItem('material')) || [];
+            const select = document.getElementById('material');
+            
+            select.innerHTML = '<option value="">Material auswählen...</option>';
+            material.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Menge aktualisieren
+        function updateAmount(id, change) {
+            const material = JSON.parse(localStorage.getItem('material')) || [];
+            const item = material.find(m => m.id === id);
+            
+            if (item) {
+                item.amount = Math.max(0, item.amount + change);
+                localStorage.setItem('material', JSON.stringify(material));
+                loadMaterial();
+            }
+        }
+
+        // Wartung eintragen
+        function addMaintenance() {
+            const maintenance = JSON.parse(localStorage.getItem('maintenance')) || [];
+            const date = new Date().toLocaleDateString('de-DE');
+            
+            maintenance.unshift({
+                type: 'Routinewartung',
+                date: date
+            });
+
+            localStorage.setItem('maintenance', JSON.stringify(maintenance));
+            
+            const list = document.getElementById('maintenanceList');
+            const li = document.createElement('li');
+            li.className = 'maintenance-item';
+            li.innerHTML = `
+                <div>Routinewartung</div>
+                <div class="maintenance-date">${date}</div>
+            `;
+            list.insertBefore(li, list.firstChild);
+        }
+
+        // Material hinzufügen Dialog
+        function showAddMaterial() {
+            const name = prompt('Name des Materials:');
+            if (!name) return;
+
+            const minAmount = parseInt(prompt('Mindestbestand:'));
+            if (isNaN(minAmount)) return;
+
+            const material = JSON.parse(localStorage.getItem('material')) || [];
+            const newId = Math.max(...material.map(m => m.id), 0) + 1;
+
+            material.push({
+                id: newId,
+                name: name,
+                amount: 0,
+                minAmount: minAmount
+            });
+
+            localStorage.setItem('material', JSON.stringify(material));
+            loadMaterial();
+            updateMaterialSelect();
+        }
+
+        // Bestellung aufgeben
+        document.getElementById('orderForm').onsubmit = (e) => {
+            e.preventDefault();
+            
+            const materialId = document.getElementById('material').value;
+            const amount = parseInt(document.getElementById('amount').value);
+            
+            if (!materialId || isNaN(amount)) return;
+
+            const material = JSON.parse(localStorage.getItem('material')) || [];
+            const item = material.find(m => m.id === parseInt(materialId));
+            
+            if (item) {
+                item.amount += amount;
+                localStorage.setItem('material', JSON.stringify(material));
+                loadMaterial();
+                e.target.reset();
+                alert(`Bestellung für ${amount}x ${item.name} wurde aufgegeben.`);
+            }
+        };
+
+        // Abmelden
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
