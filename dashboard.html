@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Dashboard</title>
+    <style>
+        :root {
+            --burg-rot: #8B0000;
+            --pergament: #F5E6D3;
+            --stein-grau: #4A4A4A;
+            --text-weiss: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--stein-grau);
+        }
+
+        .header {
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content {
+            padding: 2rem;
+            background-color: var(--pergament);
+            margin: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background-color: var(--burg-rot);
+            color: var(--text-weiss);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #a00000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Burg Hochosterwitz</h1>
+        <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div class="content">
+        <h2>Willkommen im Dashboard</h2>
+        <p>Sie sind eingeloggt als: <span id="userRole"></span></p>
+    </div>
+
+    <script>
+        // Beim Laden prüfen ob eingeloggt
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            document.getElementById('userRole').textContent = user.rolle;
+        });
+
+        // Abmelden
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
