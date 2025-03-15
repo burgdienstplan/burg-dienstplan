@@ -1,134 +1,64 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burg Hochosterwitz - Login</title>
+    <title>Burg Login</title>
     <style>
-        :root {
-            --burg-rot: #8B0000;
-            --pergament: #F5E6D3;
-            --stein-grau: #4A4A4A;
-            --text-weiss: #FFFFFF;
+        body { 
+            background: #4A4A4A; 
+            font-family: Arial; 
+            margin: 40px; 
         }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: var(--stein-grau);
+        .login { 
+            background: #F5E6D3; 
+            padding: 20px; 
+            border-radius: 8px; 
+            max-width: 300px; 
+            margin: 0 auto; 
         }
-
-        .login-container {
-            background-color: var(--pergament);
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 400px;
-            margin: 1rem;
+        h1 { 
+            color: #8B0000; 
+            text-align: center; 
         }
-
-        h1 {
-            color: var(--burg-rot);
-            text-align: center;
-            margin-bottom: 2rem;
+        input { 
+            width: 100%; 
+            padding: 8px; 
+            margin: 8px 0; 
         }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--stein-grau);
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        button {
-            width: 100%;
-            padding: 1rem;
-            background-color: var(--burg-rot);
-            color: var(--text-weiss);
-            border: none;
-            border-radius: 4px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        button:hover {
-            background-color: #a00000;
-        }
-
-        .version {
-            text-align: center;
-            margin-top: 1rem;
-            color: var(--stein-grau);
-            font-size: 0.9rem;
+        button { 
+            width: 100%; 
+            padding: 10px; 
+            background: #8B0000; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Burg Hochosterwitz</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username">Benutzername</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Passwort</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit">Anmelden</button>
+    <div class="login">
+        <h1>Burg Login</h1>
+        <form onsubmit="return login(event)">
+            <input type="text" id="user" placeholder="Benutzername"><br>
+            <input type="password" id="pass" placeholder="Passwort"><br>
+            <button type="submit">Login</button>
         </form>
-        <div class="version">Version 2025.1</div>
     </div>
-
     <script>
-        // Beim Laden der Seite
-        window.addEventListener('load', () => {
-            // Kastellan-Account erstellen
-            const kastellan = {
-                username: 'kastellan',
-                password: 'burg2025',
-                rolle: 'kastellan'
-            };
-            localStorage.setItem('staff', JSON.stringify([kastellan]));
-        });
-
-        // Login-Handler
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        function login(e) {
             e.preventDefault();
+            var user = document.getElementById('user').value;
+            var pass = document.getElementById('pass').value;
             
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            // Staff aus Storage laden
-            const staff = JSON.parse(localStorage.getItem('staff')) || [];
-            const user = staff.find(u => u.username === username && u.password === password);
-            
-            if (user) {
-                // Benutzer speichern und weiterleiten
-                localStorage.setItem('currentUser', JSON.stringify(user));
+            if(user === 'kastellan' && pass === 'burg2025') {
+                alert('Login erfolgreich!');
+                localStorage.setItem('user', 'kastellan');
                 window.location.href = 'dashboard.html';
             } else {
                 alert('Falscher Benutzername oder Passwort');
             }
-        });
+            return false;
+        }
     </script>
 </body>
 </html>

@@ -1,82 +1,54 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burg Hochosterwitz - Dashboard</title>
+    <title>Burg Dashboard</title>
     <style>
-        :root {
-            --burg-rot: #8B0000;
-            --pergament: #F5E6D3;
-            --stein-grau: #4A4A4A;
-            --text-weiss: #FFFFFF;
+        body { 
+            background: #4A4A4A; 
+            font-family: Arial; 
+            margin: 0; 
+            color: white;
         }
-
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background-color: var(--stein-grau);
-        }
-
-        .header {
-            background-color: var(--burg-rot);
-            color: var(--text-weiss);
-            padding: 1rem;
+        .header { 
+            background: #8B0000; 
+            padding: 20px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-
-        .content {
-            padding: 2rem;
-            background-color: var(--pergament);
-            margin: 2rem;
+        .content { 
+            background: #F5E6D3; 
+            margin: 20px;
+            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            color: black;
         }
-
-        button {
-            padding: 0.5rem 1rem;
-            background-color: var(--burg-rot);
-            color: var(--text-weiss);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #a00000;
+        button { 
+            padding: 10px 20px;
+            background: #8B0000; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Burg Hochosterwitz</h1>
+        <h1>Burg Dashboard</h1>
         <button onclick="logout()">Abmelden</button>
     </div>
-
     <div class="content">
-        <h2>Willkommen im Dashboard</h2>
-        <p>Sie sind eingeloggt als: <span id="userRole"></span></p>
+        <h2>Willkommen, Kastellan!</h2>
     </div>
-
     <script>
-        // Beim Laden prüfen ob eingeloggt
-        window.addEventListener('load', () => {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            document.getElementById('userRole').textContent = user.rolle;
-        });
-
-        // Abmelden
+        // Check login
+        if(!localStorage.getItem('user')) {
+            window.location.href = 'index.html';
+        }
+        
         function logout() {
-            localStorage.removeItem('currentUser');
+            localStorage.removeItem('user');
             window.location.href = 'index.html';
         }
     </script>
