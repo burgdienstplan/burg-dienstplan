@@ -108,41 +108,27 @@
     <script>
         // Benutzer-Rollen
         const ROLES = {
-            KASTELLAN: 'kastellan',
-            HAUSMEISTER: 'hausmeister',
-            SHOP: 'shop',
-            MUSEUMSFUEHRER: 'museumsfuehrer'
+            ADMIN: 'kastellan',
+            MITARBEITER: 'mitarbeiter'
         };
 
-        // Test-Benutzer erstellen
-        function initializeUsers() {
-            const users = [
-                {
+        // Admin-Account erstellen
+        function initializeAdmin() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            // Prüfen ob Admin existiert
+            if (!users.some(u => u.username === 'kastellan')) {
+                users.push({
                     username: 'kastellan',
                     password: 'burg2025',
-                    role: ROLES.KASTELLAN
-                },
-                {
-                    username: 'hausmeister',
-                    password: 'burg2025',
-                    role: ROLES.HAUSMEISTER
-                },
-                {
-                    username: 'shop',
-                    password: 'burg2025',
-                    role: ROLES.SHOP
-                },
-                {
-                    username: 'museumsfuehrer',
-                    password: 'burg2025',
-                    role: ROLES.MUSEUMSFUEHRER
-                }
-            ];
-            localStorage.setItem('users', JSON.stringify(users));
+                    role: ROLES.ADMIN
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+            }
         }
 
-        // Beim Laden Test-Benutzer erstellen
-        window.addEventListener('load', initializeUsers);
+        // Beim Laden Admin erstellen
+        window.addEventListener('load', initializeAdmin);
 
         // Login-Handler
         function login(e) {
@@ -157,23 +143,10 @@
             
             if (user) {
                 // Benutzer speichern
-                localStorage.setItem('user', user.role);
+                localStorage.setItem('currentUser', JSON.stringify(user));
                 
-                // Zum richtigen Dashboard weiterleiten
-                switch(user.role) {
-                    case ROLES.KASTELLAN:
-                        window.location.href = 'dashboard-kastellan.html';
-                        break;
-                    case ROLES.HAUSMEISTER:
-                        window.location.href = 'dashboard-hausmeister.html';
-                        break;
-                    case ROLES.SHOP:
-                        window.location.href = 'dashboard-shop.html';
-                        break;
-                    case ROLES.MUSEUMSFUEHRER:
-                        window.location.href = 'dashboard-museumsfuehrer.html';
-                        break;
-                }
+                // Zum Dashboard weiterleiten
+                window.location.href = 'dashboard.html';
             } else {
                 alert('Falscher Benutzername oder Passwort');
             }
