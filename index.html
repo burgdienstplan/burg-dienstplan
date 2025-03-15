@@ -106,29 +106,23 @@
     </div>
 
     <script>
-        // Benutzer-Rollen
-        const ROLES = {
-            ADMIN: 'kastellan',
-            MITARBEITER: 'mitarbeiter'
-        };
+        // Beim Laden localStorage zurücksetzen
+        window.addEventListener('load', () => {
+            localStorage.clear();
+            initializeAdmin();
+        });
 
         // Admin-Account erstellen
         function initializeAdmin() {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const admin = {
+                username: 'kastellan',
+                password: 'burg2025',
+                role: 'kastellan'
+            };
             
-            // Prüfen ob Admin existiert
-            if (!users.some(u => u.username === 'kastellan')) {
-                users.push({
-                    username: 'kastellan',
-                    password: 'burg2025',
-                    role: ROLES.ADMIN
-                });
-                localStorage.setItem('users', JSON.stringify(users));
-            }
+            localStorage.setItem('users', JSON.stringify([admin]));
+            console.log('Admin initialisiert:', admin);
         }
-
-        // Beim Laden Admin erstellen
-        window.addEventListener('load', initializeAdmin);
 
         // Login-Handler
         function login(e) {
@@ -137,13 +131,19 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
+            console.log('Login-Versuch:', { username, password });
+            
             // Benutzer prüfen
             const users = JSON.parse(localStorage.getItem('users')) || [];
+            console.log('Gespeicherte Benutzer:', users);
+            
             const user = users.find(u => u.username === username && u.password === password);
+            console.log('Gefundener Benutzer:', user);
             
             if (user) {
                 // Benutzer speichern
                 localStorage.setItem('currentUser', JSON.stringify(user));
+                console.log('Login erfolgreich, User gespeichert:', user);
                 
                 // Zum Dashboard weiterleiten
                 window.location.href = 'dashboard.html';
