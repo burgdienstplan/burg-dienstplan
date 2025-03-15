@@ -30,6 +30,10 @@
             color: white; 
             border: none; 
             border-radius: 4px; 
+            cursor: pointer;
+        }
+        button:hover {
+            background: #a00000;
         }
     </style>
 </head>
@@ -40,15 +44,25 @@
     </div>
     <div class="content">
         <h2>Willkommen, Kastellan!</h2>
+        <p>Sie sind erfolgreich eingeloggt.</p>
     </div>
     <script>
-        // Check login
-        if(!localStorage.getItem('user')) {
-            window.location.href = 'index.html';
+        // Sofort prüfen ob eingeloggt
+        function checkLogin() {
+            if(localStorage.getItem('user') !== 'kastellan') {
+                window.location.href = 'index.html';
+            }
         }
         
+        // Bei Laden prüfen
+        checkLogin();
+        
+        // Alle 2 Sekunden prüfen
+        setInterval(checkLogin, 2000);
+        
+        // Abmelden
         function logout() {
-            localStorage.removeItem('user');
+            localStorage.clear();
             window.location.href = 'index.html';
         }
     </script>
