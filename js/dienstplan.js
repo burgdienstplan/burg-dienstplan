@@ -395,37 +395,53 @@ class DienstplanManager {
     }
 
     renderCalendar() {
-        const month = this.selectedDate.getMonth();
-        const year = this.selectedDate.getFullYear();
+        const calendarDiv = document.getElementById('calendar');
+        calendarDiv.innerHTML = '';
         
-        document.getElementById('currentMonth').textContent = 
-            new Date(year, month).toLocaleString('de-DE', { month: 'long', year: 'numeric' });
-
-        const calendar = document.getElementById('calendar');
-        calendar.innerHTML = '';
-
-        // Wochentage
+        // Wochentage-Header
         const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
         weekdays.forEach(day => {
             const dayHeader = document.createElement('div');
-            dayHeader.className = 'calendar-day-header';
+            dayHeader.className = 'calendar-header-day';
             dayHeader.textContent = day;
-            calendar.appendChild(dayHeader);
+            calendarDiv.appendChild(dayHeader);
         });
 
-        // Tage
+        const year = this.selectedDate.getFullYear();
+        const month = this.selectedDate.getMonth();
+        
+        // Aktualisiere Header
+        document.getElementById('currentMonth').textContent = 
+            new Date(year, month).toLocaleString('de-DE', { month: 'long', year: 'numeric' });
+
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         
         // Leere Tage am Anfang
         for (let i = 0; i < firstDay.getDay(); i++) {
-            calendar.appendChild(this.createEmptyDay());
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day empty';
+            calendarDiv.appendChild(emptyDay);
         }
 
-        // Kalendertage
-        for (let date = new Date(firstDay); date <= lastDay; date.setDate(date.getDate() + 1)) {
-            calendar.appendChild(this.createDayElement(new Date(date)));
+        // Tage des Monats
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const date = new Date(year, month, day);
+            const dateStr = this.formatDate(date);
+            const dayDiv = this.createDayElement(date);
+            calendarDiv.appendChild(dayDiv);
         }
+
+        // Leere Tage am Ende
+        const remainingDays = 42 - (firstDay.getDay() + lastDay.getDate());
+        for (let i = 0; i < remainingDays; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day empty';
+            calendarDiv.appendChild(emptyDay);
+        }
+
+        // Prüfe Planungsstatus
+        this.checkPlanningStatus();
     }
 
     createDayElement(date) {
@@ -436,90 +452,71 @@ class DienstplanManager {
         
         const user = JSON.parse(localStorage.getItem('currentUser'));
         const isKastellan = user?.role === 'kastellan';
+        
+        // Datum
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'date';
+        dateDiv.textContent = date.getDate();
+        div.appendChild(dateDiv);
 
-        // Datum-Header
-        const header = document.createElement('div');
-        header.className = 'day-header';
-        header.textContent = date.getDate();
-        div.appendChild(header);
-
-        // Verschiedene Zustände
-        if (!this.isInSaison(date)) {
+        // Status (Feiertag, Ruhetag, außerhalb Saison)
+        if (!this.isInSaison(dateStr)) {
             div.classList.add('outside-season');
-        } else {
-            // Klickbar für Dienstanfragen (nur für Mitarbeiter)
-            if (!isKastellan && this.isInSaison(date)) {
-                div.style.cursor = 'pointer';
-                div.onclick = () => this.showShiftRequestDialog(dateStr);
-            }
-        }
-
-        if (this.isFeiertag(dateStr)) {
+            dateDiv.textContent += ' (Außerhalb Saison)';
+        } else if (this.isHoliday(dateStr)) {
             div.classList.add('holiday');
-            const holiday = document.createElement('div');
-            holiday.className = 'holiday-name';
-            holiday.textContent = this.isFeiertag(dateStr);
-            div.appendChild(holiday);
-        }
-
-        if (this.isRuhetag(dateStr)) {
+            dateDiv.textContent += ' (Feiertag)';
+        } else if (this.isRuhetag(dateStr)) {
             div.classList.add('ruhetag');
-            const ruhetag = document.createElement('div');
-            ruhetag.className = 'ruhetag-marker';
-            ruhetag.textContent = 'Ruhetag';
-            div.appendChild(ruhetag);
+            dateDiv.textContent += ' (Ruhetag)';
         }
 
-        // Schichten anzeigen
+        // Schichten-Container
         const shiftsDiv = document.createElement('div');
         shiftsDiv.className = 'shifts';
-        
-        // Genehmigte Schichten
+        div.appendChild(shiftsDiv);
+
+        // Schichten anzeigen
         if (this.shifts[dateStr]) {
-            this.shifts[dateStr].forEach(shift => {
+            // Sortiere Schichten: Shop Eingang zuerst, dann nach Position
+            const sortedShifts = [...this.shifts[dateStr]].sort((a, b) => {
+                if (a.position === 'shop') return -1;
+                if (b.position === 'shop') return 1;
+                return a.position.localeCompare(b.position);
+            });
+
+            sortedShifts.forEach(shift => {
                 const shiftDiv = document.createElement('div');
                 shiftDiv.className = `shift ${shift.position}`;
                 shiftDiv.dataset.date = dateStr;
                 shiftDiv.dataset.mitarbeiterId = shift.mitarbeiterId;
                 shiftDiv.dataset.position = shift.position;
+                
                 const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
                 shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
-                shiftDiv.draggable = true;
+                
+                if (isKastellan) {
+                    shiftDiv.draggable = true;
+                }
+                
                 shiftsDiv.appendChild(shiftDiv);
             });
         }
 
-        // Ausstehende Anfragen (nur für Kastellan sichtbar)
+        // Dienstanfragen anzeigen (nur für Kastellan)
         if (isKastellan && this.shiftRequests[dateStr]) {
-            this.shiftRequests[dateStr].forEach(request => {
-                if (request.status === 'pending') {
-                    const requestDiv = document.createElement('div');
-                    requestDiv.className = 'shift-request pending';
-                    requestDiv.textContent = `${request.mitarbeiterName} (${this.getPositionName(request.position)}) ⏳`;
-                    shiftsDiv.appendChild(requestDiv);
-                }
-            });
+            const requestsDiv = document.createElement('div');
+            requestsDiv.className = 'shift-requests';
+            requestsDiv.innerHTML = '⏳ Dienstanfragen';
+            div.appendChild(requestsDiv);
         }
 
-        div.appendChild(shiftsDiv);
-        return div;
-    }
+        // Event-Listener für Dienstanfragen (für Mitarbeiter)
+        if (!isKastellan && this.isInSaison(dateStr) && !this.isRuhetag(dateStr)) {
+            div.addEventListener('click', () => this.showShiftRequestDialog(dateStr));
+        }
 
-    showShiftRequestDialog(date) {
-        const positions = ['shop', 'shop_museum', 'kasse', 'fuehrung'];
-        const dialog = document.createElement('div');
-        dialog.className = 'shift-request-dialog';
-        dialog.innerHTML = `
-            <h3>Dienst vorschlagen für ${new Date(date).toLocaleDateString('de-DE')}</h3>
-            <select id="requestPosition">
-                ${positions.map(pos => `<option value="${pos}">${this.getPositionName(pos)}</option>`).join('')}
-            </select>
-            <button onclick="dienstplan.requestShift('${date}', document.getElementById('requestPosition').value)">
-                Anfragen
-            </button>
-            <button onclick="this.parentElement.remove()">Abbrechen</button>
-        `;
-        document.body.appendChild(dialog);
+        return div;
     }
 
     getPositionName(position) {

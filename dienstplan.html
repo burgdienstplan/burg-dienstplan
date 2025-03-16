@@ -15,6 +15,9 @@
             --holiday-color: #ffebee;
             --ruhetag-color: #fff3e0;
             --outside-color: #f5f5f5;
+            --stone-color: #4A4A4A;
+            --burg-color: #8B0000;
+            --parchment-color: #F5E6D3;
         }
 
         body {
@@ -87,89 +90,115 @@
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 0.5rem;
+            gap: 4px;
+            padding: 10px;
+            background: var(--stone-color);
+            border-radius: 8px;
             margin-top: 1rem;
         }
 
-        .calendar-day {
-            border: 1px solid #ddd;
-            padding: 0.5rem;
-            min-height: 120px;
-            background: white;
-            transition: all 0.2s;
-        }
-
-        .calendar-day:hover {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .calendar-day.today {
-            border: 2px solid var(--burg-rot);
-        }
-
-        .calendar-day.outside-season {
-            background-color: var(--outside-color);
-            color: #999;
-        }
-
-        .calendar-day.holiday {
-            background-color: var(--holiday-color);
-        }
-
-        .calendar-day.ruhetag {
-            background-color: var(--ruhetag-color);
-        }
-
-        .day-header {
+        .calendar-header-day {
+            background: var(--burg-color);
+            color: white;
+            padding: 8px;
+            text-align: center;
             font-weight: bold;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
+            border-radius: 4px;
         }
 
-        .holiday-name {
-            font-size: 0.8rem;
-            color: var(--burg-rot);
-            margin-top: 0.2rem;
+        .calendar-day {
+            background: var(--parchment-color);
+            min-height: 120px;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+            transition: all 0.2s ease;
         }
 
-        .ruhetag-marker {
-            font-size: 0.8rem;
-            color: #ed6c02;
-            margin-top: 0.2rem;
+        .calendar-day.empty {
+            background: var(--stone-color);
         }
 
-        .shifts {
-            margin-top: 0.5rem;
+        .calendar-day .date {
+            font-weight: bold;
+            margin-bottom: 4px;
+            padding: 2px 4px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 3px;
+        }
+
+        .calendar-day .shifts {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
         }
 
         .shift {
-            font-size: 0.85rem;
-            margin: 0.2rem 0;
-            padding: 0.3rem;
-            border-radius: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: move;
-            user-select: none;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-bottom: 2px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .shift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .shift.shop {
-            background-color: var(--shop-color);
+            background: var(--shop-color);
         }
 
         .shift.shop_museum {
-            background-color: var(--shop-color);
+            background: var(--shop-color);
             border-left: 3px solid #2196f3;
         }
 
         .shift.kasse {
-            background-color: var(--kasse-color);
+            background: var(--kasse-color);
         }
 
         .shift.fuehrung {
-            background-color: var(--fuehrung-color);
+            background: var(--fuehrung-color);
+        }
+
+        .calendar-day.outside-season {
+            opacity: 0.5;
+            background: var(--outside-color);
+        }
+
+        .calendar-day.holiday {
+            background: var(--holiday-color);
+        }
+
+        .calendar-day.ruhetag {
+            background: var(--ruhetag-color);
+        }
+
+        .shift-requests {
+            padding: 4px 8px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* Drag & Drop Styles */
+        .shift[draggable="true"] {
+            cursor: move;
+        }
+
+        .calendar-day.drag-over {
+            background: #e3f2fd;
+            border: 2px dashed #1976d2;
         }
 
         .controls {
@@ -330,11 +359,6 @@
             margin-bottom: 1rem;
             border-left: 4px solid #1976d2;
             font-weight: bold;
-        }
-
-        .calendar-day.drag-over {
-            background-color: #e3f2fd;
-            border: 2px dashed #1976d2;
         }
     </style>
 </head>
