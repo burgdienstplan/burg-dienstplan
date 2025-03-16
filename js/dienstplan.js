@@ -21,10 +21,11 @@ const SAISON = {
 class DienstplanManager {
     constructor() {
         this.currentDate = new Date();
-        this.selectedDate = new Date();
+        // Starte mit April 2025 als Standardmonat
+        this.selectedDate = new Date(2025, 3, 1); // April ist Monat 3 (0-basiert)
         this.shifts = this.initializeDemoShifts();
         this.shiftRequests = JSON.parse(localStorage.getItem('shiftRequests')) || {};
-        this.holidays = JSON.parse(localStorage.getItem('holidays')) || {};
+        this.holidays = FEIERTAGE_2025;
         this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen')) || [];
         this.fuehrungsvorschlaege = JSON.parse(localStorage.getItem('fuehrungsvorschlaege')) || [];
         this.ruhetage = JSON.parse(localStorage.getItem('ruhetage')) || [];
@@ -324,23 +325,21 @@ class DienstplanManager {
         });
     }
 
-    isInSaison(date) {
-        // Konvertiere String-Datum zu Date-Objekt falls nötig
-        const d = typeof date === 'string' ? new Date(date) : new Date(date);
+    isFeiertag(dateStr) {
+        return this.holidays[dateStr];
+    }
+
+    isInSaison(dateStr) {
+        const date = new Date(dateStr);
         const start = new Date(SAISON.start);
         const end = new Date(SAISON.end);
 
         // Setze Uhrzeiten auf Mitternacht für korrekten Vergleich
-        d.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
         start.setHours(0, 0, 0, 0);
         end.setHours(0, 0, 0, 0);
 
-        // Prüfe ob das Datum zwischen Saisonstart und -ende liegt
-        return d >= start && d <= end;
-    }
-
-    isFeiertag(dateStr) {
-        return FEIERTAGE_2025[dateStr];
+        return date >= start && date <= end;
     }
 
     isRuhetag(dateStr) {
@@ -348,7 +347,10 @@ class DienstplanManager {
     }
 
     formatDate(date) {
-        return date.toISOString().split('T')[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     addShift(mitarbeiterId, position, datum) {
@@ -465,19 +467,20 @@ class DienstplanManager {
         const dateDiv = document.createElement('div');
         dateDiv.className = 'date';
         dateDiv.textContent = date.getDate();
-        div.appendChild(dateDiv);
 
         // Status (Feiertag, Ruhetag, außerhalb Saison)
         if (!this.isInSaison(dateStr)) {
             div.classList.add('outside-season');
             dateDiv.textContent += ' (Außerhalb Saison)';
-        } else if (this.isHoliday(dateStr)) {
+        } else if (this.isFeiertag(dateStr)) {
             div.classList.add('holiday');
-            dateDiv.textContent += ' (Feiertag)';
+            dateDiv.textContent += ` (${this.isFeiertag(dateStr)})`;
         } else if (this.isRuhetag(dateStr)) {
             div.classList.add('ruhetag');
             dateDiv.textContent += ' (Ruhetag)';
         }
+
+        div.appendChild(dateDiv);
 
         // Schichten-Container
         const shiftsDiv = document.createElement('div');
@@ -544,12 +547,16 @@ class DienstplanManager {
     }
 
     prevMonth() {
-        this.selectedDate.setMonth(this.selectedDate.getMonth() - 1);
+        const newDate = new Date(this.selectedDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        this.selectedDate = newDate;
         this.renderCalendar();
     }
 
     nextMonth() {
-        this.selectedDate.setMonth(this.selectedDate.getMonth() + 1);
+        const newDate = new Date(this.selectedDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        this.selectedDate = newDate;
         this.renderCalendar();
     }
 
