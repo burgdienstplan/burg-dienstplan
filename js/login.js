@@ -18,14 +18,14 @@ const defaultUsers = [
 
 // Initialisiere Benutzer
 function initUsers() {
-    if (!localStorage.getItem('users')) {
-        localStorage.setItem('users', JSON.stringify(defaultUsers));
-    }
+    // Immer die Standard-Benutzer neu setzen
+    localStorage.setItem('users', JSON.stringify(defaultUsers));
 }
 
 // Login-Funktion
 function login(username, password) {
-    const users = JSON.parse(localStorage.getItem('users')) || defaultUsers;
+    initUsers(); // Stelle sicher, dass die Benutzer immer verfügbar sind
+    const users = JSON.parse(localStorage.getItem('users'));
     const user = users.find(u => u.username === username && u.password === password);
     
     if (user) {
