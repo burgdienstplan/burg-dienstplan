@@ -7,140 +7,149 @@ class Database {
         this.initializeDatabase();
     }
 
-    initializeDatabase() {
-        if (!localStorage.getItem('dbInitialized')) {
-            // Standardwerte setzen
-            this.setItem('mitarbeiter', []);
-            this.setItem('shifts', {});
-            this.setItem('feiertage', this.getDefaultFeiertage2025());
-            this.setItem('ruhetage', []);
-            this.setItem('urlaubsanfragen', []);
-            this.setItem('fuehrungsvorschlaege', []);
-            
-            // Admin-Account erstellen
-            this.addMitarbeiter({
-                id: 'admin',
-                vorname: 'Kastellan',
-                nachname: 'Admin',
-                username: 'kastellan',
-                password: 'burg2025',
-                rolle: 'admin',
-                aktiv: true
-            });
+    async initializeDatabase() {
+        // Initialisiere Standarddaten, falls nicht vorhanden
+        if (!localStorage.getItem('mitarbeiter')) {
+            const defaultMitarbeiter = [
+                {
+                    id: '1',
+                    username: 'kastellan',
+                    password: 'burg2025',
+                    vorname: 'Martin',
+                    nachname: 'Steindorfer',
+                    rolle: 'admin',
+                    aktiv: true
+                },
+                {
+                    id: '2',
+                    username: 'test',
+                    password: 'test',
+                    vorname: 'Test',
+                    nachname: 'Benutzer',
+                    rolle: 'mitarbeiter',
+                    aktiv: true
+                }
+            ];
+            localStorage.setItem('mitarbeiter', JSON.stringify(defaultMitarbeiter));
+        }
 
-            localStorage.setItem('dbInitialized', 'true');
-            localStorage.setItem('dbVersion', '2025.2');
+        // Initialisiere Feiertage 2025
+        if (!localStorage.getItem('feiertage')) {
+            const feiertage2025 = [
+                { datum: '2025-01-01', name: 'Neujahr' },
+                { datum: '2025-01-06', name: 'Heilige Drei Könige' },
+                { datum: '2025-04-21', name: 'Ostermontag' },
+                { datum: '2025-05-01', name: 'Staatsfeiertag' },
+                { datum: '2025-05-29', name: 'Christi Himmelfahrt' },
+                { datum: '2025-06-09', name: 'Pfingstmontag' },
+                { datum: '2025-06-19', name: 'Fronleichnam' },
+                { datum: '2025-08-15', name: 'Mariä Himmelfahrt' },
+                { datum: '2025-10-26', name: 'Nationalfeiertag' }
+            ];
+            localStorage.setItem('feiertage', JSON.stringify(feiertage2025));
         }
     }
 
     // Basis-Funktionen
-    setItem(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-    }
-
-    getItem(key) {
+    async getItem(key) {
         return JSON.parse(localStorage.getItem(key));
     }
 
-    // Mitarbeiter-Verwaltung
-    async getMitarbeiter() {
-        return this.getItem('mitarbeiter') || [];
+    async setItem(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
     }
 
-    async getMitarbeiterById(id) {
-        const mitarbeiter = await this.getMitarbeiter();
-        return mitarbeiter.find(m => m.id === id);
+    async removeItem(key) {
+        localStorage.removeItem(key);
+    }
+
+    // Mitarbeiter-Funktionen
+    async getMitarbeiter() {
+        return this.getItem('mitarbeiter') || [];
     }
 
     async addMitarbeiter(mitarbeiter) {
         const mitarbeiterListe = await this.getMitarbeiter();
         mitarbeiterListe.push(mitarbeiter);
-        this.setItem('mitarbeiter', mitarbeiterListe);
+        await this.setItem('mitarbeiter', mitarbeiterListe);
     }
 
-    async updateMitarbeiter(mitarbeiter) {
+    async updateMitarbeiter(id, updates) {
         const mitarbeiterListe = await this.getMitarbeiter();
-        const index = mitarbeiterListe.findIndex(m => m.id === mitarbeiter.id);
+        const index = mitarbeiterListe.findIndex(m => m.id === id);
         if (index !== -1) {
-            mitarbeiterListe[index] = mitarbeiter;
-            this.setItem('mitarbeiter', mitarbeiterListe);
+            mitarbeiterListe[index] = { ...mitarbeiterListe[index], ...updates };
+            await this.setItem('mitarbeiter', mitarbeiterListe);
         }
     }
 
-    // Schicht-Verwaltung
-    async getShifts(datum) {
-        const shifts = this.getItem('shifts') || {};
-        return shifts[datum] || [];
+    // Schicht-Funktionen
+    async getShifts(startDate, endDate) {
+        const shifts = await this.getItem('shifts') || [];
+        if (!startDate) return shifts;
+
+        return shifts.filter(shift => {
+            const shiftDate = new Date(shift.datum);
+            const start = new Date(startDate);
+            const end = endDate ? new Date(endDate) : start;
+            return shiftDate >= start && shiftDate <= end;
+        });
     }
 
-    async addShift(datum, shift) {
-        const shifts = this.getItem('shifts') || {};
-        if (!shifts[datum]) shifts[datum] = [];
-        shifts[datum].push(shift);
-        this.setItem('shifts', shifts);
+    async addShift(shift) {
+        const shifts = await this.getShifts();
+        shift.id = crypto.randomUUID();
+        shifts.push(shift);
+        await this.setItem('shifts', shifts);
+        return shift;
     }
 
-    async updateShift(datum, shiftId, updatedShift) {
-        const shifts = this.getItem('shifts') || {};
-        if (shifts[datum]) {
-            const index = shifts[datum].findIndex(s => s.id === shiftId);
-            if (index !== -1) {
-                shifts[datum][index] = updatedShift;
-                this.setItem('shifts', shifts);
-            }
+    async updateShift(id, updates) {
+        const shifts = await this.getShifts();
+        const index = shifts.findIndex(s => s.id === id);
+        if (index !== -1) {
+            shifts[index] = { ...shifts[index], ...updates };
+            await this.setItem('shifts', shifts);
         }
     }
 
-    async deleteShift(datum, shiftId) {
-        const shifts = this.getItem('shifts') || {};
-        if (shifts[datum]) {
-            shifts[datum] = shifts[datum].filter(s => s.id !== shiftId);
-            this.setItem('shifts', shifts);
-        }
+    async deleteShift(id) {
+        const shifts = await this.getShifts();
+        const filteredShifts = shifts.filter(s => s.id !== id);
+        await this.setItem('shifts', filteredShifts);
     }
 
-    // Urlaubs-Verwaltung
+    // Urlaub-Funktionen
     async getUrlaubsanfragen() {
-        return this.getItem('urlaubsanfragen') || [];
+        return this.getItem('urlaube') || [];
     }
 
     async addUrlaubsanfrage(anfrage) {
-        const anfragen = await this.getUrlaubsanfragen();
-        anfragen.push({
-            ...anfrage,
-            id: crypto.randomUUID(),
-            status: 'pending',
-            datum: new Date().toISOString()
-        });
-        this.setItem('urlaubsanfragen', anfragen);
+        const urlaube = await this.getUrlaubsanfragen();
+        anfrage.id = crypto.randomUUID();
+        urlaube.push(anfrage);
+        await this.setItem('urlaube', urlaube);
+        return anfrage;
     }
 
     async updateUrlaubsanfrage(id, status) {
-        const anfragen = await this.getUrlaubsanfragen();
-        const index = anfragen.findIndex(a => a.id === id);
+        const urlaube = await this.getUrlaubsanfragen();
+        const index = urlaube.findIndex(u => u.id === id);
         if (index !== -1) {
-            anfragen[index].status = status;
-            this.setItem('urlaubsanfragen', anfragen);
+            urlaube[index].status = status;
+            await this.setItem('urlaube', urlaube);
         }
     }
 
-    // Feiertage 2025
-    getDefaultFeiertage2025() {
-        return [
-            { datum: '2025-01-01', name: 'Neujahr' },
-            { datum: '2025-01-06', name: 'Heilige Drei Könige' },
-            { datum: '2025-04-21', name: 'Ostermontag' },
-            { datum: '2025-05-01', name: 'Staatsfeiertag' },
-            { datum: '2025-05-29', name: 'Christi Himmelfahrt' },
-            { datum: '2025-06-09', name: 'Pfingstmontag' },
-            { datum: '2025-06-19', name: 'Fronleichnam' },
-            { datum: '2025-08-15', name: 'Mariä Himmelfahrt' },
-            { datum: '2025-10-26', name: 'Nationalfeiertag' },
-            { datum: '2025-11-01', name: 'Allerheiligen' },
-            { datum: '2025-12-08', name: 'Mariä Empfängnis' },
-            { datum: '2025-12-25', name: 'Christtag' },
-            { datum: '2025-12-26', name: 'Stefanitag' }
-        ];
+    // Feiertag-Funktionen
+    async getFeiertage() {
+        return this.getItem('feiertage') || [];
+    }
+
+    async addFeiertag(feiertag) {
+        const feiertage = await this.getFeiertage();
+        feiertage.push(feiertag);
+        await this.setItem('feiertage', feiertage);
     }
 
     // Authentifizierung
