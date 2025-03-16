@@ -317,6 +317,49 @@
             Saison 2025: 1. April - 1. November
         </div>
 
+        <!-- Kalender -->
+        <div class="calendar">
+            <div class="calendar-header">
+                <button id="prevMonth">&lt;</button>
+                <h2 id="currentMonth"></h2>
+                <button id="nextMonth">&gt;</button>
+            </div>
+            
+            <div id="calendar" class="calendar-grid"></div>
+
+            <!-- Legende -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--shop-color)"></div>
+                    Shop Eingang
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--shop-color); border-left: 3px solid #2196f3"></div>
+                    Shop Museum
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--kasse-color)"></div>
+                    Kasse
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--fuehrung-color)"></div>
+                    Führung
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--holiday-color)"></div>
+                    Feiertag
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--ruhetag-color)"></div>
+                    Ruhetag
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--outside-color)"></div>
+                    Außerhalb der Saison
+                </div>
+            </div>
+        </div>
+
         <!-- Admin-Bereich (nur für Kastellan sichtbar) -->
         <div id="adminControls" style="display: none;">
             <div class="controls">
@@ -388,49 +431,6 @@
                 </div>
                 <div class="form-actions">
                     <button onclick="submitFuehrungsvorschlag()">Führung vorschlagen</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kalender -->
-        <div class="calendar">
-            <div class="calendar-header">
-                <button id="prevMonth">&lt;</button>
-                <h2 id="currentMonth"></h2>
-                <button id="nextMonth">&gt;</button>
-            </div>
-            
-            <div id="calendar" class="calendar-grid"></div>
-
-            <!-- Legende -->
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--shop-color)"></div>
-                    Shop Eingang
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--shop-color); border-left: 3px solid #2196f3"></div>
-                    Shop Museum
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--kasse-color)"></div>
-                    Kasse
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--fuehrung-color)"></div>
-                    Führung
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--holiday-color)"></div>
-                    Feiertag
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--ruhetag-color)"></div>
-                    Ruhetag
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--outside-color)"></div>
-                    Außerhalb der Saison
                 </div>
             </div>
         </div>
