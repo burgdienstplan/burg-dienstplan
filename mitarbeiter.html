@@ -2,13 +2,12 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Burg Hochosterwitz - Mitarbeiter</title>
+    <title>Burg Hochosterwitz - Mitarbeiterverwaltung</title>
     <style>
         :root {
             --burg-rot: #8B0000;
             --pergament: #F5E6D3;
             --stein-grau: #4A4A4A;
-            --text-weiss: #FFFFFF;
         }
 
         body {
@@ -17,11 +16,13 @@
             padding: 0;
             min-height: 100vh;
             background-color: var(--stein-grau);
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             background-color: var(--burg-rot);
-            color: var(--text-weiss);
+            color: white;
             padding: 1rem;
             display: flex;
             justify-content: space-between;
@@ -29,263 +30,254 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+
         .content {
+            flex: 1;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .mitarbeiter-form {
             background-color: var(--pergament);
-            margin: 2rem;
             padding: 2rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .mitarbeiter-liste {
+            background-color: var(--pergament);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
             color: var(--stein-grau);
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
         }
 
         button {
-            padding: 0.75rem 1.5rem;
             background-color: var(--burg-rot);
-            color: var(--text-weiss);
+            color: white;
             border: none;
+            padding: 0.75rem 1.5rem;
             border-radius: 4px;
             cursor: pointer;
             font-size: 1rem;
-            transition: background-color 0.2s;
         }
 
         button:hover {
             background-color: #a00000;
         }
 
-        .mitarbeiter-liste {
-            background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 2rem;
-        }
-
         .mitarbeiter-item {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 1rem;
-            padding: 1.5rem;
-            border-bottom: 1px solid #eee;
-            align-items: start;
             background: white;
-            transition: background-color 0.2s;
-        }
-
-        .mitarbeiter-item:hover {
-            background: var(--pergament);
-        }
-
-        .mitarbeiter-item:last-child {
-            border-bottom: none;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .mitarbeiter-info {
-            line-height: 1.6;
+            flex: 1;
         }
 
-        .mitarbeiter-hauptinfo {
-            margin-bottom: 1rem;
+        .mitarbeiter-info strong {
+            display: block;
+            color: var(--stein-grau);
         }
 
-        .mitarbeiter-hauptinfo strong {
-            font-size: 1.2rem;
+        .positionen {
             color: var(--burg-rot);
+            font-size: 0.9rem;
         }
 
-        .rolle {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            background: var(--stein-grau);
-            color: white;
-            border-radius: 4px;
-            font-size: 0.9rem;
+        .edit-btn, .status-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
             margin-left: 0.5rem;
         }
 
-        .mitarbeiter-kontakt {
-            margin-bottom: 1rem;
-            color: var(--stein-grau);
-        }
-
-        .login-statistik {
-            background: var(--pergament);
-            padding: 0.8rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .login-count {
-            margin-bottom: 0.5rem;
-        }
-
-        .login-count strong, .last-login strong {
-            color: var(--burg-rot);
-        }
-
-        .mitarbeiter-history {
-            position: relative;
-        }
-
-        .history-content {
-            background: var(--pergament);
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
             padding: 1rem;
             border-radius: 4px;
-            margin-top: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .history-item {
-            padding: 0.8rem 0;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .history-item em {
-            color: var(--burg-rot);
-            font-size: 0.8rem;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .mitarbeiter-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--stein-grau);
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .edit-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: white;
             z-index: 1000;
-            max-width: 500px;
-            width: 90%;
         }
 
-        .edit-dialog::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: -1;
+        .success {
+            background-color: #4caf50;
         }
 
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            margin-top: 2rem;
+        .error {
+            background-color: #f44336;
         }
 
-        .delete-btn {
-            background-color: #dc3545;
+        .info {
+            background-color: #2196f3;
         }
 
-        .delete-btn:hover {
-            background-color: #c82333;
+        .footer {
+            background-color: var(--burg-rot);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
         }
 
-        .edit-btn {
-            background-color: #0056b3;
-        }
-
-        .edit-btn:hover {
-            background-color: #004494;
-        }
-
-        .reset-btn {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .reset-btn:hover {
-            background-color: #e0a800;
-        }
-
-        .back-btn {
-            background-color: var(--stein-grau);
-        }
-
-        .back-btn:hover {
-            background-color: #333;
-        }
-
-        .history-btn {
-            background-color: var(--stein-grau);
-            width: 100%;
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Mitarbeiter-Verwaltung</h1>
-        <div>
-            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
-            <button onclick="logout()">Abmelden</button>
+        <h1>Mitarbeiterverwaltung</h1>
+        <div class="header-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="dienstplan.html">Dienstplan</a>
+            <a href="#" onclick="logout()">Abmelden</a>
         </div>
     </div>
 
     <div class="content">
-        <div id="kastellanBereich" style="display: none;">
-            <button onclick="showEditDialog()" style="margin-bottom: 2rem;">Neuen Mitarbeiter anlegen</button>
+        <div class="mitarbeiter-form">
+            <h2>Mitarbeiter hinzufügen/bearbeiten</h2>
+            <form id="mitarbeiterForm">
+                <div class="form-group">
+                    <label for="vorname">Vorname:</label>
+                    <input type="text" id="vorname" required>
+                </div>
+                <div class="form-group">
+                    <label for="nachname">Nachname:</label>
+                    <input type="text" id="nachname" required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Benutzername:</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Passwort:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="rolle">Rolle:</label>
+                    <select id="rolle" required>
+                        <option value="mitarbeiter">Mitarbeiter</option>
+                        <option value="admin">Admin (Kastellan)</option>
+                    </select>
+                </div>
+                <button type="submit" class="save-btn">Hinzufügen</button>
+            </form>
         </div>
 
         <div class="mitarbeiter-liste">
-            <h2>Mitarbeiter</h2>
+            <h2>Mitarbeiterliste</h2>
             <div id="mitarbeiterListe"></div>
         </div>
     </div>
 
+    <div class="footer">
+        2025 Burg Hochosterwitz
+    </div>
+
+    <script src="js/login.js"></script>
     <script src="js/mitarbeiter.js"></script>
     <script>
-        // Beim Laden prüfen ob Kastellan
-        window.addEventListener('load', () => {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
+        // Prüfe Login-Status
+        if (!isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        // Initialisiere Mitarbeiterverwaltung
+        const mitarbeiterManager = new MitarbeiterManager();
+        mitarbeiterManager.loadMitarbeiterListe();
+
+        // Form Handler
+        document.getElementById('mitarbeiterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            // Zeige Kastellan-spezifische Elemente
-            if (user.role === 'kastellan') {
-                document.getElementById('kastellanBereich').style.display = 'block';
+            const vorname = document.getElementById('vorname').value;
+            const nachname = document.getElementById('nachname').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rolle = document.getElementById('rolle').value;
+            
+            const editId = e.target.dataset.editId;
+            
+            try {
+                if (editId) {
+                    // Update
+                    mitarbeiterManager.updateMitarbeiter(editId, {
+                        vorname,
+                        nachname,
+                        password,
+                        rolle
+                    });
+                    mitarbeiterManager.showNotification('Mitarbeiter aktualisiert', 'success');
+                } else {
+                    // Neu
+                    if (mitarbeiterManager.existsMitarbeiter(username)) {
+                        mitarbeiterManager.showNotification('Benutzername existiert bereits', 'error');
+                        return;
+                    }
+                    mitarbeiterManager.addMitarbeiter(vorname, nachname, username, password, rolle);
+                    mitarbeiterManager.showNotification('Mitarbeiter hinzugefügt', 'success');
+                }
+                
+                e.target.reset();
+                e.target.dataset.editId = '';
+                document.querySelector('.save-btn').textContent = 'Hinzufügen';
+                mitarbeiterManager.loadMitarbeiterListe();
+            } catch (error) {
+                console.error('Fehler:', error);
+                mitarbeiterManager.showNotification('Ein Fehler ist aufgetreten', 'error');
             }
         });
 
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'index.html';
+        // Prüfe Admin-Rechte
+        const currentUser = getCurrentUser();
+        if (currentUser.rolle !== 'admin') {
+            document.querySelector('.mitarbeiter-form').style.display = 'none';
+            mitarbeiterManager.showNotification('Nur Administratoren können Mitarbeiter verwalten', 'info');
         }
     </script>
 </body>

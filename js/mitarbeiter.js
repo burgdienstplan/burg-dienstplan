@@ -3,40 +3,84 @@
 
 class MitarbeiterManager {
     constructor() {
-        this.db = new Database();
-        this.initializeEventListeners();
+        this.loadMitarbeiter();
     }
 
-    initializeEventListeners() {
-        document.getElementById('addMitarbeiterForm')?.addEventListener('submit', (e) => this.handleAddMitarbeiter(e));
+    // Lade Mitarbeiter aus localStorage
+    loadMitarbeiter() {
+        this.mitarbeiter = JSON.parse(localStorage.getItem('users')) || [];
     }
 
-    async handleAddMitarbeiter(event) {
-        event.preventDefault();
-        const vorname = document.getElementById('vorname').value;
-        const nachname = document.getElementById('nachname').value;
-        const positionen = Array.from(document.getElementById('positionen').selectedOptions).map(option => option.value);
+    // Speichere Mitarbeiter in localStorage
+    saveMitarbeiter() {
+        localStorage.setItem('users', JSON.stringify(this.mitarbeiter));
+    }
 
-        try {
-            await this.db.addMitarbeiter({
-                id: crypto.randomUUID(),
-                vorname,
-                nachname,
-                positionen,
-                aktiv: true,
-                urlaubsTage: 25,
-                genommenerUrlaub: []
-            });
+    // Füge neuen Mitarbeiter hinzu
+    addMitarbeiter(vorname, nachname, username, password, rolle = 'mitarbeiter') {
+        const newMitarbeiter = {
+            username,
+            password,
+            vorname,
+            nachname,
+            rolle,
+            aktiv: true
+        };
 
-            this.showNotification('Mitarbeiter erfolgreich hinzugefügt', 'success');
-            this.loadMitarbeiterListe();
-            event.target.reset();
-        } catch (error) {
-            this.showNotification('Fehler beim Hinzufügen des Mitarbeiters', 'error');
-            console.error('Fehler:', error);
+        this.mitarbeiter.push(newMitarbeiter);
+        this.saveMitarbeiter();
+        return newMitarbeiter;
+    }
+
+    // Aktualisiere Mitarbeiter
+    updateMitarbeiter(username, updates) {
+        const index = this.mitarbeiter.findIndex(m => m.username === username);
+        if (index !== -1) {
+            this.mitarbeiter[index] = { ...this.mitarbeiter[index], ...updates };
+            this.saveMitarbeiter();
+            return true;
         }
+        return false;
     }
 
+    // Lösche Mitarbeiter (deaktiviere)
+    deleteMitarbeiter(username) {
+        const index = this.mitarbeiter.findIndex(m => m.username === username);
+        if (index !== -1) {
+            this.mitarbeiter[index].aktiv = false;
+            this.saveMitarbeiter();
+            return true;
+        }
+        return false;
+    }
+
+    // Hole alle aktiven Mitarbeiter
+    getAktiveMitarbeiter() {
+        return this.mitarbeiter.filter(m => m.aktiv);
+    }
+
+    // Hole Mitarbeiter nach Rolle
+    getMitarbeiterByRolle(rolle) {
+        return this.mitarbeiter.filter(m => m.aktiv && m.rolle === rolle);
+    }
+
+    // Prüfe ob Mitarbeiter existiert
+    existsMitarbeiter(username) {
+        return this.mitarbeiter.some(m => m.username === username);
+    }
+
+    // Hole Mitarbeiter nach Username
+    getMitarbeiter(username) {
+        return this.mitarbeiter.find(m => m.username === username);
+    }
+
+    // Validiere Passwort
+    validatePassword(username, password) {
+        const user = this.getMitarbeiter(username);
+        return user && user.password === password;
+    }
+
+    // Zeige Benachrichtigung
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = type;
@@ -48,25 +92,25 @@ class MitarbeiterManager {
         setTimeout(() => notification.remove(), 3000);
     }
 
+    // Lade Mitarbeiterliste
     async loadMitarbeiterListe() {
-        const mitarbeiter = await this.db.getMitarbeiter();
         const liste = document.getElementById('mitarbeiterListe');
         if (!liste) return;
 
         liste.innerHTML = '';
         
-        mitarbeiter.forEach(ma => {
+        this.getAktiveMitarbeiter().forEach(ma => {
             const item = document.createElement('div');
             item.className = 'mitarbeiter-item';
             item.innerHTML = `
                 <div>
                     <strong>${ma.vorname} ${ma.nachname}</strong>
-                    <span class="positionen">${ma.positionen.join(', ')}</span>
+                    <span class="positionen">${ma.rolle}</span>
                 </div>
                 <div>
-                    <button onclick="mitarbeiterManager.bearbeiteMitarbeiter('${ma.id}')" 
+                    <button onclick="mitarbeiterManager.bearbeiteMitarbeiter('${ma.username}')" 
                             class="edit-btn" title="Bearbeiten">✏️</button>
-                    <button onclick="mitarbeiterManager.toggleMitarbeiterStatus('${ma.id}')" 
+                    <button onclick="mitarbeiterManager.toggleMitarbeiterStatus('${ma.username}')" 
                             class="status-btn" title="${ma.aktiv ? 'Deaktivieren' : 'Aktivieren'}">
                             ${ma.aktiv ? '🟢' : '🔴'}
                     </button>
@@ -76,32 +120,34 @@ class MitarbeiterManager {
         });
     }
 
-    async bearbeiteMitarbeiter(id) {
-        const mitarbeiter = await this.db.getMitarbeiterById(id);
+    // Bearbeite Mitarbeiter
+    async bearbeiteMitarbeiter(username) {
+        const mitarbeiter = this.getMitarbeiter(username);
         if (!mitarbeiter) return;
 
         // Formular mit Mitarbeiterdaten füllen
         document.getElementById('vorname').value = mitarbeiter.vorname;
         document.getElementById('nachname').value = mitarbeiter.nachname;
         
-        const positionenSelect = document.getElementById('positionen');
-        Array.from(positionenSelect.options).forEach(option => {
-            option.selected = mitarbeiter.positionen.includes(option.value);
+        const rolleSelect = document.getElementById('rolle');
+        Array.from(rolleSelect.options).forEach(option => {
+            option.selected = mitarbeiter.rolle === option.value;
         });
 
         // Formular in Bearbeitungsmodus setzen
         const form = document.getElementById('addMitarbeiterForm');
-        form.dataset.editId = id;
+        form.dataset.editId = username;
         document.querySelector('.save-btn').textContent = 'Aktualisieren';
     }
 
-    async toggleMitarbeiterStatus(id) {
+    // Toggle Mitarbeiter Status
+    async toggleMitarbeiterStatus(username) {
         try {
-            const mitarbeiter = await this.db.getMitarbeiterById(id);
+            const mitarbeiter = this.getMitarbeiter(username);
             if (!mitarbeiter) return;
 
             mitarbeiter.aktiv = !mitarbeiter.aktiv;
-            await this.db.updateMitarbeiter(mitarbeiter);
+            this.saveMitarbeiter();
             
             this.showNotification(
                 `Mitarbeiter ${mitarbeiter.aktiv ? 'aktiviert' : 'deaktiviert'}`,
