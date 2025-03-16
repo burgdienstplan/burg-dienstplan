@@ -23,6 +23,7 @@ class DienstplanManager {
         this.currentDate = new Date();
         this.selectedDate = new Date();
         this.shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+        this.shiftRequests = JSON.parse(localStorage.getItem('shiftRequests')) || {};
         this.holidays = JSON.parse(localStorage.getItem('holidays')) || {};
         this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen')) || [];
         this.fuehrungsvorschlaege = JSON.parse(localStorage.getItem('fuehrungsvorschlaege')) || [];
@@ -38,18 +39,96 @@ class DienstplanManager {
         document.getElementById('prevMonth').addEventListener('click', () => this.prevMonth());
         document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
         
-        // Admin-Funktionen
         const user = JSON.parse(localStorage.getItem('currentUser'));
+        
+        // Admin-Funktionen
         if (user?.role === 'kastellan') {
             document.getElementById('adminControls').style.display = 'block';
             document.getElementById('addShift').addEventListener('click', () => this.addShift());
             document.getElementById('markRuhetag').addEventListener('click', () => this.markRuhetag());
+            this.loadPendingRequests();
+        } else {
+            // Mitarbeiter können Dienste vorschlagen
+            document.getElementById('mitarbeiterControls').style.display = 'block';
         }
 
         // Mitarbeiter-spezifische Funktionen
         if (user?.role === 'museumsfuehrer') {
             document.getElementById('fuehrungControls').style.display = 'block';
         }
+    }
+
+    loadPendingRequests() {
+        const requestsDiv = document.getElementById('dienstAnfragen');
+        requestsDiv.innerHTML = '<h3>Dienstanfragen</h3>';
+        
+        Object.entries(this.shiftRequests).forEach(([date, requests]) => {
+            requests.forEach(request => {
+                if (request.status === 'pending') {
+                    const requestElement = document.createElement('div');
+                    requestElement.className = 'dienstanfrage';
+                    requestElement.innerHTML = `
+                        <p>${request.mitarbeiterName} möchte am ${new Date(date).toLocaleDateString('de-DE')} 
+                           als ${request.position} arbeiten</p>
+                        <button onclick="dienstplan.approveShiftRequest('${date}', ${request.id})">Genehmigen</button>
+                        <button onclick="dienstplan.rejectShiftRequest('${date}', ${request.id})">Ablehnen</button>
+                    `;
+                    requestsDiv.appendChild(requestElement);
+                }
+            });
+        });
+    }
+
+    requestShift(date, position) {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) return;
+
+        if (!this.isInSaison(date)) {
+            alert('Dieses Datum liegt außerhalb der Saison!');
+            return;
+        }
+
+        if (this.isRuhetag(date)) {
+            alert('An diesem Tag ist Ruhetag!');
+            return;
+        }
+
+        const request = {
+            id: Date.now(),
+            mitarbeiterId: user.id,
+            mitarbeiterName: `${user.vorname} ${user.nachname}`,
+            position: position,
+            status: 'pending',
+            requestDate: new Date().toISOString()
+        };
+
+        if (!this.shiftRequests[date]) {
+            this.shiftRequests[date] = [];
+        }
+        
+        this.shiftRequests[date].push(request);
+        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
+        alert('Ihre Dienstanfrage wurde eingereicht und wird vom Kastellan geprüft.');
+    }
+
+    approveShiftRequest(date, requestId) {
+        const request = this.shiftRequests[date].find(r => r.id === requestId);
+        if (!request) return;
+
+        request.status = 'approved';
+        this.addShift(request.mitarbeiterId, request.position, date);
+        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
+        this.loadPendingRequests();
+        this.renderCalendar();
+    }
+
+    rejectShiftRequest(date, requestId) {
+        const request = this.shiftRequests[date].find(r => r.id === requestId);
+        if (!request) return;
+
+        request.status = 'rejected';
+        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
+        this.loadPendingRequests();
     }
 
     loadMitarbeiter() {
@@ -83,11 +162,7 @@ class DienstplanManager {
         return date.toISOString().split('T')[0];
     }
 
-    addShift() {
-        const mitarbeiterId = document.getElementById('mitarbeiter').value;
-        const position = document.getElementById('position').value;
-        const datum = document.getElementById('datum').value;
-
+    addShift(mitarbeiterId, position, datum) {
         if (!mitarbeiterId || !position || !datum) {
             alert('Bitte alle Felder ausfüllen!');
             return;
@@ -109,9 +184,11 @@ class DienstplanManager {
             return;
         }
 
-        const shifts = this.shifts[datum] || [];
-        shifts.push({ mitarbeiterId, position });
-        this.shifts[datum] = shifts;
+        if (!this.shifts[datum]) {
+            this.shifts[datum] = [];
+        }
+        
+        this.shifts[datum].push({ mitarbeiterId, position });
         localStorage.setItem('shifts', JSON.stringify(this.shifts));
         this.renderCalendar();
     }
@@ -134,28 +211,6 @@ class DienstplanManager {
             localStorage.setItem('ruhetage', JSON.stringify(this.ruhetage));
             this.renderCalendar();
         }
-    }
-
-    addUrlaubsanfrage(mitarbeiterId, startDatum, endDatum) {
-        this.urlaubsanfragen.push({
-            id: Date.now(),
-            mitarbeiterId,
-            startDatum,
-            endDatum,
-            status: 'pending'
-        });
-        localStorage.setItem('urlaubsanfragen', JSON.stringify(this.urlaubsanfragen));
-    }
-
-    addFuehrungsvorschlag(mitarbeiterId, datum, zeit) {
-        this.fuehrungsvorschlaege.push({
-            id: Date.now(),
-            mitarbeiterId,
-            datum,
-            zeit,
-            status: 'pending'
-        });
-        localStorage.setItem('fuehrungsvorschlaege', JSON.stringify(this.fuehrungsvorschlaege));
     }
 
     renderCalendar() {
@@ -196,50 +251,89 @@ class DienstplanManager {
         const dateStr = this.formatDate(date);
         const div = document.createElement('div');
         div.className = 'calendar-day';
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const isKastellan = user?.role === 'kastellan';
+
+        // Datum-Header
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.textContent = date.getDate();
+        div.appendChild(header);
 
         // Verschiedene Zustände
         if (!this.isInSaison(date)) {
             div.classList.add('outside-season');
+        } else {
+            // Klickbar für Dienstanfragen (nur für Mitarbeiter)
+            if (!isKastellan && this.isInSaison(date)) {
+                div.style.cursor = 'pointer';
+                div.onclick = () => this.showShiftRequestDialog(dateStr);
+            }
         }
+
         if (this.isFeiertag(dateStr)) {
             div.classList.add('holiday');
+            const holiday = document.createElement('div');
+            holiday.className = 'holiday-name';
+            holiday.textContent = this.isFeiertag(dateStr);
+            div.appendChild(holiday);
         }
+
         if (this.isRuhetag(dateStr)) {
             div.classList.add('ruhetag');
-        }
-        if (this.formatDate(new Date()) === dateStr) {
-            div.classList.add('today');
+            const ruhetag = document.createElement('div');
+            ruhetag.className = 'ruhetag-marker';
+            ruhetag.textContent = 'Ruhetag';
+            div.appendChild(ruhetag);
         }
 
-        // Tag und Info
-        div.innerHTML = `
-            <div class="day-header">
-                ${date.getDate()}
-                ${this.isFeiertag(dateStr) ? `<div class="holiday-name">${FEIERTAGE_2025[dateStr]}</div>` : ''}
-                ${this.isRuhetag(dateStr) ? '<div class="ruhetag-marker">Ruhetag</div>' : ''}
-            </div>
-        `;
-
-        // Schichten
-        const shifts = this.shifts[dateStr] || [];
+        // Schichten anzeigen
         const shiftsDiv = document.createElement('div');
         shiftsDiv.className = 'shifts';
         
-        shifts.forEach(shift => {
-            const mitarbeiter = this.getMitarbeiter(shift.mitarbeiterId);
-            const shiftDiv = document.createElement('div');
-            shiftDiv.className = `shift ${shift.position}`;
-            shiftDiv.textContent = `${mitarbeiter?.name || 'Unbekannt'} (${this.getPositionName(shift.position)})`;
-            shiftsDiv.appendChild(shiftDiv);
-        });
+        // Genehmigte Schichten
+        if (this.shifts[dateStr]) {
+            this.shifts[dateStr].forEach(shift => {
+                const shiftDiv = document.createElement('div');
+                shiftDiv.className = `shift ${shift.position}`;
+                const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
+                shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
+                shiftsDiv.appendChild(shiftDiv);
+            });
+        }
+
+        // Ausstehende Anfragen (nur für Kastellan sichtbar)
+        if (isKastellan && this.shiftRequests[dateStr]) {
+            this.shiftRequests[dateStr].forEach(request => {
+                if (request.status === 'pending') {
+                    const requestDiv = document.createElement('div');
+                    requestDiv.className = 'shift-request pending';
+                    requestDiv.textContent = `${request.mitarbeiterName} (${this.getPositionName(request.position)}) ⏳`;
+                    shiftsDiv.appendChild(requestDiv);
+                }
+            });
+        }
 
         div.appendChild(shiftsDiv);
         return div;
     }
 
-    getMitarbeiter(id) {
-        const mitarbeiter = JSON.parse(localStorage.getItem('mitarbeiter')) || [];
-        return mitarbeiter.find(m => m.id === id);
+    showShiftRequestDialog(date) {
+        const positions = ['shop', 'shop_museum', 'kasse', 'fuehrung'];
+        const dialog = document.createElement('div');
+        dialog.className = 'shift-request-dialog';
+        dialog.innerHTML = `
+            <h3>Dienst vorschlagen für ${new Date(date).toLocaleDateString('de-DE')}</h3>
+            <select id="requestPosition">
+                ${positions.map(pos => `<option value="${pos}">${this.getPositionName(pos)}</option>`).join('')}
+            </select>
+            <button onclick="dienstplan.requestShift('${date}', document.getElementById('requestPosition').value)">
+                Anfragen
+            </button>
+            <button onclick="this.parentElement.remove()">Abbrechen</button>
+        `;
+        document.body.appendChild(dialog);
     }
 
     getPositionName(position) {
@@ -252,6 +346,12 @@ class DienstplanManager {
         return positions[position] || position;
     }
 
+    getMitarbeiterName(id) {
+        const mitarbeiter = JSON.parse(localStorage.getItem('mitarbeiter')) || [];
+        const found = mitarbeiter.find(m => m.id === id);
+        return found ? found.name : 'Unbekannt';
+    }
+
     prevMonth() {
         this.selectedDate.setMonth(this.selectedDate.getMonth() - 1);
         this.renderCalendar();
@@ -261,9 +361,15 @@ class DienstplanManager {
         this.selectedDate.setMonth(this.selectedDate.getMonth() + 1);
         this.renderCalendar();
     }
+
+    createEmptyDay() {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        return div;
+    }
 }
 
 // Initialisierung
 document.addEventListener('DOMContentLoaded', () => {
-    const dienstplan = new DienstplanManager();
+    window.dienstplan = new DienstplanManager();
 });
