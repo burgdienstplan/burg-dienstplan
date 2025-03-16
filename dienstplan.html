@@ -451,11 +451,85 @@
         .mitarbeiter-item button:hover {
             color: var(--burg-color);
         }
+
+        /* Version Info */
+        .version-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--parchment-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .version-info p {
+            color: var(--burg-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .version-info ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .version-info li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(139, 0, 0, 0.1);
+        }
+
+        .version-info li:last-child {
+            border-bottom: none;
+        }
+
+        /* Login Box */
+        .login-box {
+            background: var(--parchment-color);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-box h2 {
+            color: var(--burg-color);
+            margin-bottom: 5px;
+        }
+
+        .login-box h3 {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .login-box button {
+            background: var(--burg-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .login-box button:hover {
+            background: #660000;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Dienstplan</h1>
+        <h1>Dienstplan v2025.1.2</h1>
         <div>
             <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
             <button onclick="logout()">Abmelden</button>
