@@ -28,10 +28,12 @@ class DienstplanManager {
         this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen')) || [];
         this.fuehrungsvorschlaege = JSON.parse(localStorage.getItem('fuehrungsvorschlaege')) || [];
         this.ruhetage = JSON.parse(localStorage.getItem('ruhetage')) || [];
+        this.lastModified = JSON.parse(localStorage.getItem('lastModified')) || {};
         
         this.initializeEventListeners();
         this.loadMitarbeiter();
         this.renderCalendar();
+        this.checkPlanningStatus();
     }
 
     initializeEventListeners() {
@@ -47,15 +49,159 @@ class DienstplanManager {
             document.getElementById('addShift').addEventListener('click', () => this.addShift());
             document.getElementById('markRuhetag').addEventListener('click', () => this.markRuhetag());
             this.loadPendingRequests();
+            
+            // Drag & Drop für Schichten
+            this.initializeDragAndDrop();
         } else {
             // Mitarbeiter können Dienste vorschlagen
             document.getElementById('mitarbeiterControls').style.display = 'block';
+            this.checkForUpdates(user.id);
         }
 
         // Mitarbeiter-spezifische Funktionen
         if (user?.role === 'museumsfuehrer') {
             document.getElementById('fuehrungControls').style.display = 'block';
         }
+    }
+
+    initializeDragAndDrop() {
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('shift')) {
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    date: e.target.dataset.date,
+                    mitarbeiterId: e.target.dataset.mitarbeiterId,
+                    position: e.target.dataset.position
+                }));
+            }
+        });
+
+        document.addEventListener('dragover', (e) => {
+            if (e.target.classList.contains('calendar-day')) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('drop', (e) => {
+            if (e.target.classList.contains('calendar-day')) {
+                e.preventDefault();
+                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const newDate = e.target.dataset.date;
+                
+                if (this.canMoveShift(data, newDate)) {
+                    this.moveShift(data, newDate);
+                }
+            }
+        });
+    }
+
+    canMoveShift(shiftData, newDate) {
+        // Prüfen ob das neue Datum in der Saison liegt
+        if (!this.isInSaison(newDate)) {
+            alert('Dieses Datum liegt außerhalb der Saison!');
+            return false;
+        }
+
+        // Prüfen ob es ein Ruhetag ist
+        if (this.isRuhetag(newDate)) {
+            alert('An diesem Tag ist Ruhetag!');
+            return false;
+        }
+
+        // Wenn es Shop Eingang ist, prüfen ob andere Positionen betroffen sind
+        if (shiftData.position === 'shop') {
+            const shifts = this.shifts[shiftData.date] || [];
+            if (shifts.length > 1) {
+                alert('Shop Eingang kann nicht verschoben werden, wenn andere Positionen besetzt sind!');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    moveShift(shiftData, newDate) {
+        // Alte Schicht entfernen
+        const oldShifts = this.shifts[shiftData.date] || [];
+        const index = oldShifts.findIndex(s => 
+            s.mitarbeiterId === shiftData.mitarbeiterId && 
+            s.position === shiftData.position
+        );
+        
+        if (index > -1) {
+            oldShifts.splice(index, 1);
+            if (oldShifts.length === 0) {
+                delete this.shifts[shiftData.date];
+            } else {
+                this.shifts[shiftData.date] = oldShifts;
+            }
+        }
+
+        // Neue Schicht hinzufügen
+        if (!this.shifts[newDate]) {
+            this.shifts[newDate] = [];
+        }
+        this.shifts[newDate].push({
+            mitarbeiterId: shiftData.mitarbeiterId,
+            position: shiftData.position
+        });
+
+        // Änderungen speichern
+        this.lastModified[newDate] = new Date().toISOString();
+        localStorage.setItem('shifts', JSON.stringify(this.shifts));
+        localStorage.setItem('lastModified', JSON.stringify(this.lastModified));
+        
+        this.renderCalendar();
+    }
+
+    checkPlanningStatus() {
+        const warningDiv = document.getElementById('planningWarning');
+        if (!warningDiv) return;
+
+        const today = new Date();
+        const twoWeeksFromNow = new Date();
+        twoWeeksFromNow.setDate(today.getDate() + 14);
+
+        let isFullyPlanned = true;
+        let currentDate = new Date(today);
+
+        while (currentDate <= twoWeeksFromNow) {
+            const dateStr = this.formatDate(currentDate);
+            if (this.isInSaison(dateStr) && !this.isRuhetag(dateStr)) {
+                const shifts = this.shifts[dateStr] || [];
+                if (!shifts.some(s => s.position === 'shop')) {
+                    isFullyPlanned = false;
+                    break;
+                }
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        warningDiv.innerHTML = isFullyPlanned ? 
+            '<div class="success">✓ Dienstplan ist für die nächsten 14 Tage vollständig</div>' :
+            '<div class="warning">⚠ Bitte den Dienstplan für die nächsten 14 Tage vervollständigen!</div>';
+    }
+
+    checkForUpdates(mitarbeiterId) {
+        const lastCheck = localStorage.getItem(`lastCheck_${mitarbeiterId}`) || '2000-01-01';
+        let hasUpdates = false;
+
+        Object.entries(this.lastModified).forEach(([date, modifiedDate]) => {
+            if (modifiedDate > lastCheck) {
+                const shifts = this.shifts[date] || [];
+                if (shifts.some(s => s.mitarbeiterId === mitarbeiterId)) {
+                    hasUpdates = true;
+                }
+            }
+        });
+
+        if (hasUpdates) {
+            const updateDiv = document.createElement('div');
+            updateDiv.className = 'update-notification';
+            updateDiv.innerHTML = '⚠ Es gibt Änderungen in Ihrem Dienstplan!';
+            document.querySelector('.content').insertBefore(updateDiv, document.querySelector('.calendar'));
+        }
+
+        localStorage.setItem(`lastCheck_${mitarbeiterId}`, new Date().toISOString());
     }
 
     loadPendingRequests() {
@@ -251,6 +397,7 @@ class DienstplanManager {
         const dateStr = this.formatDate(date);
         const div = document.createElement('div');
         div.className = 'calendar-day';
+        div.dataset.date = dateStr;
         
         const user = JSON.parse(localStorage.getItem('currentUser'));
         const isKastellan = user?.role === 'kastellan';
@@ -297,8 +444,12 @@ class DienstplanManager {
             this.shifts[dateStr].forEach(shift => {
                 const shiftDiv = document.createElement('div');
                 shiftDiv.className = `shift ${shift.position}`;
+                shiftDiv.dataset.date = dateStr;
+                shiftDiv.dataset.mitarbeiterId = shift.mitarbeiterId;
+                shiftDiv.dataset.position = shift.position;
                 const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
                 shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
+                shiftDiv.draggable = true;
                 shiftsDiv.appendChild(shiftDiv);
             });
         }

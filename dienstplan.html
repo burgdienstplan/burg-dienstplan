@@ -151,6 +151,8 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: move;
+            user-select: none;
         }
 
         .shift.shop {
@@ -301,6 +303,39 @@
         .dienstanfrage button {
             margin-right: 0.5rem;
         }
+
+        .warning {
+            background-color: #fff3e0;
+            color: #ed6c02;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ed6c02;
+        }
+
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .update-notification {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #1976d2;
+            font-weight: bold;
+        }
+
+        .calendar-day.drag-over {
+            background-color: #e3f2fd;
+            border: 2px dashed #1976d2;
+        }
     </style>
 </head>
 <body>
@@ -316,6 +351,9 @@
         <div class="saison-info">
             Saison 2025: 1. April - 1. November
         </div>
+
+        <!-- Planungswarnung -->
+        <div id="planningWarning"></div>
 
         <!-- Kalender -->
         <div class="calendar">
