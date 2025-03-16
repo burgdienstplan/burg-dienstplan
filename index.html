@@ -94,16 +94,19 @@
             padding: 1rem;
             border-radius: 4px;
             margin-bottom: 1rem;
+            display: none;
         }
 
         .notification.error {
             background-color: #ffebee;
             color: #c62828;
+            display: block;
         }
 
         .notification.success {
             background-color: #e8f5e9;
             color: #2e7d32;
+            display: block;
         }
 
         .saison-info {
@@ -136,16 +139,16 @@
                 Saison 2025: 1. April - 1. November
             </div>
 
-            <div id="notifications"></div>
+            <div id="notification" class="notification"></div>
 
-            <form id="loginForm" onsubmit="return handleLogin(event)">
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="username">Benutzername:</label>
-                    <input type="text" id="username" required autocomplete="username">
+                    <input type="text" id="username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Passwort:</label>
-                    <input type="password" id="password" required autocomplete="current-password">
+                    <input type="password" id="password" required>
                 </div>
                 <button type="submit">Anmelden</button>
             </form>
@@ -156,65 +159,30 @@
         2025 Burg Hochosterwitz. Alle Rechte vorbehalten.
     </div>
 
-    <script src="js/database.js"></script>
+    <script src="js/login.js"></script>
     <script>
-        const db = new Database();
+        // Wenn bereits eingeloggt, direkt zum Dashboard
+        if (isLoggedIn()) {
+            window.location.href = 'dashboard.html';
+        }
 
-        function handleLogin(event) {
-            event.preventDefault();
+        // Login-Formular Handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-
-            try {
-                const mitarbeiter = db.getMitarbeiter();
-                const user = mitarbeiter.find(m => 
-                    m.username === username && 
-                    m.password === password
-                );
-
-                if (user) {
-                    db.setItem('currentUser', {
-                        id: user.id,
-                        username: user.username,
-                        vorname: user.vorname,
-                        nachname: user.nachname,
-                        rolle: user.rolle
-                    });
-
-                    showNotification('Login erfolgreich!', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                } else {
-                    showNotification('Ungültige Anmeldedaten', 'error');
-                }
-            } catch (error) {
-                console.error('Login-Fehler:', error);
-                showNotification('Ein Fehler ist aufgetreten', 'error');
-            }
-        }
-
-        function showNotification(message, type = 'info') {
-            const notifications = document.getElementById('notifications');
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
+            const notification = document.getElementById('notification');
             
-            notifications.innerHTML = '';
-            notifications.appendChild(notification);
-
-            if (type === 'success') return;
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        // Prüfe ob bereits eingeloggt
-        window.addEventListener('load', () => {
-            const currentUser = db.getItem('currentUser');
-            if (currentUser) {
-                window.location.href = 'dashboard.html';
+            if (login(username, password)) {
+                notification.textContent = 'Login erfolgreich!';
+                notification.className = 'notification success';
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } else {
+                notification.textContent = 'Ungültige Anmeldedaten';
+                notification.className = 'notification error';
             }
         });
     </script>
