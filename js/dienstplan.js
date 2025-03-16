@@ -103,28 +103,42 @@ class DienstplanManager {
     initializeDragAndDrop() {
         document.addEventListener('dragstart', (e) => {
             if (e.target.classList.contains('shift')) {
-                e.dataTransfer.setData('text/plain', JSON.stringify({
+                e.dataTransfer.setData('application/json', JSON.stringify({
                     date: e.target.dataset.date,
                     mitarbeiterId: e.target.dataset.mitarbeiterId,
                     position: e.target.dataset.position
                 }));
+                e.target.classList.add('dragging');
+            }
+        });
+
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('shift')) {
+                e.target.classList.remove('dragging');
             }
         });
 
         document.addEventListener('dragover', (e) => {
-            if (e.target.classList.contains('calendar-day')) {
+            if (e.target.closest('.calendar-day')) {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
             }
         });
 
         document.addEventListener('drop', (e) => {
-            if (e.target.classList.contains('calendar-day')) {
+            const calendarDay = e.target.closest('.calendar-day');
+            if (calendarDay) {
                 e.preventDefault();
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                const newDate = e.target.dataset.date;
-                
-                if (this.canMoveShift(data, newDate)) {
-                    this.moveShift(data, newDate);
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    const newDate = calendarDay.dataset.date;
+                    
+                    if (this.canMoveShift(data, newDate)) {
+                        this.moveShift(data, newDate);
+                        this.renderCalendar();
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Verschieben der Schicht:', error);
                 }
             }
         });
@@ -143,11 +157,24 @@ class DienstplanManager {
             return false;
         }
 
+        // Prüfen ob es ein Feiertag ist
+        if (this.isFeiertag(newDate)) {
+            alert('An diesem Tag ist ein Feiertag!');
+            return false;
+        }
+
         // Wenn es Shop Eingang ist, prüfen ob andere Positionen betroffen sind
         if (shiftData.position === 'shop') {
             const shifts = this.shifts[shiftData.date] || [];
-            if (shifts.length > 1) {
+            const otherShifts = shifts.filter(s => s.position !== 'shop');
+            if (otherShifts.length > 0) {
                 alert('Shop Eingang kann nicht verschoben werden, wenn andere Positionen besetzt sind!');
+                return false;
+            }
+        } else {
+            // Wenn es keine Shop-Position ist, prüfen ob Shop Eingang besetzt ist
+            if (!this.isShopBesetzt(newDate)) {
+                alert('Shop Eingang muss zuerst besetzt werden!');
                 return false;
             }
         }
@@ -185,8 +212,6 @@ class DienstplanManager {
         this.lastModified[newDate] = new Date().toISOString();
         localStorage.setItem('shifts', JSON.stringify(this.shifts));
         localStorage.setItem('lastModified', JSON.stringify(this.lastModified));
-        
-        this.renderCalendar();
     }
 
     checkPlanningStatus() {
@@ -485,8 +510,7 @@ class DienstplanManager {
         // Schichten-Container
         const shiftsDiv = document.createElement('div');
         shiftsDiv.className = 'shifts';
-        div.appendChild(shiftsDiv);
-
+        
         // Schichten anzeigen
         if (this.shifts[dateStr]) {
             // Sortiere Schichten: Shop Eingang zuerst, dann nach Position
@@ -503,29 +527,18 @@ class DienstplanManager {
                 shiftDiv.dataset.mitarbeiterId = shift.mitarbeiterId;
                 shiftDiv.dataset.position = shift.position;
                 
-                const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
-                shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
-                
                 if (isKastellan) {
                     shiftDiv.draggable = true;
                 }
                 
+                const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
+                shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
+                
                 shiftsDiv.appendChild(shiftDiv);
             });
         }
-
-        // Dienstanfragen anzeigen (nur für Kastellan)
-        if (isKastellan && this.shiftRequests[dateStr]) {
-            const requestsDiv = document.createElement('div');
-            requestsDiv.className = 'shift-requests';
-            requestsDiv.innerHTML = '⏳ Dienstanfragen';
-            div.appendChild(requestsDiv);
-        }
-
-        // Event-Listener für Dienstanfragen (für Mitarbeiter)
-        if (!isKastellan && this.isInSaison(dateStr) && !this.isRuhetag(dateStr)) {
-            div.addEventListener('click', () => this.showShiftRequestDialog(dateStr));
-        }
+        
+        div.appendChild(shiftsDiv);
 
         return div;
     }
