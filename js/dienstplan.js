@@ -325,9 +325,17 @@ class DienstplanManager {
     }
 
     isInSaison(date) {
-        const d = new Date(date);
+        // Konvertiere String-Datum zu Date-Objekt falls nötig
+        const d = typeof date === 'string' ? new Date(date) : new Date(date);
         const start = new Date(SAISON.start);
         const end = new Date(SAISON.end);
+
+        // Setze Uhrzeiten auf Mitternacht für korrekten Vergleich
+        d.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        // Prüfe ob das Datum zwischen Saisonstart und -ende liegt
         return d >= start && d <= end;
     }
 
