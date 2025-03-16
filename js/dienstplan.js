@@ -23,271 +23,236 @@ const SAISON = {
 
 class DienstplanManager {
     constructor() {
-        this.db = new Database();
         this.currentDate = new Date();
-        this.selectedDate = new Date(2025, 3, 1); // Start mit 1. April 2025
-        this.positions = [
-            { id: 'shop_eingang', name: 'Shop Eingang', required: true },
-            { id: 'shop_museum', name: 'Shop Museum', required: false },
-            { id: 'kasse', name: 'Kasse', required: false },
-            { id: 'fuehrung', name: 'Führung', required: false }
-        ];
+        this.selectedDate = new Date(2025, 3, 1); // Start der Saison
+        this.positions = ['Shop Eingang', 'Shop Museum', 'Kasse', 'Führung'];
+        this.loadData();
         this.initializeEventListeners();
-        this.loadDienstplan();
     }
 
-    async initializeEventListeners() {
-        // Kalender-Navigation
+    loadData() {
+        // Lade Schichten
+        this.shifts = JSON.parse(localStorage.getItem('shifts')) || [];
+        
+        // Lade Feiertage
+        this.feiertage = JSON.parse(localStorage.getItem('feiertage')) || [];
+        
+        // Lade Ruhetage
+        this.ruhetage = JSON.parse(localStorage.getItem('ruhetage')) || [];
+        
+        // Lade Mitarbeiter
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        this.mitarbeiter = users.filter(user => user.aktiv);
+    }
+
+    saveData() {
+        localStorage.setItem('shifts', JSON.stringify(this.shifts));
+        localStorage.setItem('ruhetage', JSON.stringify(this.ruhetage));
+    }
+
+    initializeEventListeners() {
+        // Monat Navigation
         document.getElementById('prevMonth')?.addEventListener('click', () => this.changeMonth(-1));
         document.getElementById('nextMonth')?.addEventListener('click', () => this.changeMonth(1));
         
-        // Schicht-Verwaltung
-        document.getElementById('addShiftForm')?.addEventListener('submit', (e) => this.handleAddShift(e));
+        // Schicht Formular
+        document.getElementById('shiftForm')?.addEventListener('submit', (e) => this.handleShiftSubmit(e));
         
-        // Drag & Drop für Schichten
-        this.initializeDragAndDrop();
-    }
-
-    initializeDragAndDrop() {
-        const cells = document.querySelectorAll('.shift-cell');
-        cells.forEach(cell => {
-            cell.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                cell.classList.add('dragover');
-            });
-
-            cell.addEventListener('dragleave', () => {
-                cell.classList.remove('dragover');
-            });
-
-            cell.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                cell.classList.remove('dragover');
-                
-                const shiftId = e.dataTransfer.getData('text/plain');
-                const targetDate = cell.dataset.date;
-                const targetPosition = cell.dataset.position;
-                
-                await this.moveShift(shiftId, targetDate, targetPosition);
-            });
-        });
-
-        const shifts = document.querySelectorAll('.shift');
-        shifts.forEach(shift => {
-            shift.setAttribute('draggable', true);
-            shift.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', shift.dataset.shiftId);
-            });
+        // Ruhetag Toggle
+        document.getElementById('dienstplanGrid')?.addEventListener('click', (e) => {
+            if (e.target.classList.contains('ruhetag-toggle')) {
+                this.toggleRuhetag(e.target.dataset.date);
+            }
         });
     }
 
-    async handleAddShift(event) {
+    changeMonth(delta) {
+        this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
+        this.renderDienstplan();
+    }
+
+    // Prüfe ob ein Datum in der Saison liegt (1. April - 1. November)
+    isInSaison(date) {
+        const year = date.getFullYear();
+        const start = new Date(year, 3, 1); // 1. April
+        const end = new Date(year, 10, 1); // 1. November
+        return date >= start && date <= end;
+    }
+
+    // Prüfe ob ein Datum ein Feiertag ist
+    isFeiertag(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        return this.feiertage.some(f => f.datum === dateStr);
+    }
+
+    // Prüfe ob ein Datum ein Ruhetag ist
+    isRuhetag(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        return this.ruhetage.includes(dateStr);
+    }
+
+    // Toggle Ruhetag Status
+    toggleRuhetag(dateStr) {
+        const index = this.ruhetage.indexOf(dateStr);
+        if (index === -1) {
+            this.ruhetage.push(dateStr);
+        } else {
+            this.ruhetage.splice(index, 1);
+        }
+        this.saveData();
+        this.renderDienstplan();
+    }
+
+    // Hole Schichten für ein Datum
+    getShiftsForDate(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        return this.shifts.filter(s => s.datum === dateStr);
+    }
+
+    // Füge neue Schicht hinzu
+    addShift(date, mitarbeiterId, position) {
+        const shift = {
+            id: crypto.randomUUID(),
+            datum: date.toISOString().split('T')[0],
+            mitarbeiterId,
+            position
+        };
+        this.shifts.push(shift);
+        this.saveData();
+    }
+
+    // Lösche Schicht
+    deleteShift(shiftId) {
+        this.shifts = this.shifts.filter(s => s.id !== shiftId);
+        this.saveData();
+    }
+
+    // Handle Schicht Formular Submit
+    handleShiftSubmit(event) {
         event.preventDefault();
-        const date = document.getElementById('shiftDate').value;
-        const position = document.getElementById('shiftPosition').value;
-        const mitarbeiterId = document.getElementById('shiftMitarbeiter').value;
+        const date = new Date(document.getElementById('shiftDate').value);
+        const mitarbeiterId = document.getElementById('mitarbeiter').value;
+        const position = document.getElementById('position').value;
 
-        if (!this.validateShiftDate(date)) return;
-
-        try {
-            await this.db.addShift({
-                datum: date,
-                position: position,
-                mitarbeiterId: mitarbeiterId
-            });
-
-            this.showNotification('Schicht erfolgreich hinzugefügt', 'success');
-            this.loadDienstplan();
-            event.target.reset();
-        } catch (error) {
-            this.showNotification('Fehler beim Hinzufügen der Schicht', 'error');
-            console.error('Fehler:', error);
-        }
-    }
-
-    validateShiftDate(date) {
-        const shiftDate = new Date(date);
-        const saisonStart = new Date(2025, 3, 1); // 1. April
-        const saisonEnde = new Date(2025, 10, 1); // 1. November
-
-        if (shiftDate < saisonStart || shiftDate > saisonEnde) {
-            this.showNotification('Schichten müssen innerhalb der Saison (1. April - 1. November) liegen', 'error');
-            return false;
+        if (!this.isInSaison(date)) {
+            alert('Datum liegt außerhalb der Saison (1. April - 1. November)');
+            return;
         }
 
-        return true;
-    }
-
-    async moveShift(shiftId, targetDate, targetPosition) {
-        if (!this.validateShiftDate(targetDate)) return;
-
-        try {
-            await this.db.updateShift(shiftId, {
-                datum: targetDate,
-                position: targetPosition
-            });
-
-            this.showNotification('Schicht erfolgreich verschoben', 'success');
-            this.loadDienstplan();
-        } catch (error) {
-            this.showNotification('Fehler beim Verschieben der Schicht', 'error');
-            console.error('Fehler:', error);
+        if (this.isRuhetag(date)) {
+            alert('An Ruhetagen können keine Schichten eingetragen werden');
+            return;
         }
+
+        this.addShift(date, mitarbeiterId, position);
+        this.renderDienstplan();
+        event.target.reset();
     }
 
-    async loadDienstplan() {
-        const calendar = document.getElementById('dienstplanCalendar');
-        if (!calendar) return;
+    // Render Dienstplan
+    renderDienstplan() {
+        const grid = document.getElementById('dienstplanGrid');
+        if (!grid) return;
 
         const year = this.selectedDate.getFullYear();
         const month = this.selectedDate.getMonth();
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
-
-        // Hole alle relevanten Daten
-        const shifts = await this.db.getShifts(firstDay.toISOString(), lastDay.toISOString());
-        const mitarbeiter = await this.db.getMitarbeiter();
-        const urlaube = await this.db.getUrlaubsanfragen();
-        const feiertage = await this.db.getFeiertage();
-
-        // Erstelle Kalender-Header
-        let html = this.createCalendarHeader();
-
-        // Erstelle Kalender-Body
-        html += '<div class="calendar-body">';
         
-        for (let day = new Date(firstDay); day <= lastDay; day.setDate(day.getDate() + 1)) {
-            const dateStr = day.toISOString().split('T')[0];
-            const dayShifts = shifts.filter(s => s.datum === dateStr);
-            const dayUrlaube = urlaube.filter(u => 
-                u.status === 'approved' &&
-                new Date(u.startDatum) <= day &&
-                new Date(u.endDatum) >= day
-            );
-            const isFeiertagOrRuhetag = this.isFeiertagOrRuhetag(day, feiertage);
+        // Update Monat/Jahr Anzeige
+        document.getElementById('currentMonth').textContent = 
+            new Intl.DateTimeFormat('de-DE', { month: 'long', year: 'numeric' }).format(this.selectedDate);
 
-            html += this.createDayCell(day, dayShifts, dayUrlaube, isFeiertagOrRuhetag, mitarbeiter);
-        }
+        // Leere Grid
+        grid.innerHTML = '';
 
-        html += '</div>';
-        calendar.innerHTML = html;
-
-        // Initialisiere Drag & Drop nach dem Rendern
-        this.initializeDragAndDrop();
-    }
-
-    createCalendarHeader() {
-        const monthNames = [
-            'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
-        ];
-
-        return `
-            <div class="calendar-header">
-                <button id="prevMonth">&lt;</button>
-                <h2>${monthNames[this.selectedDate.getMonth()]} ${this.selectedDate.getFullYear()}</h2>
-                <button id="nextMonth">&gt;</button>
-            </div>
-            <div class="positions-header">
-                <div class="date-column">Datum</div>
-                ${this.positions.map(pos => `
-                    <div class="position-column">
-                        ${pos.name}
-                        ${pos.required ? '<span class="required-badge">Pflicht</span>' : ''}
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    createDayCell(day, shifts, urlaube, isFeiertagOrRuhetag, mitarbeiter) {
-        const dateStr = day.toISOString().split('T')[0];
-        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-        const cellClass = isFeiertagOrRuhetag ? 'feiertag' : isWeekend ? 'weekend' : '';
-
-        let html = `
-            <div class="calendar-row ${cellClass}">
-                <div class="date-cell">
-                    <span class="date">${day.getDate()}</span>
-                    <span class="day">${this.getDayName(day)}</span>
-                    ${isFeiertagOrRuhetag ? `<span class="tag">${isFeiertagOrRuhetag}</span>` : ''}
-                </div>
-        `;
-
-        // Füge Zellen für jede Position hinzu
-        this.positions.forEach(position => {
-            const positionShifts = shifts.filter(s => s.position === position.id);
-            const urlaubeHtml = this.createUrlaubeHtml(urlaube, mitarbeiter);
-
-            html += `
-                <div class="shift-cell" data-date="${dateStr}" data-position="${position.id}">
-                    ${positionShifts.map(shift => {
-                        const mitarbeiter = mitarbeiter.find(m => m.id === shift.mitarbeiterId);
-                        return `
-                            <div class="shift" data-shift-id="${shift.id}" draggable="true">
-                                <span class="mitarbeiter-name">${mitarbeiter?.vorname} ${mitarbeiter?.nachname}</span>
-                                <button class="delete-shift" onclick="dienstplanManager.deleteShift('${shift.id}')">×</button>
-                            </div>
-                        `;
-                    }).join('')}
-                    ${urlaubeHtml}
-                </div>
-            `;
+        // Füge Wochentage hinzu
+        const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        weekdays.forEach(day => {
+            const cell = document.createElement('div');
+            cell.className = 'weekday';
+            cell.textContent = day;
+            grid.appendChild(cell);
         });
 
-        html += '</div>';
-        return html;
-    }
-
-    createUrlaubeHtml(urlaube, mitarbeiter) {
-        if (!urlaube.length) return '';
-
-        return `
-            <div class="urlaube-info">
-                ${urlaube.map(urlaub => {
-                    const mitarbeiter = mitarbeiter.find(m => m.id === urlaub.mitarbeiterId);
-                    return `<span class="urlaub-tag">${mitarbeiter?.vorname} ${mitarbeiter?.nachname} (Urlaub)</span>`;
-                }).join('')}
-            </div>
-        `;
-    }
-
-    async deleteShift(shiftId) {
-        try {
-            await this.db.deleteShift(shiftId);
-            this.showNotification('Schicht erfolgreich gelöscht', 'success');
-            this.loadDienstplan();
-        } catch (error) {
-            this.showNotification('Fehler beim Löschen der Schicht', 'error');
-            console.error('Fehler:', error);
+        // Fülle leere Tage am Anfang
+        for (let i = 0; i < firstDay.getDay(); i++) {
+            const cell = document.createElement('div');
+            cell.className = 'day empty';
+            grid.appendChild(cell);
         }
-    }
 
-    changeMonth(delta) {
-        this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
-        this.loadDienstplan();
-    }
+        // Füge Tage hinzu
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const date = new Date(year, month, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const cell = document.createElement('div');
+            cell.className = 'day';
 
-    getDayName(date) {
-        const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-        return days[date.getDay()];
-    }
+            // Prüfe Saison
+            if (!this.isInSaison(date)) {
+                cell.classList.add('off-season');
+            }
 
-    isFeiertagOrRuhetag(date, feiertage) {
-        const dateStr = date.toISOString().split('T')[0];
-        const feiertag = feiertage.find(f => f.datum === dateStr);
-        return feiertag ? feiertag.name : '';
-    }
+            // Prüfe Feiertag
+            if (this.isFeiertag(date)) {
+                cell.classList.add('holiday');
+                const feiertag = this.feiertage.find(f => f.datum === dateStr);
+                cell.title = feiertag.name;
+            }
 
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-        
-        const container = document.querySelector('.content');
-        container.insertBefore(notification, container.firstChild);
-        
-        setTimeout(() => notification.remove(), 3000);
+            // Prüfe Ruhetag
+            if (this.isRuhetag(date)) {
+                cell.classList.add('ruhetag');
+            }
+
+            // Füge Datum hinzu
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'date';
+            dateDiv.textContent = day;
+            cell.appendChild(dateDiv);
+
+            // Füge Ruhetag Toggle hinzu (nur für Admins)
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser?.rolle === 'admin' && this.isInSaison(date)) {
+                const ruhetagBtn = document.createElement('button');
+                ruhetagBtn.className = 'ruhetag-toggle';
+                ruhetagBtn.textContent = this.isRuhetag(date) ? '🔴' : '⚪';
+                ruhetagBtn.title = this.isRuhetag(date) ? 'Ruhetag aufheben' : 'Als Ruhetag markieren';
+                ruhetagBtn.dataset.date = dateStr;
+                cell.appendChild(ruhetagBtn);
+            }
+
+            // Füge Schichten hinzu
+            const shifts = this.getShiftsForDate(date);
+            if (shifts.length > 0) {
+                const shiftsDiv = document.createElement('div');
+                shiftsDiv.className = 'shifts';
+                shifts.forEach(shift => {
+                    const shiftDiv = document.createElement('div');
+                    shiftDiv.className = 'shift';
+                    const mitarbeiter = this.mitarbeiter.find(m => m.id === shift.mitarbeiterId);
+                    shiftDiv.textContent = `${shift.position}: ${mitarbeiter?.vorname || 'Unbekannt'}`;
+                    
+                    // Lösch-Button (nur für Admins)
+                    if (currentUser?.rolle === 'admin') {
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-shift';
+                        deleteBtn.textContent = '❌';
+                        deleteBtn.onclick = () => {
+                            this.deleteShift(shift.id);
+                            this.renderDienstplan();
+                        };
+                        shiftDiv.appendChild(deleteBtn);
+                    }
+                    
+                    shiftsDiv.appendChild(shiftDiv);
+                });
+                cell.appendChild(shiftsDiv);
+            }
+
+            grid.appendChild(cell);
+        }
     }
 }
 

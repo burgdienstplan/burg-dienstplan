@@ -8,13 +8,6 @@
             --burg-rot: #8B0000;
             --pergament: #F5E6D3;
             --stein-grau: #4A4A4A;
-            --text-weiss: #FFFFFF;
-            --shop-color: #e3f2fd;
-            --kasse-color: #f3e5f5;
-            --fuehrung-color: #e8f5e9;
-            --holiday-color: #ffebee;
-            --ruhetag-color: #fff3e0;
-            --outside-color: #f5f5f5;
         }
 
         body {
@@ -23,11 +16,13 @@
             padding: 0;
             min-height: 100vh;
             background-color: var(--stein-grau);
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             background-color: var(--burg-rot);
-            color: var(--text-weiss);
+            color: white;
             padding: 1rem;
             display: flex;
             justify-content: space-between;
@@ -35,254 +30,326 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+
         .content {
-            background-color: var(--pergament);
-            margin: 2rem;
+            flex: 1;
             padding: 2rem;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .sidebar {
+            background-color: var(--pergament);
+            padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            color: var(--stein-grau);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            height: fit-content;
         }
 
-        button {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--burg-rot);
-            color: var(--text-weiss);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #a00000;
-        }
-
-        .back-btn {
-            background-color: var(--stein-grau);
-        }
-
-        .back-btn:hover {
-            background-color: #333;
-        }
-
-        .calendar {
-            background: white;
+        .dienstplan {
+            background-color: var(--pergament);
+            padding: 1.5rem;
             border-radius: 8px;
-            padding: 1rem;
-            margin-top: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .calendar-header {
+        .month-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: var(--pergament);
-            border-radius: 8px;
+            margin-bottom: 1.5rem;
         }
 
-        .calendar-grid {
+        .month-nav button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--burg-rot);
+        }
+
+        #currentMonth {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--burg-rot);
+        }
+
+        .dienstplan-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
-            padding: 10px;
-            background: var(--stein-grau);
-            border-radius: 8px;
-            margin-top: 1rem;
         }
 
-        .calendar-header-day {
-            background: var(--burg-rot);
-            color: white;
-            padding: 8px;
+        .weekday {
             text-align: center;
             font-weight: bold;
-            border-radius: 4px;
+            padding: 0.5rem;
+            color: var(--burg-rot);
         }
 
-        .calendar-day {
-            background: var(--pergament);
-            min-height: 120px;
-            padding: 8px;
+        .day {
+            background: white;
+            min-height: 100px;
+            padding: 0.5rem;
             border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
             position: relative;
-            transition: all 0.2s ease;
         }
 
-        .calendar-day.empty {
-            background: var(--stein-grau);
+        .day.empty {
+            background: none;
         }
 
-        .calendar-day .date {
+        .day.off-season {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .day.holiday {
+            background: #fff3e0;
+        }
+
+        .day.ruhetag {
+            background: #ffebee;
+        }
+
+        .date {
             font-weight: bold;
-            margin-bottom: 4px;
-            padding: 2px 4px;
-            background: rgba(0,0,0,0.05);
-            border-radius: 3px;
+            margin-bottom: 0.5rem;
         }
 
-        .calendar-day .shifts {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex-grow: 1;
+        .shifts {
+            font-size: 0.9rem;
         }
 
         .shift {
-            padding: 6px;
+            background: var(--pergament);
+            padding: 0.3rem;
+            margin: 0.2rem 0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-shift {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.8rem;
+        }
+
+        .ruhetag-toggle {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.2rem;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--stein-grau);
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 0.9em;
-            margin-bottom: 2px;
-            transition: all 0.2s ease;
-            border: 1px solid rgba(0,0,0,0.1);
+            font-size: 1rem;
         }
 
-        .shift:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        button[type="submit"] {
+            background-color: var(--burg-rot);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
         }
 
-        .shift.shop {
-            background: var(--shop-color);
+        button[type="submit"]:hover {
+            background-color: #a00000;
         }
 
-        .shift.shop_museum {
-            background: var(--shop-color);
-            border-left: 3px solid #2196f3;
-        }
-
-        .shift.kasse {
-            background: var(--kasse-color);
-        }
-
-        .shift.fuehrung {
-            background: var(--fuehrung-color);
-        }
-
-        .calendar-day.outside-season {
-            opacity: 0.5;
-            background: var(--outside-color);
-        }
-
-        .calendar-day.holiday {
-            background: var(--holiday-color);
-        }
-
-        .calendar-day.ruhetag {
-            background: var(--ruhetag-color);
-        }
-
-        .holiday-name, .ruhetag-info {
-            font-size: 0.8em;
-            color: var(--burg-rot);
+        .saison-info {
+            background: var(--burg-rot);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
             text-align: center;
-            margin-top: 4px;
-            font-style: italic;
+            font-weight: bold;
         }
 
-        /* Drag & Drop Styles */
-        .shift[draggable="true"] {
-            cursor: move;
+        .legende {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #ddd;
         }
 
-        .calendar-day.drag-over {
-            background: #e3f2fd;
-            border: 2px dashed #1976d2;
+        .legende-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
 
-        /* Admin Controls */
-        #adminControls {
-            display: none;
-            margin-bottom: 2rem;
+        .legende-farbe {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.5rem;
+            border-radius: 3px;
+        }
+
+        .footer {
+            background-color: var(--burg-rot);
+            color: white;
             padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 0.9rem;
         }
 
-        /* Mitarbeiter Controls */
-        #mitarbeiterControls {
-            display: none;
-            margin-bottom: 2rem;
-        }
-
-        /* Führungs Controls */
-        #fuehrungControls {
-            display: none;
-            margin-bottom: 2rem;
-        }
-
-        .success {
-            color: #155724;
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .warning {
-            color: #856404;
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-        }
-
-        .error {
-            color: #721c24;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Dienstplan v2025.2</h1>
-        <div>
-            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
+        <h1>Dienstplan</h1>
+        <div class="header-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="mitarbeiter.html">Mitarbeiter</a>
+            <a href="#" onclick="logout()">Abmelden</a>
         </div>
     </div>
 
     <div class="content">
-        <div class="saison-info">
-            Saison 2025: 1. April - 1. November
-        </div>
+        <div class="sidebar">
+            <div class="saison-info">
+                Saison 2025: 1. April - 1. November
+            </div>
 
-        <!-- Planungswarnung -->
-        <div id="planningWarning"></div>
+            <form id="shiftForm">
+                <div class="form-group">
+                    <label for="shiftDate">Datum:</label>
+                    <input type="date" id="shiftDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="mitarbeiter">Mitarbeiter:</label>
+                    <select id="mitarbeiter" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="position">Position:</label>
+                    <select id="position" required>
+                        <option value="Shop Eingang">Shop Eingang</option>
+                        <option value="Shop Museum">Shop Museum</option>
+                        <option value="Kasse">Kasse</option>
+                        <option value="Führung">Führung</option>
+                    </select>
+                </div>
+                <button type="submit">Schicht eintragen</button>
+            </form>
 
-        <!-- Admin-Bereich -->
-        <div id="adminControls">
-            <h2>Dienstplan verwalten</h2>
-            <div class="control-group">
-                <button id="addShift">Schicht hinzufügen</button>
-                <button id="markRuhetag">Ruhetag markieren</button>
+            <div class="legende">
+                <h3>Legende</h3>
+                <div class="legende-item">
+                    <div class="legende-farbe" style="background: #fff3e0;"></div>
+                    <span>Feiertag</span>
+                </div>
+                <div class="legende-item">
+                    <div class="legende-farbe" style="background: #ffebee;"></div>
+                    <span>Ruhetag</span>
+                </div>
+                <div class="legende-item">
+                    <div class="legende-farbe" style="background: #f5f5f5;"></div>
+                    <span>Außerhalb der Saison</span>
+                </div>
             </div>
         </div>
 
-        <!-- Kalender -->
-        <div class="calendar">
-            <div class="calendar-header">
-                <button id="prevMonth">◀</button>
-                <h2 id="currentMonth"></h2>
-                <button id="nextMonth">▶</button>
+        <div class="dienstplan">
+            <div class="month-nav">
+                <button id="prevMonth">←</button>
+                <span id="currentMonth"></span>
+                <button id="nextMonth">→</button>
             </div>
-            <div class="calendar-grid"></div>
+            <div id="dienstplanGrid" class="dienstplan-grid"></div>
         </div>
     </div>
 
-    <script src="js/database.js"></script>
+    <div class="footer">
+        2025 Burg Hochosterwitz
+    </div>
+
+    <script src="js/login.js"></script>
     <script src="js/dienstplan.js"></script>
+    <script>
+        // Prüfe Login-Status
+        if (!isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        // Initialisiere Dienstplan
+        const dienstplan = new DienstplanManager();
+        dienstplan.renderDienstplan();
+
+        // Fülle Mitarbeiter-Select
+        const mitarbeiterSelect = document.getElementById('mitarbeiter');
+        dienstplan.mitarbeiter.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = `${m.vorname} ${m.nachname}`;
+            mitarbeiterSelect.appendChild(option);
+        });
+
+        // Setze Mindestdatum auf Saisonstart
+        const datePicker = document.getElementById('shiftDate');
+        datePicker.min = '2025-04-01';
+        datePicker.max = '2025-11-01';
+        
+        // Setze aktuelles Datum als Standard
+        const today = new Date();
+        if (today >= new Date('2025-04-01') && today <= new Date('2025-11-01')) {
+            datePicker.value = today.toISOString().split('T')[0];
+        } else {
+            datePicker.value = '2025-04-01';
+        }
+
+        // Verstecke Formular für normale Mitarbeiter
+        const currentUser = getCurrentUser();
+        if (currentUser.rolle !== 'admin') {
+            document.querySelector('.sidebar').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
