@@ -22,7 +22,7 @@ class DienstplanManager {
     constructor() {
         this.currentDate = new Date();
         this.selectedDate = new Date();
-        this.shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+        this.shifts = this.initializeDemoShifts();
         this.shiftRequests = JSON.parse(localStorage.getItem('shiftRequests')) || {};
         this.holidays = JSON.parse(localStorage.getItem('holidays')) || {};
         this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen')) || [];
@@ -34,6 +34,41 @@ class DienstplanManager {
         this.loadMitarbeiter();
         this.renderCalendar();
         this.checkPlanningStatus();
+    }
+
+    initializeDemoShifts() {
+        // Demo-Schichten für April 2025
+        const demoShifts = {
+            '2025-04-01': [
+                { mitarbeiterId: 'anna', position: 'shop' },
+                { mitarbeiterId: 'peter', position: 'fuehrung' }
+            ],
+            '2025-04-02': [
+                { mitarbeiterId: 'maria', position: 'shop' },
+                { mitarbeiterId: 'lisa', position: 'shop_museum' }
+            ],
+            '2025-04-03': [
+                { mitarbeiterId: 'josef', position: 'shop' },
+                { mitarbeiterId: 'peter', position: 'fuehrung' }
+            ],
+            '2025-04-04': [
+                { mitarbeiterId: 'lisa', position: 'shop' },
+                { mitarbeiterId: 'maria', position: 'kasse' }
+            ],
+            '2025-04-05': [
+                { mitarbeiterId: 'anna', position: 'shop' },
+                { mitarbeiterId: 'josef', position: 'fuehrung' },
+                { mitarbeiterId: 'maria', position: 'kasse' }
+            ],
+            '2025-04-06': [
+                { mitarbeiterId: 'peter', position: 'shop' },
+                { mitarbeiterId: 'lisa', position: 'shop_museum' }
+            ]
+        };
+
+        // Speichere die Demo-Schichten
+        localStorage.setItem('shifts', JSON.stringify(demoShifts));
+        return demoShifts;
     }
 
     initializeEventListeners() {

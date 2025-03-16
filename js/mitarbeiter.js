@@ -199,6 +199,49 @@ class MitarbeiterManager {
 // Globale Instanz
 const mitarbeiterManager = new MitarbeiterManager();
 
+// Demo-Mitarbeiter für die Burg
+const demoMitarbeiter = [
+    {
+        id: 'anna',
+        name: 'Anna Müller',
+        position: ['shop', 'shop_museum', 'kasse'],
+        role: 'mitarbeiter'
+    },
+    {
+        id: 'peter',
+        name: 'Peter Wagner',
+        position: ['shop', 'fuehrung'],
+        role: 'museumsfuehrer'
+    },
+    {
+        id: 'maria',
+        name: 'Maria Huber',
+        position: ['shop', 'shop_museum', 'kasse'],
+        role: 'mitarbeiter'
+    },
+    {
+        id: 'josef',
+        name: 'Josef Bauer',
+        position: ['shop', 'fuehrung'],
+        role: 'museumsfuehrer'
+    },
+    {
+        id: 'lisa',
+        name: 'Lisa Berger',
+        position: ['shop', 'shop_museum'],
+        role: 'mitarbeiter'
+    },
+    {
+        id: 'kastellan',
+        name: 'Hans Burgverwalter',
+        position: ['all'],
+        role: 'kastellan'
+    }
+];
+
+// Speichere Demo-Mitarbeiter im localStorage
+localStorage.setItem('mitarbeiter', JSON.stringify(demoMitarbeiter));
+
 // UI Funktionen
 function toggleHistory(id) {
     const historyDiv = document.getElementById(`history-${id}`);
