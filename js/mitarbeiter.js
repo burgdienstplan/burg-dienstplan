@@ -1,241 +1,120 @@
-// Verschlüsselungsfunktionen
-function encryptData(data, key) {
-    // Einfache Verschlüsselung für localStorage (in Produktion sollte eine stärkere Methode verwendet werden)
-    return btoa(JSON.stringify(data));
-}
+// Mitarbeiterverwaltung für Burg Hochosterwitz - Version 2025.2
+// Letzte Aktualisierung: 16.03.2025
 
-function decryptData(encryptedData, key) {
-    try {
-        return JSON.parse(atob(encryptedData));
-    } catch (e) {
-        return null;
-    }
-}
-
-// Passwort-Hashing (in Produktion sollte bcrypt oder ähnliches verwendet werden)
-function hashPassword(password) {
-    return btoa(password);
-}
-
-// Mitarbeiter-Klasse
 class MitarbeiterManager {
     constructor() {
-        this.mitarbeiter = this.loadMitarbeiter();
+        this.db = new Database();
         this.initializeEventListeners();
     }
 
-    loadMitarbeiter() {
-        return JSON.parse(localStorage.getItem('mitarbeiter')) || [];
+    initializeEventListeners() {
+        document.getElementById('addMitarbeiterForm')?.addEventListener('submit', (e) => this.handleAddMitarbeiter(e));
     }
 
-    saveMitarbeiter() {
-        localStorage.setItem('mitarbeiter', JSON.stringify(this.mitarbeiter));
-    }
+    async handleAddMitarbeiter(event) {
+        event.preventDefault();
+        const vorname = document.getElementById('vorname').value;
+        const nachname = document.getElementById('nachname').value;
+        const positionen = Array.from(document.getElementById('positionen').selectedOptions).map(option => option.value);
 
-    addMitarbeiter(vorname, nachname, positionen) {
-        const id = vorname.toLowerCase().replace(/\s+/g, '');
-        const mitarbeiter = {
-            id,
-            vorname,
-            nachname,
-            name: `${vorname} ${nachname}`,
-            positionen
-        };
-        this.mitarbeiter.push(mitarbeiter);
-        this.saveMitarbeiter();
-        this.updateMitarbeiterListe();
-        return mitarbeiter;
-    }
+        try {
+            await this.db.addMitarbeiter({
+                id: crypto.randomUUID(),
+                vorname,
+                nachname,
+                positionen,
+                aktiv: true,
+                urlaubsTage: 25,
+                genommenerUrlaub: []
+            });
 
-    deleteMitarbeiter(id) {
-        // Prüfe ob Mitarbeiter noch Schichten hat
-        const shifts = JSON.parse(localStorage.getItem('shifts')) || {};
-        let hasShifts = false;
-        
-        Object.values(shifts).forEach(dayShifts => {
-            if (dayShifts.some(shift => shift.mitarbeiterId === id)) {
-                hasShifts = true;
-            }
-        });
-
-        if (hasShifts) {
-            alert('Dieser Mitarbeiter hat noch Schichten im Dienstplan. Bitte zuerst alle Schichten löschen.');
-            return false;
+            this.showNotification('Mitarbeiter erfolgreich hinzugefügt', 'success');
+            this.loadMitarbeiterListe();
+            event.target.reset();
+        } catch (error) {
+            this.showNotification('Fehler beim Hinzufügen des Mitarbeiters', 'error');
+            console.error('Fehler:', error);
         }
-
-        this.mitarbeiter = this.mitarbeiter.filter(m => m.id !== id);
-        this.saveMitarbeiter();
-        this.updateMitarbeiterListe();
-        return true;
     }
 
-    updateMitarbeiterListe() {
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = type;
+        notification.textContent = message;
+        
+        const container = document.querySelector('.content');
+        container.insertBefore(notification, container.firstChild);
+        
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    async loadMitarbeiterListe() {
+        const mitarbeiter = await this.db.getMitarbeiter();
         const liste = document.getElementById('mitarbeiterListe');
         if (!liste) return;
 
         liste.innerHTML = '';
-        this.mitarbeiter.forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'mitarbeiter-item';
-            
-            const info = document.createElement('span');
-            info.textContent = `${m.name} (${m.positionen.join(', ')})`;
-            div.appendChild(info);
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.onclick = () => this.deleteMitarbeiter(m.id);
-            div.appendChild(deleteBtn);
-
-            liste.appendChild(div);
+        
+        mitarbeiter.forEach(ma => {
+            const item = document.createElement('div');
+            item.className = 'mitarbeiter-item';
+            item.innerHTML = `
+                <div>
+                    <strong>${ma.vorname} ${ma.nachname}</strong>
+                    <span class="positionen">${ma.positionen.join(', ')}</span>
+                </div>
+                <div>
+                    <button onclick="mitarbeiterManager.bearbeiteMitarbeiter('${ma.id}')" 
+                            class="edit-btn" title="Bearbeiten">✏️</button>
+                    <button onclick="mitarbeiterManager.toggleMitarbeiterStatus('${ma.id}')" 
+                            class="status-btn" title="${ma.aktiv ? 'Deaktivieren' : 'Aktivieren'}">
+                            ${ma.aktiv ? '🟢' : '🔴'}
+                    </button>
+                </div>
+            `;
+            liste.appendChild(item);
         });
     }
 
-    initializeEventListeners() {
-        const addForm = document.getElementById('addMitarbeiterForm');
-        if (addForm) {
-            addForm.onsubmit = (e) => {
-                e.preventDefault();
-                const vorname = document.getElementById('vorname').value;
-                const nachname = document.getElementById('nachname').value;
-                const positionen = Array.from(document.getElementById('positionen').selectedOptions)
-                    .map(option => option.value);
-                
-                if (vorname && nachname && positionen.length > 0) {
-                    this.addMitarbeiter(vorname, nachname, positionen);
-                    addForm.reset();
-                }
-            };
+    async bearbeiteMitarbeiter(id) {
+        const mitarbeiter = await this.db.getMitarbeiterById(id);
+        if (!mitarbeiter) return;
+
+        // Formular mit Mitarbeiterdaten füllen
+        document.getElementById('vorname').value = mitarbeiter.vorname;
+        document.getElementById('nachname').value = mitarbeiter.nachname;
+        
+        const positionenSelect = document.getElementById('positionen');
+        Array.from(positionenSelect.options).forEach(option => {
+            option.selected = mitarbeiter.positionen.includes(option.value);
+        });
+
+        // Formular in Bearbeitungsmodus setzen
+        const form = document.getElementById('addMitarbeiterForm');
+        form.dataset.editId = id;
+        document.querySelector('.save-btn').textContent = 'Aktualisieren';
+    }
+
+    async toggleMitarbeiterStatus(id) {
+        try {
+            const mitarbeiter = await this.db.getMitarbeiterById(id);
+            if (!mitarbeiter) return;
+
+            mitarbeiter.aktiv = !mitarbeiter.aktiv;
+            await this.db.updateMitarbeiter(mitarbeiter);
+            
+            this.showNotification(
+                `Mitarbeiter ${mitarbeiter.aktiv ? 'aktiviert' : 'deaktiviert'}`,
+                'success'
+            );
+            this.loadMitarbeiterListe();
+        } catch (error) {
+            this.showNotification('Fehler beim Ändern des Status', 'error');
+            console.error('Fehler:', error);
         }
     }
 }
 
 // Initialisierung
-document.addEventListener('DOMContentLoaded', () => {
-    window.mitarbeiterManager = new MitarbeiterManager();
-});
-
-// UI Funktionen
-function toggleHistory(id) {
-    const historyDiv = document.getElementById(`history-${id}`);
-    historyDiv.style.display = historyDiv.style.display === 'none' ? 'block' : 'none';
-}
-
-function showEditDialog(mitarbeiter = null) {
-    const dialog = document.createElement('div');
-    dialog.className = 'edit-dialog';
-    dialog.innerHTML = `
-        <form id="editForm">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" value="${mitarbeiter?.name || ''}" required>
-            </div>
-            <div class="form-group">
-                <label for="telefon">Telefon</label>
-                <input type="tel" id="telefon" value="${mitarbeiter?.telefon || ''}">
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" value="${mitarbeiter?.email || ''}">
-            </div>
-            ${!mitarbeiter ? `
-                <div class="form-group">
-                    <label for="username">Benutzername</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Passwort</label>
-                    <input type="password" id="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="role">Rolle</label>
-                    <select id="role" required>
-                        <option value="hausmeister">Hausmeister</option>
-                        <option value="shop">Shop</option>
-                        <option value="museumsfuehrer">Museumsführer</option>
-                    </select>
-                </div>
-            ` : ''}
-            <div class="form-actions">
-                <button type="submit">Speichern</button>
-                <button type="button" onclick="closeDialog()">Abbrechen</button>
-            </div>
-        </form>
-    `;
-    document.body.appendChild(dialog);
-
-    document.getElementById('editForm').onsubmit = (e) => {
-        e.preventDefault();
-        const formData = {
-            name: document.getElementById('name').value,
-            telefon: document.getElementById('telefon').value,
-            email: document.getElementById('email').value
-        };
-
-        if (!mitarbeiter) {
-            formData.username = document.getElementById('username').value;
-            formData.password = document.getElementById('password').value;
-            formData.role = document.getElementById('role').value;
-            mitarbeiterManager.addMitarbeiter(formData);
-        } else {
-            mitarbeiterManager.updateMitarbeiter(
-                mitarbeiter.id,
-                formData,
-                JSON.parse(localStorage.getItem('currentUser')).username
-            );
-        }
-        closeDialog();
-    };
-}
-
-function closeDialog() {
-    const dialog = document.querySelector('.edit-dialog');
-    if (dialog) dialog.remove();
-}
-
-function editMitarbeiter(id) {
-    const mitarbeiter = mitarbeiterManager.mitarbeiter.find(m => m.id === id);
-    if (mitarbeiter) showEditDialog(mitarbeiter);
-}
-
-function editSelfInfo() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const mitarbeiter = mitarbeiterManager.mitarbeiter.find(m => m.id === currentUser.id);
-    if (mitarbeiter) {
-        showEditDialog(mitarbeiter);
-    }
-}
-
-function resetPassword(id) {
-    const newPassword = prompt('Neues Passwort eingeben:');
-    if (newPassword) {
-        mitarbeiterManager.updateMitarbeiter(
-            id,
-            { password: newPassword },
-            JSON.parse(localStorage.getItem('currentUser')).username
-        );
-    }
-}
-
-function changePassword() {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const oldPassword = prompt('Altes Passwort eingeben:');
-    if (oldPassword && hashPassword(oldPassword) === currentUser.password) {
-        const newPassword = prompt('Neues Passwort eingeben:');
-        if (newPassword) {
-            mitarbeiterManager.updateMitarbeiter(
-                currentUser.id,
-                { password: newPassword },
-                currentUser.username
-            );
-        }
-    } else {
-        alert('Falsches Passwort!');
-    }
-}
-
-function deleteMitarbeiter(id) {
-    if (confirm('Mitarbeiter wirklich löschen?')) {
-        mitarbeiterManager.deleteMitarbeiter(id);
-    }
-}
+const mitarbeiterManager = new MitarbeiterManager();
+document.addEventListener('DOMContentLoaded', () => mitarbeiterManager.loadMitarbeiterListe());

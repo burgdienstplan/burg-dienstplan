@@ -1,165 +1,162 @@
 /**
  * Zentrale Datenverwaltung für den Burg Hochosterwitz Dienstplan
- * Version 2025.1.2
+ * Version 2025.2
  */
 class Database {
     constructor() {
         this.initializeDatabase();
     }
 
-    // Initialisierung der Datenbank
     initializeDatabase() {
-        // Prüfe ob Kastellan existiert
-        const mitarbeiter = this.getMitarbeiter();
-        if (!mitarbeiter.find(m => m.username === 'kastellan')) {
+        if (!localStorage.getItem('dbInitialized')) {
+            // Standardwerte setzen
+            this.setItem('mitarbeiter', []);
+            this.setItem('shifts', {});
+            this.setItem('feiertage', this.getDefaultFeiertage2025());
+            this.setItem('ruhetage', []);
+            this.setItem('urlaubsanfragen', []);
+            this.setItem('fuehrungsvorschlaege', []);
+            
+            // Admin-Account erstellen
             this.addMitarbeiter({
-                id: 'kastellan-2025',
+                id: 'admin',
                 vorname: 'Kastellan',
-                nachname: 'Burg Hochosterwitz',
+                nachname: 'Admin',
                 username: 'kastellan',
-                password: btoa('burg2025'),
-                position: 'kastellan',
-                role: 'kastellan',
-                status: 'aktiv',
-                createdAt: new Date().toISOString(),
-                lastModified: new Date().toISOString()
+                password: 'burg2025',
+                rolle: 'admin',
+                aktiv: true
             });
+
+            localStorage.setItem('dbInitialized', 'true');
+            localStorage.setItem('dbVersion', '2025.2');
         }
+    }
+
+    // Basis-Funktionen
+    setItem(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    getItem(key) {
+        return JSON.parse(localStorage.getItem(key));
     }
 
     // Mitarbeiter-Verwaltung
-    getMitarbeiter() {
-        return JSON.parse(localStorage.getItem('mitarbeiter')) || [];
+    async getMitarbeiter() {
+        return this.getItem('mitarbeiter') || [];
     }
 
-    addMitarbeiter(mitarbeiter) {
-        const mitarbeiterListe = this.getMitarbeiter();
+    async getMitarbeiterById(id) {
+        const mitarbeiter = await this.getMitarbeiter();
+        return mitarbeiter.find(m => m.id === id);
+    }
+
+    async addMitarbeiter(mitarbeiter) {
+        const mitarbeiterListe = await this.getMitarbeiter();
         mitarbeiterListe.push(mitarbeiter);
-        localStorage.setItem('mitarbeiter', JSON.stringify(mitarbeiterListe));
+        this.setItem('mitarbeiter', mitarbeiterListe);
     }
 
-    updateMitarbeiter(mitarbeiter) {
-        const mitarbeiterListe = this.getMitarbeiter();
+    async updateMitarbeiter(mitarbeiter) {
+        const mitarbeiterListe = await this.getMitarbeiter();
         const index = mitarbeiterListe.findIndex(m => m.id === mitarbeiter.id);
         if (index !== -1) {
             mitarbeiterListe[index] = mitarbeiter;
-            localStorage.setItem('mitarbeiter', JSON.stringify(mitarbeiterListe));
+            this.setItem('mitarbeiter', mitarbeiterListe);
         }
     }
 
-    // Dienstplan-Verwaltung
-    getDienste() {
-        return JSON.parse(localStorage.getItem('dienste')) || [];
+    // Schicht-Verwaltung
+    async getShifts(datum) {
+        const shifts = this.getItem('shifts') || {};
+        return shifts[datum] || [];
     }
 
-    addDienst(dienst) {
-        const dienste = this.getDienste();
-        dienste.push(dienst);
-        localStorage.setItem('dienste', JSON.stringify(dienste));
+    async addShift(datum, shift) {
+        const shifts = this.getItem('shifts') || {};
+        if (!shifts[datum]) shifts[datum] = [];
+        shifts[datum].push(shift);
+        this.setItem('shifts', shifts);
     }
 
-    updateDienst(dienst) {
-        const dienste = this.getDienste();
-        const index = dienste.findIndex(d => d.id === dienst.id);
+    async updateShift(datum, shiftId, updatedShift) {
+        const shifts = this.getItem('shifts') || {};
+        if (shifts[datum]) {
+            const index = shifts[datum].findIndex(s => s.id === shiftId);
+            if (index !== -1) {
+                shifts[datum][index] = updatedShift;
+                this.setItem('shifts', shifts);
+            }
+        }
+    }
+
+    async deleteShift(datum, shiftId) {
+        const shifts = this.getItem('shifts') || {};
+        if (shifts[datum]) {
+            shifts[datum] = shifts[datum].filter(s => s.id !== shiftId);
+            this.setItem('shifts', shifts);
+        }
+    }
+
+    // Urlaubs-Verwaltung
+    async getUrlaubsanfragen() {
+        return this.getItem('urlaubsanfragen') || [];
+    }
+
+    async addUrlaubsanfrage(anfrage) {
+        const anfragen = await this.getUrlaubsanfragen();
+        anfragen.push({
+            ...anfrage,
+            id: crypto.randomUUID(),
+            status: 'pending',
+            datum: new Date().toISOString()
+        });
+        this.setItem('urlaubsanfragen', anfragen);
+    }
+
+    async updateUrlaubsanfrage(id, status) {
+        const anfragen = await this.getUrlaubsanfragen();
+        const index = anfragen.findIndex(a => a.id === id);
         if (index !== -1) {
-            dienste[index] = dienst;
-            localStorage.setItem('dienste', JSON.stringify(dienste));
+            anfragen[index].status = status;
+            this.setItem('urlaubsanfragen', anfragen);
         }
     }
 
-    // Urlaub-Verwaltung
-    getUrlaube() {
-        return JSON.parse(localStorage.getItem('urlaube')) || [];
-    }
-
-    addUrlaub(urlaub) {
-        const urlaube = this.getUrlaube();
-        urlaube.push(urlaub);
-        localStorage.setItem('urlaube', JSON.stringify(urlaube));
-    }
-
-    updateUrlaub(urlaub) {
-        const urlaube = this.getUrlaube();
-        const index = urlaube.findIndex(u => u.id === urlaub.id);
-        if (index !== -1) {
-            urlaube[index] = urlaub;
-            localStorage.setItem('urlaube', JSON.stringify(urlaube));
-        }
-    }
-
-    // Aufzug-Verwaltung
-    getAufzugDaten() {
-        return JSON.parse(localStorage.getItem('aufzug')) || {
-            wartungen: [],
-            ersatzteile: [],
-            status: 'aktiv'
-        };
-    }
-
-    updateAufzugDaten(daten) {
-        localStorage.setItem('aufzug', JSON.stringify(daten));
-    }
-
-    // Hausmeister-Aufgaben
-    getAufgaben() {
-        return JSON.parse(localStorage.getItem('aufgaben')) || [];
-    }
-
-    addAufgabe(aufgabe) {
-        const aufgaben = this.getAufgaben();
-        aufgaben.push(aufgabe);
-        localStorage.setItem('aufgaben', JSON.stringify(aufgaben));
-    }
-
-    updateAufgabe(aufgabe) {
-        const aufgaben = this.getAufgaben();
-        const index = aufgaben.findIndex(a => a.id === aufgabe.id);
-        if (index !== -1) {
-            aufgaben[index] = aufgabe;
-            localStorage.setItem('aufgaben', JSON.stringify(aufgaben));
-        }
-    }
-
-    // Führungen-Verwaltung
-    getFuehrungen() {
-        return JSON.parse(localStorage.getItem('fuehrungen')) || [];
-    }
-
-    addFuehrung(fuehrung) {
-        const fuehrungen = this.getFuehrungen();
-        fuehrungen.push(fuehrung);
-        localStorage.setItem('fuehrungen', JSON.stringify(fuehrungen));
-    }
-
-    updateFuehrung(fuehrung) {
-        const fuehrungen = this.getFuehrungen();
-        const index = fuehrungen.findIndex(f => f.id === fuehrung.id);
-        if (index !== -1) {
-            fuehrungen[index] = fuehrung;
-            localStorage.setItem('fuehrungen', JSON.stringify(fuehrungen));
-        }
+    // Feiertage 2025
+    getDefaultFeiertage2025() {
+        return [
+            { datum: '2025-01-01', name: 'Neujahr' },
+            { datum: '2025-01-06', name: 'Heilige Drei Könige' },
+            { datum: '2025-04-21', name: 'Ostermontag' },
+            { datum: '2025-05-01', name: 'Staatsfeiertag' },
+            { datum: '2025-05-29', name: 'Christi Himmelfahrt' },
+            { datum: '2025-06-09', name: 'Pfingstmontag' },
+            { datum: '2025-06-19', name: 'Fronleichnam' },
+            { datum: '2025-08-15', name: 'Mariä Himmelfahrt' },
+            { datum: '2025-10-26', name: 'Nationalfeiertag' },
+            { datum: '2025-11-01', name: 'Allerheiligen' },
+            { datum: '2025-12-08', name: 'Mariä Empfängnis' },
+            { datum: '2025-12-25', name: 'Christtag' },
+            { datum: '2025-12-26', name: 'Stefanitag' }
+        ];
     }
 
     // Authentifizierung
-    getCurrentUser() {
-        return JSON.parse(localStorage.getItem('currentUser'));
-    }
-
-    setCurrentUser(user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-    }
-
-    logout() {
-        localStorage.removeItem('currentUser');
-    }
-
-    // Hilfsfunktionen
-    generateId() {
-        return Date.now().toString();
-    }
-
-    getCurrentTimestamp() {
-        return new Date().toISOString();
+    async login(username, password) {
+        const mitarbeiter = await this.getMitarbeiter();
+        const user = mitarbeiter.find(m => 
+            m.username === username && 
+            m.password === password && 
+            m.aktiv
+        );
+        
+        if (user) {
+            const { password, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        }
+        return null;
     }
 }
 

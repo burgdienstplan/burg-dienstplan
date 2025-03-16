@@ -15,9 +15,6 @@
             --holiday-color: #ffebee;
             --ruhetag-color: #fff3e0;
             --outside-color: #f5f5f5;
-            --stone-color: #4A4A4A;
-            --burg-color: #8B0000;
-            --parchment-color: #F5E6D3;
         }
 
         body {
@@ -92,13 +89,13 @@
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
             padding: 10px;
-            background: var(--stone-color);
+            background: var(--stein-grau);
             border-radius: 8px;
             margin-top: 1rem;
         }
 
         .calendar-header-day {
-            background: var(--burg-color);
+            background: var(--burg-rot);
             color: white;
             padding: 8px;
             text-align: center;
@@ -107,7 +104,7 @@
         }
 
         .calendar-day {
-            background: var(--parchment-color);
+            background: var(--pergament);
             min-height: 120px;
             padding: 8px;
             border-radius: 4px;
@@ -119,7 +116,7 @@
         }
 
         .calendar-day.empty {
-            background: var(--stone-color);
+            background: var(--stein-grau);
         }
 
         .calendar-day .date {
@@ -181,14 +178,12 @@
             background: var(--ruhetag-color);
         }
 
-        .shift-requests {
-            padding: 4px 8px;
-            background: #e3f2fd;
-            color: #1976d2;
-            border-radius: 4px;
-            font-size: 0.9em;
-            margin-top: 4px;
+        .holiday-name, .ruhetag-info {
+            font-size: 0.8em;
+            color: var(--burg-rot);
             text-align: center;
+            margin-top: 4px;
+            font-style: italic;
         }
 
         /* Drag & Drop Styles */
@@ -201,338 +196,61 @@
             border: 2px dashed #1976d2;
         }
 
-        .controls {
-            background: white;
+        /* Admin Controls */
+        #adminControls {
+            display: none;
+            margin-bottom: 2rem;
             padding: 1rem;
+            background: white;
             border-radius: 8px;
-            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .control-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: center;
+        /* Mitarbeiter Controls */
+        #mitarbeiterControls {
+            display: none;
+            margin-bottom: 2rem;
         }
 
-        select, input {
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        .legend {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 4px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 3px;
-        }
-
-        .urlaubsanfrage-form, .fuehrung-form {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1rem;
-        }
-
-        .form-title {
-            color: var(--burg-rot);
-            margin-bottom: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--stein-grau);
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
-        .saison-info {
-            background: var(--burg-rot);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .shift-request-dialog {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-
-        .shift-request-dialog h3 {
-            color: var(--burg-rot);
-            margin-bottom: 1rem;
-        }
-
-        .shift-request-dialog select {
-            width: 100%;
-            margin-bottom: 1rem;
-        }
-
-        .shift-request-dialog button {
-            margin-right: 1rem;
-        }
-
-        .shift-request.pending {
-            background-color: #fff3e0;
-            border-left: 3px solid #ff9800;
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            font-size: 0.9rem;
-        }
-
-        .dienstanfrage {
-            background: white;
-            padding: 1rem;
-            margin: 0.5rem 0;
-            border-radius: 4px;
-            border-left: 3px solid var(--burg-rot);
-        }
-
-        .dienstanfrage p {
-            margin: 0 0 0.5rem 0;
-        }
-
-        .dienstanfrage button {
-            margin-right: 0.5rem;
-        }
-
-        .warning {
-            background-color: #fff3e0;
-            color: #ed6c02;
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            border-left: 4px solid #ed6c02;
+        /* Führungs Controls */
+        #fuehrungControls {
+            display: none;
+            margin-bottom: 2rem;
         }
 
         .success {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
             padding: 1rem;
             border-radius: 4px;
             margin-bottom: 1rem;
-            border-left: 4px solid #2e7d32;
         }
 
-        .update-notification {
-            background-color: #e3f2fd;
-            color: #1976d2;
+        .warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
             padding: 1rem;
             border-radius: 4px;
             margin-bottom: 1rem;
-            border-left: 4px solid #1976d2;
-            font-weight: bold;
         }
 
-        /* Mitarbeiter-Verwaltung */
-        .admin-form {
-            background: var(--parchment-color);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: var(--burg-color);
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 1rem;
             border-radius: 4px;
-            background: white;
-        }
-
-        .form-group select[multiple] {
-            height: 120px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .save-btn,
-        .cancel-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .save-btn {
-            background: var(--burg-color);
-            color: white;
-        }
-
-        .save-btn:hover {
-            background: #660000;
-        }
-
-        .cancel-btn {
-            background: #9E9E9E;
-            color: white;
-        }
-
-        .cancel-btn:hover {
-            background: #757575;
-        }
-
-        .mitarbeiter-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .mitarbeiter-item button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            padding: 5px;
-            margin-left: 10px;
-            transition: color 0.2s;
-        }
-
-        .mitarbeiter-item button:hover {
-            color: var(--burg-color);
-        }
-
-        /* Version Info */
-        .version-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--parchment-color);
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .version-info p {
-            color: var(--burg-color);
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .version-info ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .version-info li {
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(139, 0, 0, 0.1);
-        }
-
-        .version-info li:last-child {
-            border-bottom: none;
-        }
-
-        /* Login Box */
-        .login-box {
-            background: var(--parchment-color);
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .login-box h2 {
-            color: var(--burg-color);
-            margin-bottom: 5px;
-        }
-
-        .login-box h3 {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .login-box button {
-            background: var(--burg-color);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-        }
-
-        .login-box button:hover {
-            background: #660000;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Dienstplan v2025.1.2</h1>
+        <h1>Dienstplan v2025.2</h1>
         <div>
             <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
-            <button onclick="logout()">Abmelden</button>
         </div>
     </div>
 
@@ -544,151 +262,27 @@
         <!-- Planungswarnung -->
         <div id="planningWarning"></div>
 
-        <!-- Admin-Bereich (nur für Kastellan sichtbar) -->
-        <div id="adminControls" style="display: none;">
-            <h2>Mitarbeiter verwalten</h2>
-            <form id="addMitarbeiterForm" class="admin-form">
-                <div class="form-group">
-                    <label for="vorname">Vorname:</label>
-                    <input type="text" id="vorname" placeholder="z.B. Thomas" required>
-                </div>
-                <div class="form-group">
-                    <label for="nachname">Nachname:</label>
-                    <input type="text" id="nachname" placeholder="z.B. Gruber" required>
-                </div>
-                <div class="form-group">
-                    <label for="positionen">Positionen (STRG/CMD + Klick für Mehrfachauswahl):</label>
-                    <select id="positionen" multiple required>
-                        <option value="shop">Shop Eingang</option>
-                        <option value="shop_museum">Shop Museum</option>
-                        <option value="kasse">Kasse</option>
-                        <option value="fuehrung">Führung</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="save-btn">Speichern</button>
-                    <button type="reset" class="cancel-btn">Abbrechen</button>
-                </div>
-            </form>
-            <div id="mitarbeiterListe"></div>
-
-            <div class="controls">
-                <div class="control-group">
-                    <select id="mitarbeiter">
-                        <option value="">Mitarbeiter auswählen...</option>
-                    </select>
-                    <select id="position">
-                        <option value="shop">Shop Eingang</option>
-                        <option value="shop_museum">Shop Museum</option>
-                        <option value="kasse">Kasse</option>
-                        <option value="fuehrung">Führung</option>
-                    </select>
-                    <input type="date" id="datum">
-                    <button id="addShift">Schicht hinzufügen</button>
-                    <button id="markRuhetag">Als Ruhetag markieren</button>
-                </div>
-            </div>
-
-            <!-- Dienstanfragen -->
-            <div id="dienstAnfragen" class="controls">
-                <h3>Dienstanfragen</h3>
-                <!-- Hier werden die Dienstanfragen dynamisch eingefügt -->
-            </div>
-
-            <!-- Urlaubsanfragen -->
-            <div id="urlaubsanfragen" class="controls">
-                <h3>Urlaubsanfragen</h3>
-                <div id="urlaubsanfragenListe"></div>
-            </div>
-
-            <!-- Führungsvorschläge -->
-            <div id="fuehrungsvorschlaege" class="controls">
-                <h3>Führungsvorschläge</h3>
-                <div id="fuehrungsvorschlaegeListe"></div>
+        <!-- Admin-Bereich -->
+        <div id="adminControls">
+            <h2>Dienstplan verwalten</h2>
+            <div class="control-group">
+                <button id="addShift">Schicht hinzufügen</button>
+                <button id="markRuhetag">Ruhetag markieren</button>
             </div>
         </div>
 
         <!-- Kalender -->
         <div class="calendar">
             <div class="calendar-header">
-                <button id="prevMonth">&lt;</button>
+                <button id="prevMonth">◀</button>
                 <h2 id="currentMonth"></h2>
-                <button id="nextMonth">&gt;</button>
+                <button id="nextMonth">▶</button>
             </div>
-            
-            <div id="calendar" class="calendar-grid"></div>
-
-            <!-- Legende -->
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--shop-color)"></div>
-                    Shop Eingang
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--shop-color); border-left: 3px solid #2196f3"></div>
-                    Shop Museum
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--kasse-color)"></div>
-                    Kasse
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--fuehrung-color)"></div>
-                    Führung
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--holiday-color)"></div>
-                    Feiertag
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--ruhetag-color)"></div>
-                    Ruhetag
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: var(--outside-color)"></div>
-                    Außerhalb der Saison
-                </div>
-            </div>
-        </div>
-
-        <!-- Mitarbeiter-Bereich -->
-        <div id="mitarbeiterControls">
-            <!-- Urlaubsanfrage-Formular -->
-            <div class="urlaubsanfrage-form">
-                <h3 class="form-title">Urlaub beantragen</h3>
-                <div class="form-group">
-                    <label for="urlaubStart">Von:</label>
-                    <input type="date" id="urlaubStart">
-                </div>
-                <div class="form-group">
-                    <label for="urlaubEnde">Bis:</label>
-                    <input type="date" id="urlaubEnde">
-                </div>
-                <div class="form-actions">
-                    <button onclick="submitUrlaubsanfrage()">Urlaub beantragen</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Museumsführer-Bereich -->
-        <div id="fuehrungControls" style="display: none;">
-            <div class="fuehrung-form">
-                <h3 class="form-title">Führung vorschlagen</h3>
-                <div class="form-group">
-                    <label for="fuehrungDatum">Datum:</label>
-                    <input type="date" id="fuehrungDatum">
-                </div>
-                <div class="form-group">
-                    <label for="fuehrungZeit">Uhrzeit:</label>
-                    <input type="time" id="fuehrungZeit">
-                </div>
-                <div class="form-actions">
-                    <button onclick="submitFuehrungsvorschlag()">Führung vorschlagen</button>
-                </div>
-            </div>
+            <div class="calendar-grid"></div>
         </div>
     </div>
 
+    <script src="js/database.js"></script>
     <script src="js/dienstplan.js"></script>
 </body>
 </html>

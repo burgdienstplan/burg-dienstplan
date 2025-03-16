@@ -18,569 +18,278 @@ const SAISON = {
     end: '2025-11-01'
 };
 
+// Burg Hochosterwitz Dienstplan - Version 2025.2
+// Letzte Aktualisierung: 16.03.2025
+
 class DienstplanManager {
     constructor() {
+        this.db = new Database();
         this.currentDate = new Date();
-        // Starte mit April 2025 als Standardmonat
-        this.selectedDate = new Date(2025, 3, 1); // April ist Monat 3 (0-basiert)
-        this.shifts = this.initializeDemoShifts();
-        this.shiftRequests = JSON.parse(localStorage.getItem('shiftRequests')) || {};
-        this.holidays = FEIERTAGE_2025;
-        this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen')) || [];
-        this.fuehrungsvorschlaege = JSON.parse(localStorage.getItem('fuehrungsvorschlaege')) || [];
-        this.ruhetage = JSON.parse(localStorage.getItem('ruhetage')) || [];
-        this.lastModified = JSON.parse(localStorage.getItem('lastModified')) || {};
-        
+        this.selectedDate = new Date(2025, 3, 1); // Start mit 1. April 2025
+        this.positions = [
+            { id: 'shop_eingang', name: 'Shop Eingang', required: true },
+            { id: 'shop_museum', name: 'Shop Museum', required: false },
+            { id: 'kasse', name: 'Kasse', required: false },
+            { id: 'fuehrung', name: 'Führung', required: false }
+        ];
         this.initializeEventListeners();
-        this.loadMitarbeiter();
-        this.renderCalendar();
-        this.checkPlanningStatus();
+        this.loadDienstplan();
     }
 
-    initializeDemoShifts() {
-        // Demo-Schichten für April 2025
-        const demoShifts = {
-            '2025-04-01': [
-                { mitarbeiterId: 'anna', position: 'shop' },
-                { mitarbeiterId: 'peter', position: 'fuehrung' }
-            ],
-            '2025-04-02': [
-                { mitarbeiterId: 'maria', position: 'shop' },
-                { mitarbeiterId: 'lisa', position: 'shop_museum' }
-            ],
-            '2025-04-03': [
-                { mitarbeiterId: 'josef', position: 'shop' },
-                { mitarbeiterId: 'peter', position: 'fuehrung' }
-            ],
-            '2025-04-04': [
-                { mitarbeiterId: 'lisa', position: 'shop' },
-                { mitarbeiterId: 'maria', position: 'kasse' }
-            ],
-            '2025-04-05': [
-                { mitarbeiterId: 'anna', position: 'shop' },
-                { mitarbeiterId: 'josef', position: 'fuehrung' },
-                { mitarbeiterId: 'maria', position: 'kasse' }
-            ],
-            '2025-04-06': [
-                { mitarbeiterId: 'peter', position: 'shop' },
-                { mitarbeiterId: 'lisa', position: 'shop_museum' }
-            ]
-        };
-
-        // Speichere die Demo-Schichten
-        localStorage.setItem('shifts', JSON.stringify(demoShifts));
-        return demoShifts;
-    }
-
-    initializeEventListeners() {
-        // Navigations-Listener
-        document.getElementById('prevMonth').addEventListener('click', () => this.prevMonth());
-        document.getElementById('nextMonth').addEventListener('click', () => this.nextMonth());
+    async initializeEventListeners() {
+        // Kalender-Navigation
+        document.getElementById('prevMonth')?.addEventListener('click', () => this.changeMonth(-1));
+        document.getElementById('nextMonth')?.addEventListener('click', () => this.changeMonth(1));
         
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        // Schicht-Verwaltung
+        document.getElementById('addShiftForm')?.addEventListener('submit', (e) => this.handleAddShift(e));
         
-        // Admin-Funktionen
-        if (user?.role === 'kastellan') {
-            document.getElementById('adminControls').style.display = 'block';
-            document.getElementById('addShift').addEventListener('click', () => this.addShift());
-            document.getElementById('markRuhetag').addEventListener('click', () => this.markRuhetag());
-            this.loadPendingRequests();
-            
-            // Drag & Drop für Schichten
-            this.initializeDragAndDrop();
-        } else {
-            // Mitarbeiter können Dienste vorschlagen
-            document.getElementById('mitarbeiterControls').style.display = 'block';
-            this.checkForUpdates(user.id);
-        }
-
-        // Mitarbeiter-spezifische Funktionen
-        if (user?.role === 'museumsfuehrer') {
-            document.getElementById('fuehrungControls').style.display = 'block';
-        }
+        // Drag & Drop für Schichten
+        this.initializeDragAndDrop();
     }
 
     initializeDragAndDrop() {
-        document.addEventListener('dragstart', (e) => {
-            if (e.target.classList.contains('shift')) {
-                e.dataTransfer.setData('application/json', JSON.stringify({
-                    date: e.target.dataset.date,
-                    mitarbeiterId: e.target.dataset.mitarbeiterId,
-                    position: e.target.dataset.position
-                }));
-                e.target.classList.add('dragging');
-            }
-        });
-
-        document.addEventListener('dragend', (e) => {
-            if (e.target.classList.contains('shift')) {
-                e.target.classList.remove('dragging');
-            }
-        });
-
-        document.addEventListener('dragover', (e) => {
-            if (e.target.closest('.calendar-day')) {
+        const cells = document.querySelectorAll('.shift-cell');
+        cells.forEach(cell => {
+            cell.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            }
+                cell.classList.add('dragover');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('dragover');
+            });
+
+            cell.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                cell.classList.remove('dragover');
+                
+                const shiftId = e.dataTransfer.getData('text/plain');
+                const targetDate = cell.dataset.date;
+                const targetPosition = cell.dataset.position;
+                
+                await this.moveShift(shiftId, targetDate, targetPosition);
+            });
         });
 
-        document.addEventListener('drop', (e) => {
-            const calendarDay = e.target.closest('.calendar-day');
-            if (calendarDay) {
-                e.preventDefault();
-                try {
-                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                    const newDate = calendarDay.dataset.date;
-                    
-                    if (this.canMoveShift(data, newDate)) {
-                        this.moveShift(data, newDate);
-                        this.renderCalendar();
-                    }
-                } catch (error) {
-                    console.error('Fehler beim Verschieben der Schicht:', error);
-                }
-            }
+        const shifts = document.querySelectorAll('.shift');
+        shifts.forEach(shift => {
+            shift.setAttribute('draggable', true);
+            shift.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', shift.dataset.shiftId);
+            });
         });
     }
 
-    canMoveShift(shiftData, newDate) {
-        // Prüfen ob das neue Datum in der Saison liegt
-        if (!this.isInSaison(newDate)) {
-            alert('Dieses Datum liegt außerhalb der Saison!');
-            return false;
-        }
+    async handleAddShift(event) {
+        event.preventDefault();
+        const date = document.getElementById('shiftDate').value;
+        const position = document.getElementById('shiftPosition').value;
+        const mitarbeiterId = document.getElementById('shiftMitarbeiter').value;
 
-        // Prüfen ob es ein Ruhetag ist
-        if (this.isRuhetag(newDate)) {
-            alert('An diesem Tag ist Ruhetag!');
-            return false;
-        }
+        if (!this.validateShiftDate(date)) return;
 
-        // Prüfen ob es ein Feiertag ist
-        if (this.isFeiertag(newDate)) {
-            alert('An diesem Tag ist ein Feiertag!');
-            return false;
-        }
+        try {
+            await this.db.addShift({
+                datum: date,
+                position: position,
+                mitarbeiterId: mitarbeiterId
+            });
 
-        // Wenn es Shop Eingang ist, prüfen ob andere Positionen betroffen sind
-        if (shiftData.position === 'shop') {
-            const shifts = this.shifts[shiftData.date] || [];
-            const otherShifts = shifts.filter(s => s.position !== 'shop');
-            if (otherShifts.length > 0) {
-                alert('Shop Eingang kann nicht verschoben werden, wenn andere Positionen besetzt sind!');
-                return false;
-            }
-        } else {
-            // Wenn es keine Shop-Position ist, prüfen ob Shop Eingang besetzt ist
-            if (!this.isShopBesetzt(newDate)) {
-                alert('Shop Eingang muss zuerst besetzt werden!');
-                return false;
-            }
+            this.showNotification('Schicht erfolgreich hinzugefügt', 'success');
+            this.loadDienstplan();
+            event.target.reset();
+        } catch (error) {
+            this.showNotification('Fehler beim Hinzufügen der Schicht', 'error');
+            console.error('Fehler:', error);
+        }
+    }
+
+    validateShiftDate(date) {
+        const shiftDate = new Date(date);
+        const saisonStart = new Date(2025, 3, 1); // 1. April
+        const saisonEnde = new Date(2025, 10, 1); // 1. November
+
+        if (shiftDate < saisonStart || shiftDate > saisonEnde) {
+            this.showNotification('Schichten müssen innerhalb der Saison (1. April - 1. November) liegen', 'error');
+            return false;
         }
 
         return true;
     }
 
-    moveShift(shiftData, newDate) {
-        // Alte Schicht entfernen
-        const oldShifts = this.shifts[shiftData.date] || [];
-        const index = oldShifts.findIndex(s => 
-            s.mitarbeiterId === shiftData.mitarbeiterId && 
-            s.position === shiftData.position
-        );
-        
-        if (index > -1) {
-            oldShifts.splice(index, 1);
-            if (oldShifts.length === 0) {
-                delete this.shifts[shiftData.date];
-            } else {
-                this.shifts[shiftData.date] = oldShifts;
-            }
-        }
+    async moveShift(shiftId, targetDate, targetPosition) {
+        if (!this.validateShiftDate(targetDate)) return;
 
-        // Neue Schicht hinzufügen
-        if (!this.shifts[newDate]) {
-            this.shifts[newDate] = [];
-        }
-        this.shifts[newDate].push({
-            mitarbeiterId: shiftData.mitarbeiterId,
-            position: shiftData.position
-        });
-
-        // Änderungen speichern
-        this.lastModified[newDate] = new Date().toISOString();
-        localStorage.setItem('shifts', JSON.stringify(this.shifts));
-        localStorage.setItem('lastModified', JSON.stringify(this.lastModified));
-    }
-
-    checkPlanningStatus() {
-        const warningDiv = document.getElementById('planningWarning');
-        if (!warningDiv) return;
-
-        const today = new Date();
-        const twoWeeksFromNow = new Date();
-        twoWeeksFromNow.setDate(today.getDate() + 14);
-
-        let isFullyPlanned = true;
-        let currentDate = new Date(today);
-
-        while (currentDate <= twoWeeksFromNow) {
-            const dateStr = this.formatDate(currentDate);
-            if (this.isInSaison(dateStr) && !this.isRuhetag(dateStr)) {
-                const shifts = this.shifts[dateStr] || [];
-                if (!shifts.some(s => s.position === 'shop')) {
-                    isFullyPlanned = false;
-                    break;
-                }
-            }
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-
-        warningDiv.innerHTML = isFullyPlanned ? 
-            '<div class="success">✓ Dienstplan ist für die nächsten 14 Tage vollständig</div>' :
-            '<div class="warning">⚠ Bitte den Dienstplan für die nächsten 14 Tage vervollständigen!</div>';
-    }
-
-    checkForUpdates(mitarbeiterId) {
-        const lastCheck = localStorage.getItem(`lastCheck_${mitarbeiterId}`) || '2000-01-01';
-        let hasUpdates = false;
-
-        Object.entries(this.lastModified).forEach(([date, modifiedDate]) => {
-            if (modifiedDate > lastCheck) {
-                const shifts = this.shifts[date] || [];
-                if (shifts.some(s => s.mitarbeiterId === mitarbeiterId)) {
-                    hasUpdates = true;
-                }
-            }
-        });
-
-        if (hasUpdates) {
-            const updateDiv = document.createElement('div');
-            updateDiv.className = 'update-notification';
-            updateDiv.innerHTML = '⚠ Es gibt Änderungen in Ihrem Dienstplan!';
-            document.querySelector('.content').insertBefore(updateDiv, document.querySelector('.calendar'));
-        }
-
-        localStorage.setItem(`lastCheck_${mitarbeiterId}`, new Date().toISOString());
-    }
-
-    loadPendingRequests() {
-        const requestsDiv = document.getElementById('dienstAnfragen');
-        requestsDiv.innerHTML = '<h3>Dienstanfragen</h3>';
-        
-        Object.entries(this.shiftRequests).forEach(([date, requests]) => {
-            requests.forEach(request => {
-                if (request.status === 'pending') {
-                    const requestElement = document.createElement('div');
-                    requestElement.className = 'dienstanfrage';
-                    requestElement.innerHTML = `
-                        <p>${request.mitarbeiterName} möchte am ${new Date(date).toLocaleDateString('de-DE')} 
-                           als ${request.position} arbeiten</p>
-                        <button onclick="dienstplan.approveShiftRequest('${date}', ${request.id})">Genehmigen</button>
-                        <button onclick="dienstplan.rejectShiftRequest('${date}', ${request.id})">Ablehnen</button>
-                    `;
-                    requestsDiv.appendChild(requestElement);
-                }
+        try {
+            await this.db.updateShift(shiftId, {
+                datum: targetDate,
+                position: targetPosition
             });
-        });
-    }
 
-    requestShift(date, position) {
-        const user = JSON.parse(localStorage.getItem('currentUser'));
-        if (!user) return;
-
-        if (!this.isInSaison(date)) {
-            alert('Dieses Datum liegt außerhalb der Saison!');
-            return;
-        }
-
-        if (this.isRuhetag(date)) {
-            alert('An diesem Tag ist Ruhetag!');
-            return;
-        }
-
-        const request = {
-            id: Date.now(),
-            mitarbeiterId: user.id,
-            mitarbeiterName: `${user.vorname} ${user.nachname}`,
-            position: position,
-            status: 'pending',
-            requestDate: new Date().toISOString()
-        };
-
-        if (!this.shiftRequests[date]) {
-            this.shiftRequests[date] = [];
-        }
-        
-        this.shiftRequests[date].push(request);
-        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
-        alert('Ihre Dienstanfrage wurde eingereicht und wird vom Kastellan geprüft.');
-    }
-
-    approveShiftRequest(date, requestId) {
-        const request = this.shiftRequests[date].find(r => r.id === requestId);
-        if (!request) return;
-
-        request.status = 'approved';
-        this.addShift(request.mitarbeiterId, request.position, date);
-        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
-        this.loadPendingRequests();
-        this.renderCalendar();
-    }
-
-    rejectShiftRequest(date, requestId) {
-        const request = this.shiftRequests[date].find(r => r.id === requestId);
-        if (!request) return;
-
-        request.status = 'rejected';
-        localStorage.setItem('shiftRequests', JSON.stringify(this.shiftRequests));
-        this.loadPendingRequests();
-    }
-
-    loadMitarbeiter() {
-        const mitarbeiter = JSON.parse(localStorage.getItem('mitarbeiter')) || [];
-        const select = document.getElementById('mitarbeiter');
-        select.innerHTML = '<option value="">Mitarbeiter auswählen...</option>';
-        mitarbeiter.forEach(m => {
-            const option = document.createElement('option');
-            option.value = m.id;
-            option.textContent = m.name;
-            select.appendChild(option);
-        });
-    }
-
-    isFeiertag(dateStr) {
-        return this.holidays[dateStr];
-    }
-
-    isInSaison(dateStr) {
-        const date = new Date(dateStr);
-        const start = new Date(SAISON.start);
-        const end = new Date(SAISON.end);
-
-        // Setze Uhrzeiten auf Mitternacht für korrekten Vergleich
-        date.setHours(0, 0, 0, 0);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-
-        return date >= start && date <= end;
-    }
-
-    isRuhetag(dateStr) {
-        return this.ruhetage.includes(dateStr);
-    }
-
-    formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    addShift(mitarbeiterId, position, datum) {
-        if (!mitarbeiterId || !position || !datum) {
-            alert('Bitte alle Felder ausfüllen!');
-            return;
-        }
-
-        if (!this.isInSaison(datum)) {
-            alert('Dieses Datum liegt außerhalb der Saison!');
-            return;
-        }
-
-        if (this.isRuhetag(datum)) {
-            alert('An diesem Tag ist Ruhetag!');
-            return;
-        }
-
-        // Prüfen ob Shop Eingang besetzt ist
-        if (position !== 'shop' && !this.isShopBesetzt(datum)) {
-            alert('Shop Eingang muss zuerst besetzt werden!');
-            return;
-        }
-
-        if (!this.shifts[datum]) {
-            this.shifts[datum] = [];
-        }
-        
-        this.shifts[datum].push({ mitarbeiterId, position });
-        localStorage.setItem('shifts', JSON.stringify(this.shifts));
-        this.renderCalendar();
-    }
-
-    isShopBesetzt(datum) {
-        const shifts = this.shifts[datum] || [];
-        return shifts.some(s => s.position === 'shop');
-    }
-
-    markRuhetag() {
-        const datum = document.getElementById('datum').value;
-        
-        if (!this.isInSaison(datum)) {
-            alert('Ruhetage können nur während der Saison markiert werden!');
-            return;
-        }
-
-        if (!this.ruhetage.includes(datum)) {
-            this.ruhetage.push(datum);
-            localStorage.setItem('ruhetage', JSON.stringify(this.ruhetage));
-            this.renderCalendar();
+            this.showNotification('Schicht erfolgreich verschoben', 'success');
+            this.loadDienstplan();
+        } catch (error) {
+            this.showNotification('Fehler beim Verschieben der Schicht', 'error');
+            console.error('Fehler:', error);
         }
     }
 
-    renderCalendar() {
-        const calendarDiv = document.getElementById('calendar');
-        calendarDiv.innerHTML = '';
-        
-        // Wochentage-Header
-        const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-        weekdays.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'calendar-header-day';
-            dayHeader.textContent = day;
-            calendarDiv.appendChild(dayHeader);
-        });
+    async loadDienstplan() {
+        const calendar = document.getElementById('dienstplanCalendar');
+        if (!calendar) return;
 
         const year = this.selectedDate.getFullYear();
         const month = this.selectedDate.getMonth();
-        
-        // Aktualisiere Header
-        document.getElementById('currentMonth').textContent = 
-            new Date(year, month).toLocaleString('de-DE', { month: 'long', year: 'numeric' });
-
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
+
+        // Hole alle relevanten Daten
+        const shifts = await this.db.getShifts(firstDay.toISOString(), lastDay.toISOString());
+        const mitarbeiter = await this.db.getMitarbeiter();
+        const urlaube = await this.db.getUrlaubsanfragen();
+        const feiertage = await this.db.getFeiertage();
+
+        // Erstelle Kalender-Header
+        let html = this.createCalendarHeader();
+
+        // Erstelle Kalender-Body
+        html += '<div class="calendar-body">';
         
-        // Leere Tage am Anfang
-        for (let i = 0; i < firstDay.getDay(); i++) {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'calendar-day empty';
-            calendarDiv.appendChild(emptyDay);
+        for (let day = new Date(firstDay); day <= lastDay; day.setDate(day.getDate() + 1)) {
+            const dateStr = day.toISOString().split('T')[0];
+            const dayShifts = shifts.filter(s => s.datum === dateStr);
+            const dayUrlaube = urlaube.filter(u => 
+                u.status === 'approved' &&
+                new Date(u.startDatum) <= day &&
+                new Date(u.endDatum) >= day
+            );
+            const isFeiertagOrRuhetag = this.isFeiertagOrRuhetag(day, feiertage);
+
+            html += this.createDayCell(day, dayShifts, dayUrlaube, isFeiertagOrRuhetag, mitarbeiter);
         }
 
-        // Tage des Monats
-        for (let day = 1; day <= lastDay.getDate(); day++) {
-            const date = new Date(year, month, day);
-            const dateStr = this.formatDate(date);
-            const dayDiv = this.createDayElement(date);
-            calendarDiv.appendChild(dayDiv);
+        html += '</div>';
+        calendar.innerHTML = html;
+
+        // Initialisiere Drag & Drop nach dem Rendern
+        this.initializeDragAndDrop();
+    }
+
+    createCalendarHeader() {
+        const monthNames = [
+            'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+        ];
+
+        return `
+            <div class="calendar-header">
+                <button id="prevMonth">&lt;</button>
+                <h2>${monthNames[this.selectedDate.getMonth()]} ${this.selectedDate.getFullYear()}</h2>
+                <button id="nextMonth">&gt;</button>
+            </div>
+            <div class="positions-header">
+                <div class="date-column">Datum</div>
+                ${this.positions.map(pos => `
+                    <div class="position-column">
+                        ${pos.name}
+                        ${pos.required ? '<span class="required-badge">Pflicht</span>' : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    createDayCell(day, shifts, urlaube, isFeiertagOrRuhetag, mitarbeiter) {
+        const dateStr = day.toISOString().split('T')[0];
+        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+        const cellClass = isFeiertagOrRuhetag ? 'feiertag' : isWeekend ? 'weekend' : '';
+
+        let html = `
+            <div class="calendar-row ${cellClass}">
+                <div class="date-cell">
+                    <span class="date">${day.getDate()}</span>
+                    <span class="day">${this.getDayName(day)}</span>
+                    ${isFeiertagOrRuhetag ? `<span class="tag">${isFeiertagOrRuhetag}</span>` : ''}
+                </div>
+        `;
+
+        // Füge Zellen für jede Position hinzu
+        this.positions.forEach(position => {
+            const positionShifts = shifts.filter(s => s.position === position.id);
+            const urlaubeHtml = this.createUrlaubeHtml(urlaube, mitarbeiter);
+
+            html += `
+                <div class="shift-cell" data-date="${dateStr}" data-position="${position.id}">
+                    ${positionShifts.map(shift => {
+                        const mitarbeiter = mitarbeiter.find(m => m.id === shift.mitarbeiterId);
+                        return `
+                            <div class="shift" data-shift-id="${shift.id}" draggable="true">
+                                <span class="mitarbeiter-name">${mitarbeiter?.vorname} ${mitarbeiter?.nachname}</span>
+                                <button class="delete-shift" onclick="dienstplanManager.deleteShift('${shift.id}')">×</button>
+                            </div>
+                        `;
+                    }).join('')}
+                    ${urlaubeHtml}
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        return html;
+    }
+
+    createUrlaubeHtml(urlaube, mitarbeiter) {
+        if (!urlaube.length) return '';
+
+        return `
+            <div class="urlaube-info">
+                ${urlaube.map(urlaub => {
+                    const mitarbeiter = mitarbeiter.find(m => m.id === urlaub.mitarbeiterId);
+                    return `<span class="urlaub-tag">${mitarbeiter?.vorname} ${mitarbeiter?.nachname} (Urlaub)</span>`;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    async deleteShift(shiftId) {
+        try {
+            await this.db.deleteShift(shiftId);
+            this.showNotification('Schicht erfolgreich gelöscht', 'success');
+            this.loadDienstplan();
+        } catch (error) {
+            this.showNotification('Fehler beim Löschen der Schicht', 'error');
+            console.error('Fehler:', error);
         }
-
-        // Leere Tage am Ende
-        const remainingDays = 42 - (firstDay.getDay() + lastDay.getDate());
-        for (let i = 0; i < remainingDays; i++) {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'calendar-day empty';
-            calendarDiv.appendChild(emptyDay);
-        }
-
-        // Prüfe Planungsstatus
-        this.checkPlanningStatus();
     }
 
-    createDayElement(date) {
-        const dateStr = this.formatDate(date);
-        const div = document.createElement('div');
-        div.className = 'calendar-day';
-        div.dataset.date = dateStr;
+    changeMonth(delta) {
+        this.selectedDate.setMonth(this.selectedDate.getMonth() + delta);
+        this.loadDienstplan();
+    }
+
+    getDayName(date) {
+        const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+        return days[date.getDay()];
+    }
+
+    isFeiertagOrRuhetag(date, feiertage) {
+        const dateStr = date.toISOString().split('T')[0];
+        const feiertag = feiertage.find(f => f.datum === dateStr);
+        return feiertag ? feiertag.name : '';
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
         
-        const user = JSON.parse(localStorage.getItem('currentUser'));
-        const isKastellan = user?.role === 'kastellan';
+        const container = document.querySelector('.content');
+        container.insertBefore(notification, container.firstChild);
         
-        // Datum
-        const dateDiv = document.createElement('div');
-        dateDiv.className = 'date';
-        dateDiv.textContent = date.getDate();
-
-        // Status (Feiertag, Ruhetag, außerhalb Saison)
-        if (!this.isInSaison(dateStr)) {
-            div.classList.add('outside-season');
-            dateDiv.textContent += ' (Außerhalb Saison)';
-        } else if (this.isFeiertag(dateStr)) {
-            div.classList.add('holiday');
-            dateDiv.textContent += ` (${this.isFeiertag(dateStr)})`;
-        } else if (this.isRuhetag(dateStr)) {
-            div.classList.add('ruhetag');
-            dateDiv.textContent += ' (Ruhetag)';
-        }
-
-        div.appendChild(dateDiv);
-
-        // Schichten-Container
-        const shiftsDiv = document.createElement('div');
-        shiftsDiv.className = 'shifts';
-        
-        // Schichten anzeigen
-        if (this.shifts[dateStr]) {
-            // Sortiere Schichten: Shop Eingang zuerst, dann nach Position
-            const sortedShifts = [...this.shifts[dateStr]].sort((a, b) => {
-                if (a.position === 'shop') return -1;
-                if (b.position === 'shop') return 1;
-                return a.position.localeCompare(b.position);
-            });
-
-            sortedShifts.forEach(shift => {
-                const shiftDiv = document.createElement('div');
-                shiftDiv.className = `shift ${shift.position}`;
-                shiftDiv.dataset.date = dateStr;
-                shiftDiv.dataset.mitarbeiterId = shift.mitarbeiterId;
-                shiftDiv.dataset.position = shift.position;
-                
-                if (isKastellan) {
-                    shiftDiv.draggable = true;
-                }
-                
-                const mitarbeiter = this.getMitarbeiterName(shift.mitarbeiterId);
-                shiftDiv.textContent = `${this.getPositionName(shift.position)}: ${mitarbeiter}`;
-                
-                shiftsDiv.appendChild(shiftDiv);
-            });
-        }
-        
-        div.appendChild(shiftsDiv);
-
-        return div;
-    }
-
-    getPositionName(position) {
-        const positions = {
-            'shop': 'Shop Eingang',
-            'shop_museum': 'Shop Museum',
-            'kasse': 'Kasse',
-            'fuehrung': 'Führung'
-        };
-        return positions[position] || position;
-    }
-
-    getMitarbeiterName(id) {
-        const mitarbeiter = JSON.parse(localStorage.getItem('mitarbeiter')) || [];
-        const found = mitarbeiter.find(m => m.id === id);
-        return found ? found.name : 'Unbekannt';
-    }
-
-    prevMonth() {
-        const newDate = new Date(this.selectedDate);
-        newDate.setMonth(newDate.getMonth() - 1);
-        this.selectedDate = newDate;
-        this.renderCalendar();
-    }
-
-    nextMonth() {
-        const newDate = new Date(this.selectedDate);
-        newDate.setMonth(newDate.getMonth() + 1);
-        this.selectedDate = newDate;
-        this.renderCalendar();
-    }
-
-    createEmptyDay() {
-        const div = document.createElement('div');
-        div.className = 'calendar-day empty';
-        return div;
+        setTimeout(() => notification.remove(), 3000);
     }
 }
 
 // Initialisierung
-document.addEventListener('DOMContentLoaded', () => {
-    window.dienstplan = new DienstplanManager();
-});
+const dienstplanManager = new DienstplanManager();

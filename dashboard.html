@@ -35,6 +35,46 @@
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+            color: var(--burg-rot);
+        }
+
+        .card-title {
+            color: var(--burg-rot);
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .card-content {
             color: var(--stein-grau);
         }
 
@@ -47,186 +87,231 @@
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 1rem;
         }
 
         button:hover {
             background-color: #a00000;
         }
 
-        .dashboard-menu {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+        .logout-btn {
+            background-color: var(--stein-grau);
         }
 
-        .menu-item {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .logout-btn:hover {
+            background-color: #333;
         }
 
-        .menu-item h3 {
-            color: var(--burg-rot);
-            margin: 0 0 1rem 0;
-            font-size: 1.4rem;
-        }
-
-        .menu-item p {
-            margin: 0 0 1.5rem 0;
-            line-height: 1.5;
-        }
-
-        .menu-item ul {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 1.5rem 0;
-        }
-
-        .menu-item li {
-            margin: 0.5rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-        }
-
-        .menu-item li:before {
-            content: "•";
-            color: var(--burg-rot);
-            position: absolute;
-            left: 0;
-        }
-
-        .copyright {
+        .version-info {
             text-align: center;
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid rgba(0,0,0,0.1);
             color: var(--stein-grau);
+            margin-top: 2rem;
             font-size: 0.9rem;
         }
 
-        .welcome-box {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
+        .saison-info {
+            background: var(--burg-rot);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .notification {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .notification.warning {
+            background-color: #fff3e0;
+            color: #ed6c02;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
             margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .welcome-box h2 {
+        .stat-number {
+            font-size: 2rem;
             color: var(--burg-rot);
-            margin: 0 0 1rem 0;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: var(--stein-grau);
+            margin-top: 0.5rem;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Burg Hochosterwitz</h1>
-        <button onclick="logout()">Abmelden</button>
+        <h1>Dashboard v2025.2</h1>
+        <button class="logout-btn" onclick="logout()">Abmelden</button>
     </div>
 
     <div class="content">
-        <div class="welcome-box">
-            <h2>Dashboard</h2>
-            <div id="welcomeMessage"></div>
+        <div class="saison-info">
+            Saison 2025: 1. April - 1. November
         </div>
 
-        <!-- Kastellan Menü -->
-        <div class="dashboard-menu" id="adminMenu" style="display: none;">
-            <div class="menu-item">
-                <h3>Mitarbeiter-Verwaltung</h3>
-                <p>Verwalten Sie hier alle Mitarbeiter der Burg Hochosterwitz.</p>
-                <ul>
-                    <li>Neue Mitarbeiter anlegen</li>
-                    <li>Mitarbeiter bearbeiten</li>
-                    <li>Mitarbeiter entfernen</li>
-                </ul>
-                <button onclick="window.location.href='mitarbeiter.html'">Verwalten</button>
-            </div>
+        <div id="notifications">
+            <!-- Benachrichtigungen werden hier dynamisch eingefügt -->
+        </div>
 
-            <div class="menu-item">
-                <h3>Dienstplan</h3>
-                <p>Erstellen und verwalten Sie den Dienstplan für alle Positionen.</p>
-                <ul>
-                    <li>Saisonkalender (1. April - 1. November)</li>
-                    <li>Feiertage und Ruhetage</li>
-                    <li>Schichtplanung</li>
-                </ul>
-                <button onclick="window.location.href='dienstplan.html'">Öffnen</button>
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="mitarbeiterCount">0</div>
+                <div class="stat-label">Aktive Mitarbeiter</div>
             </div>
-
-            <div class="menu-item">
-                <h3>Hausmeister-Aufgaben</h3>
-                <p>Verwalten Sie die Aufgaben für den Hausmeister.</p>
-                <ul>
-                    <li>Neue Aufgaben erstellen</li>
-                    <li>Aufgaben zuweisen</li>
-                    <li>Status überprüfen</li>
-                </ul>
-                <button onclick="window.location.href='aufgaben.html'">Verwalten</button>
+            <div class="stat-card">
+                <div class="stat-number" id="urlaubCount">0</div>
+                <div class="stat-label">Offene Urlaubsanträge</div>
             </div>
-
-            <div class="menu-item">
-                <h3>Lift & Material</h3>
-                <p>Verwalten Sie den Lift-Status und das Materiallager.</p>
-                <ul>
-                    <li>Lift-Status prüfen</li>
-                    <li>Materialbestand verwalten</li>
-                    <li>Bestellungen planen</li>
-                </ul>
-                <button onclick="window.location.href='lift.html'">Öffnen</button>
+            <div class="stat-card">
+                <div class="stat-number" id="shiftsToday">0</div>
+                <div class="stat-label">Schichten heute</div>
             </div>
         </div>
 
-        <!-- Mitarbeiter Menü -->
-        <div class="dashboard-menu" id="mitarbeiterMenu" style="display: none;">
-            <div class="menu-item">
-                <h3>Mein Dienstplan</h3>
-                <p>Sehen Sie hier Ihren aktuellen Dienstplan ein.</p>
-                <ul>
-                    <li>Aktuelle Schichten</li>
-                    <li>Kommende Dienste</li>
-                    <li>Urlaubszeiten</li>
-                </ul>
-                <button onclick="window.location.href='dienstplan.html'">Anzeigen</button>
+        <div class="dashboard-grid">
+            <!-- Dienstplan -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon">📅</div>
+                    <h2 class="card-title">Dienstplan</h2>
+                </div>
+                <div class="card-content">
+                    <p>Verwalten Sie den Dienstplan für alle Mitarbeiter.</p>
+                    <button onclick="window.location.href='dienstplan.html'">Zum Dienstplan</button>
+                </div>
+            </div>
+
+            <!-- Urlaubsverwaltung -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon">🌴</div>
+                    <h2 class="card-title">Urlaubsverwaltung</h2>
+                </div>
+                <div class="card-content">
+                    <p>Bearbeiten Sie Urlaubsanträge und planen Sie Abwesenheiten.</p>
+                    <button onclick="window.location.href='urlaub.html'">Zur Urlaubsverwaltung</button>
+                </div>
+            </div>
+
+            <!-- Mitarbeiterverwaltung (nur für Admin) -->
+            <div class="dashboard-card" id="adminCard" style="display: none;">
+                <div class="card-header">
+                    <div class="card-icon">👥</div>
+                    <h2 class="card-title">Mitarbeiterverwaltung</h2>
+                </div>
+                <div class="card-content">
+                    <p>Verwalten Sie alle Mitarbeiter und deren Berechtigungen.</p>
+                    <button onclick="window.location.href='mitarbeiter.html'">Zur Mitarbeiterverwaltung</button>
+                </div>
+            </div>
+
+            <!-- Persönliche Übersicht -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon">👤</div>
+                    <h2 class="card-title">Meine Übersicht</h2>
+                </div>
+                <div class="card-content" id="personalOverview">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
             </div>
         </div>
 
-        <div class="copyright">&copy; 2025 Programiert Martin Steindorfer</div>
+        <div class="version-info">
+            <p>Burg Hochosterwitz Dienstplan v2025.2</p>
+            <p> 2025 Burg Hochosterwitz. Alle Rechte vorbehalten.</p>
+        </div>
     </div>
 
+    <script src="js/database.js"></script>
     <script>
-        // Beim Laden prüfen
-        window.addEventListener('load', () => {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user) {
+        const db = new Database();
+        
+        // Überprüfe Login-Status
+        async function checkLogin() {
+            const currentUser = await db.getItem('currentUser');
+            if (!currentUser) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            // Willkommensnachricht
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            welcomeMessage.textContent = `Willkommen ${user.username}!`;
-
-            // Menü anzeigen basierend auf Rolle
-            const adminMenu = document.getElementById('adminMenu');
-            const mitarbeiterMenu = document.getElementById('mitarbeiterMenu');
-
-            if (user.role === 'kastellan') {
-                adminMenu.style.display = 'grid';
-                mitarbeiterMenu.style.display = 'none';
-            } else {
-                adminMenu.style.display = 'none';
-                mitarbeiterMenu.style.display = 'grid';
+            // Admin-Bereich anzeigen
+            if (currentUser.rolle === 'admin') {
+                document.getElementById('adminCard').style.display = 'block';
             }
-        });
 
-        // Abmelden
+            loadDashboard();
+        }
+
+        async function loadDashboard() {
+            // Statistiken laden
+            const mitarbeiter = await db.getMitarbeiter();
+            const urlaubsanfragen = await db.getUrlaubsanfragen();
+            const heute = new Date().toISOString().split('T')[0];
+            const shifts = await db.getShifts(heute);
+
+            // Statistiken aktualisieren
+            document.getElementById('mitarbeiterCount').textContent = 
+                mitarbeiter.filter(m => m.aktiv).length;
+            document.getElementById('urlaubCount').textContent = 
+                urlaubsanfragen.filter(u => u.status === 'pending').length;
+            document.getElementById('shiftsToday').textContent = shifts.length;
+
+            // Persönliche Übersicht
+            const currentUser = await db.getItem('currentUser');
+            const personalOverview = document.getElementById('personalOverview');
+            const userShifts = shifts.filter(s => s.mitarbeiterId === currentUser.id);
+            const userUrlaub = urlaubsanfragen.filter(u => 
+                u.mitarbeiterId === currentUser.id && 
+                u.status === 'pending'
+            );
+
+            personalOverview.innerHTML = `
+                <p><strong>Meine Schichten heute:</strong> ${userShifts.length}</p>
+                <p><strong>Offene Urlaubsanträge:</strong> ${userUrlaub.length}</p>
+                <button onclick="window.location.href='profil.html'">Mein Profil</button>
+            `;
+
+            // Benachrichtigungen
+            const notifications = document.getElementById('notifications');
+            if (shifts.length === 0) {
+                notifications.innerHTML += `
+                    <div class="notification warning">
+                        Heute sind noch keine Schichten eingeteilt!
+                    </div>
+                `;
+            }
+        }
+
         function logout() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', checkLogin);
     </script>
 </body>
 </html>

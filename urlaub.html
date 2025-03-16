@@ -2,30 +2,24 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Burg Hochosterwitz - Urlaubsanträge</title>
+    <title>Burg Hochosterwitz - Urlaubsverwaltung</title>
     <style>
         :root {
             --burg-rot: #8B0000;
             --pergament: #F5E6D3;
             --stein-grau: #4A4A4A;
             --text-weiss: #FFFFFF;
-            --border-color: #C4B5A5;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --error-color: #f44336;
         }
 
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            min-height: 100vh;
             background-color: var(--stein-grau);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: var(--pergament);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .header {
@@ -35,218 +29,214 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        h1, h2 {
-            color: var(--burg-rot);
-            margin: 0;
+        .content {
+            background-color: var(--pergament);
+            margin: 2rem;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .nav-menu {
-            margin-bottom: 20px;
-        }
-
-        .nav-menu a {
-            color: var(--burg-rot);
-            text-decoration: none;
-            margin-right: 20px;
-        }
-
-        .nav-menu a:hover {
-            text-decoration: underline;
+        .urlaub-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 1rem;
         }
 
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 0.5rem;
             color: var(--stein-grau);
             font-weight: bold;
         }
 
-        input[type="date"],
-        textarea {
+        .form-group input {
             width: 100%;
-            padding: 8px;
-            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border: 1px solid #ddd;
             border-radius: 4px;
-            margin-bottom: 10px;
+            font-size: 1rem;
         }
 
-        .btn {
+        button {
+            padding: 0.75rem 1.5rem;
             background-color: var(--burg-rot);
-            color: white;
-            padding: 10px 20px;
+            color: var(--text-weiss);
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.2s;
         }
 
-        .btn:hover {
-            background-color: #6B0000;
+        button:hover {
+            background-color: #a00000;
+        }
+
+        .back-btn {
+            background-color: var(--stein-grau);
+        }
+
+        .back-btn:hover {
+            background-color: #333;
         }
 
         .urlaub-liste {
-            margin-top: 30px;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 2rem;
         }
 
         .urlaub-item {
-            background-color: white;
-            padding: 15px;
-            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .urlaub-item:last-child {
+            border-bottom: none;
+        }
+
+        .urlaub-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .urlaub-info {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
             border-radius: 4px;
-            border: 1px solid var(--border-color);
+            font-size: 0.875rem;
         }
 
-        .status-pending {
-            border-left: 4px solid #856404;
+        .status-badge.pending {
+            background-color: #fff3e0;
+            color: #ed6c02;
         }
 
-        .status-approved {
-            border-left: 4px solid #155724;
+        .status-badge.approved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
         }
 
-        .status-rejected {
-            border-left: 4px solid #721c24;
+        .status-badge.rejected {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .urlaub-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .approve-btn {
+            background-color: var(--success-color);
+        }
+
+        .reject-btn {
+            background-color: var(--error-color);
+        }
+
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .warning {
+            background-color: #fff3e0;
+            color: #ed6c02;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .saison-info {
+            background: var(--burg-rot);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Urlaubsanträge</h1>
-            <button onclick="window.location.href='dashboard.html'" class="btn">Zurück zum Dashboard</button>
-        </div>
-
-        <div class="nav-menu">
-            <a href="dashboard.html">Dashboard</a>
-            <a href="dienstplan.html">Dienstplan</a>
-            <a href="urlaub.html">Urlaub</a>
-        </div>
-        
-        <div id="urlaubsformular">
-            <h2>Neuer Urlaubsantrag</h2>
-            <form id="urlaubForm">
-                <div class="form-group">
-                    <label for="startDate">Von:</label>
-                    <input type="date" id="startDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="endDate">Bis:</label>
-                    <input type="date" id="endDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="grund">Grund (optional):</label>
-                    <textarea id="grund" rows="3"></textarea>
-                </div>
-                <button type="submit" class="btn">Urlaubsantrag einreichen</button>
-            </form>
-        </div>
-
-        <div class="urlaub-liste">
-            <h2>Urlaubsanträge</h2>
-            <div id="urlaubListe"></div>
+    <div class="header">
+        <h1>Urlaubsverwaltung v2025.2</h1>
+        <div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">Zurück</button>
         </div>
     </div>
 
-    <script>
-        // Prüfe Login-Status
-        const userString = localStorage.getItem('currentUser');
-        if (!userString) {
-            window.location.href = 'index.html';
-        }
-        const currentUser = JSON.parse(userString);
+    <div class="content">
+        <div class="saison-info">
+            Saison 2025: 1. April - 1. November
+        </div>
 
-        // Lade Urlaubsanträge
-        let urlaube = JSON.parse(localStorage.getItem('urlaube')) || [];
+        <!-- Urlaubsanfrage-Formular -->
+        <div class="urlaub-form">
+            <h2>Urlaub beantragen</h2>
+            <form id="urlaubsanfrageForm">
+                <div class="form-group">
+                    <label for="urlaubStart">Von:</label>
+                    <input type="date" id="urlaubStart" required>
+                </div>
+                <div class="form-group">
+                    <label for="urlaubEnde">Bis:</label>
+                    <input type="date" id="urlaubEnde" required>
+                </div>
+                <button type="submit">Urlaub beantragen</button>
+            </form>
+        </div>
 
-        // Formular-Handler
-        document.getElementById('urlaubForm').onsubmit = function(e) {
-            e.preventDefault();
-            
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const grund = document.getElementById('grund').value;
+        <!-- Urlaubsanfragen Liste -->
+        <div class="urlaub-liste">
+            <h2>Urlaubsanfragen</h2>
+            <div id="urlaubsanfragenListe"></div>
+        </div>
+    </div>
 
-            // Validiere Daten
-            if (new Date(startDate) > new Date(endDate)) {
-                alert('Das Enddatum muss nach dem Startdatum liegen.');
-                return;
-            }
-
-            // Erstelle neuen Urlaubsantrag
-            const urlaubsantrag = {
-                id: Date.now().toString(),
-                mitarbeiterId: currentUser.id,
-                mitarbeiterName: currentUser.username,
-                startDate,
-                endDate,
-                grund,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-
-            urlaube.push(urlaubsantrag);
-            localStorage.setItem('urlaube', JSON.stringify(urlaube));
-            updateUrlaubListe();
-            e.target.reset();
-        };
-
-        function updateUrlaubListe() {
-            const urlaubListe = document.getElementById('urlaubListe');
-            let antraege = urlaube;
-            
-            // Für normale Mitarbeiter nur eigene Anträge zeigen
-            if (currentUser.role !== 'kastellan') {
-                antraege = urlaube.filter(u => u.mitarbeiterId === currentUser.id);
-            }
-
-            urlaubListe.innerHTML = antraege.map(urlaub => {
-                const statusClass = `status-${urlaub.status}`;
-                const statusText = {
-                    'pending': 'Ausstehend',
-                    'approved': 'Genehmigt',
-                    'rejected': 'Abgelehnt'
-                }[urlaub.status];
-
-                let aktionen = '';
-                if (currentUser.role === 'kastellan' && urlaub.status === 'pending') {
-                    aktionen = `
-                        <button onclick="handleUrlaubAction('${urlaub.id}', 'approved')" class="btn">Genehmigen</button>
-                        <button onclick="handleUrlaubAction('${urlaub.id}', 'rejected')" class="btn">Ablehnen</button>
-                    `;
-                }
-
-                return `
-                    <div class="urlaub-item ${statusClass}">
-                        <p><strong>Mitarbeiter:</strong> ${urlaub.mitarbeiterName}</p>
-                        <p><strong>Von:</strong> ${new Date(urlaub.startDate).toLocaleDateString()}</p>
-                        <p><strong>Bis:</strong> ${new Date(urlaub.endDate).toLocaleDateString()}</p>
-                        <p><strong>Status:</strong> ${statusText}</p>
-                        ${urlaub.grund ? `<p><strong>Grund:</strong> ${urlaub.grund}</p>` : ''}
-                        ${aktionen}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function handleUrlaubAction(urlaubId, action) {
-            const urlaub = urlaube.find(u => u.id === urlaubId);
-            if (urlaub) {
-                urlaub.status = action;
-                localStorage.setItem('urlaube', JSON.stringify(urlaube));
-                updateUrlaubListe();
-            }
-        }
-
-        // Initial laden
-        updateUrlaubListe();
-    </script>
+    <script src="js/database.js"></script>
+    <script src="js/urlaub.js"></script>
 </body>
 </html>
