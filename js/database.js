@@ -7,46 +7,50 @@ class Database {
         this.initializeDatabase();
     }
 
-    async initializeDatabase() {
-        // Initialisiere Standarddaten, falls nicht vorhanden
-        if (!localStorage.getItem('mitarbeiter')) {
-            const defaultMitarbeiter = [
-                {
-                    id: '1',
-                    username: 'kastellan',
-                    password: 'burg2025',
-                    vorname: 'Martin',
-                    nachname: 'Steindorfer',
-                    rolle: 'admin',
-                    aktiv: true
-                },
-                {
-                    id: '2',
-                    username: 'test',
-                    password: 'test',
-                    vorname: 'Test',
-                    nachname: 'Benutzer',
-                    rolle: 'mitarbeiter',
-                    aktiv: true
-                }
-            ];
-            localStorage.setItem('mitarbeiter', JSON.stringify(defaultMitarbeiter));
-        }
+    initializeDatabase() {
+        // Standard-Benutzer immer neu erstellen
+        const defaultMitarbeiter = [
+            {
+                id: '1',
+                username: 'kastellan',
+                password: 'burg2025',
+                vorname: 'Martin',
+                nachname: 'Steindorfer',
+                rolle: 'admin',
+                aktiv: true
+            },
+            {
+                id: '2',
+                username: 'test',
+                password: 'test',
+                vorname: 'Test',
+                nachname: 'Benutzer',
+                rolle: 'mitarbeiter',
+                aktiv: true
+            }
+        ];
+        localStorage.setItem('mitarbeiter', JSON.stringify(defaultMitarbeiter));
 
-        // Initialisiere Feiertage 2025
-        if (!localStorage.getItem('feiertage')) {
-            const feiertage2025 = [
-                { datum: '2025-01-01', name: 'Neujahr' },
-                { datum: '2025-01-06', name: 'Heilige Drei Könige' },
-                { datum: '2025-04-21', name: 'Ostermontag' },
-                { datum: '2025-05-01', name: 'Staatsfeiertag' },
-                { datum: '2025-05-29', name: 'Christi Himmelfahrt' },
-                { datum: '2025-06-09', name: 'Pfingstmontag' },
-                { datum: '2025-06-19', name: 'Fronleichnam' },
-                { datum: '2025-08-15', name: 'Mariä Himmelfahrt' },
-                { datum: '2025-10-26', name: 'Nationalfeiertag' }
-            ];
-            localStorage.setItem('feiertage', JSON.stringify(feiertage2025));
+        // Feiertage 2025
+        const feiertage2025 = [
+            { datum: '2025-01-01', name: 'Neujahr' },
+            { datum: '2025-01-06', name: 'Heilige Drei Könige' },
+            { datum: '2025-04-21', name: 'Ostermontag' },
+            { datum: '2025-05-01', name: 'Staatsfeiertag' },
+            { datum: '2025-05-29', name: 'Christi Himmelfahrt' },
+            { datum: '2025-06-09', name: 'Pfingstmontag' },
+            { datum: '2025-06-19', name: 'Fronleichnam' },
+            { datum: '2025-08-15', name: 'Mariä Himmelfahrt' },
+            { datum: '2025-10-26', name: 'Nationalfeiertag' }
+        ];
+        localStorage.setItem('feiertage', JSON.stringify(feiertage2025));
+
+        // Leere Arrays für andere Daten initialisieren
+        if (!localStorage.getItem('shifts')) {
+            localStorage.setItem('shifts', JSON.stringify([]));
+        }
+        if (!localStorage.getItem('urlaube')) {
+            localStorage.setItem('urlaube', JSON.stringify([]));
         }
     }
 
