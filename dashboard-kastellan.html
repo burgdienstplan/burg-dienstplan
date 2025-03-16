@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Kastellan Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Kastellan Dashboard</h1>
+        <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div class="nav-menu">
+        <a href="#mitarbeiter">Mitarbeiter</a>
+        <a href="#dienstplan">Dienstplan</a>
+        <a href="#aufgaben">Aufgaben</a>
+        <a href="#lift">Lift & Lager</a>
+    </div>
+
+    <div class="dashboard-cards">
+        <div class="card">
+            <h2>Mitarbeiter</h2>
+            <p>Verwaltung aller Mitarbeiter</p>
+            <button onclick="window.location.href='#mitarbeiter'">Verwalten</button>
+        </div>
+        
+        <div class="card">
+            <h2>Dienstplan</h2>
+            <p>Dienstplan erstellen und bearbeiten</p>
+            <button onclick="window.location.href='#dienstplan'">Öffnen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Aufgaben</h2>
+            <p>Aufgaben zuweisen und verwalten</p>
+            <button onclick="window.location.href='#aufgaben'">Verwalten</button>
+        </div>
+        
+        <div class="card">
+            <h2>Lift & Lager</h2>
+            <p>Lift-Status und Lagerverwaltung</p>
+            <button onclick="window.location.href='#lift'">Öffnen</button>
+        </div>
+    </div>
+
+    <script>
+        // Prüfen ob Kastellan
+        function checkKastellan() {
+            const user = localStorage.getItem('user');
+            if(user !== 'kastellan') {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Bei Laden und regelmäßig prüfen
+        checkKastellan();
+        setInterval(checkKastellan, 2000);
+        
+        // Abmelden
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Hausmeister Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Hausmeister Dashboard</h1>
+        <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div class="nav-menu">
+        <a href="#aufgaben">Aufgaben</a>
+        <a href="#wartung">Wartung</a>
+        <a href="#material">Material</a>
+    </div>
+
+    <div class="dashboard-cards">
+        <div class="card">
+            <h2>Aktuelle Aufgaben</h2>
+            <p>Ihre zugewiesenen Aufgaben</p>
+            <button onclick="window.location.href='#aufgaben'">Anzeigen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Wartungsplan</h2>
+            <p>Anstehende Wartungsarbeiten</p>
+            <button onclick="window.location.href='#wartung'">Öffnen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Material & Werkzeug</h2>
+            <p>Materialbestand und Werkzeuge</p>
+            <button onclick="window.location.href='#material'">Verwalten</button>
+        </div>
+    </div>
+
+    <script>
+        // Prüfen ob Hausmeister
+        function checkHausmeister() {
+            const user = localStorage.getItem('user');
+            if(user !== 'hausmeister') {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Bei Laden und regelmäßig prüfen
+        checkHausmeister();
+        setInterval(checkHausmeister, 2000);
+        
+        // Abmelden
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

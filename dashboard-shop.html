@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Shop Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Shop Dashboard</h1>
+        <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div class="nav-menu">
+        <a href="#kasse">Kasse</a>
+        <a href="#bestand">Bestand</a>
+        <a href="#bestellung">Bestellung</a>
+    </div>
+
+    <div class="dashboard-cards">
+        <div class="card">
+            <h2>Kasse</h2>
+            <p>Tagesabrechnung und Kassenbuch</p>
+            <button onclick="window.location.href='#kasse'">Öffnen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Bestand</h2>
+            <p>Aktuelle Lagerbestände</p>
+            <button onclick="window.location.href='#bestand'">Prüfen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Bestellung</h2>
+            <p>Neue Waren bestellen</p>
+            <button onclick="window.location.href='#bestellung'">Bestellen</button>
+        </div>
+    </div>
+
+    <script>
+        // Prüfen ob Shop-Mitarbeiter
+        function checkShop() {
+            const user = localStorage.getItem('user');
+            if(user !== 'shop') {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Bei Laden und regelmäßig prüfen
+        checkShop();
+        setInterval(checkShop, 2000);
+        
+        // Abmelden
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

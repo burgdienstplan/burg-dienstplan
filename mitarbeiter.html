@@ -62,15 +62,48 @@
 
         .mitarbeiter-item {
             display: grid;
-            grid-template-columns: 1fr 1fr auto auto;
+            grid-template-columns: 2fr 1fr 1fr;
             gap: 1rem;
             padding: 1rem;
             border-bottom: 1px solid #eee;
-            align-items: center;
+            align-items: start;
         }
 
         .mitarbeiter-item:last-child {
             border-bottom: none;
+        }
+
+        .mitarbeiter-info {
+            line-height: 1.6;
+        }
+
+        .mitarbeiter-history {
+            position: relative;
+        }
+
+        .history-content {
+            background: var(--pergament);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .mitarbeiter-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
 
         .form-group {
@@ -80,19 +113,47 @@
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
+            color: var(--stein-grau);
         }
 
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 1rem;
         }
 
-        .actions {
-            margin-top: 2rem;
+        .edit-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .edit-dialog::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: -1;
+        }
+
+        .form-actions {
             display: flex;
             gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
         }
 
         .delete-btn {
@@ -111,12 +172,26 @@
             background-color: #004494;
         }
 
+        .reset-btn {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .reset-btn:hover {
+            background-color: #e0a800;
+        }
+
         .back-btn {
             background-color: var(--stein-grau);
         }
 
         .back-btn:hover {
             background-color: #333;
+        }
+
+        .history-btn {
+            background-color: var(--stein-grau);
+            width: 100%;
         }
     </style>
 </head>
@@ -130,26 +205,9 @@
     </div>
 
     <div class="content">
-        <h2>Neuen Mitarbeiter anlegen</h2>
-        <form id="mitarbeiterForm">
-            <div class="form-group">
-                <label for="vorname">Vorname</label>
-                <input type="text" id="vorname" required>
-            </div>
-            <div class="form-group">
-                <label for="nachname">Nachname</label>
-                <input type="text" id="nachname" required>
-            </div>
-            <div class="form-group">
-                <label for="username">Benutzername</label>
-                <input type="text" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Passwort</label>
-                <input type="password" id="password" required>
-            </div>
-            <button type="submit">Mitarbeiter anlegen</button>
-        </form>
+        <div id="kastellanBereich" style="display: none;">
+            <button onclick="showEditDialog()" style="margin-bottom: 2rem;">Neuen Mitarbeiter anlegen</button>
+        </div>
 
         <div class="mitarbeiter-liste">
             <h2>Mitarbeiter</h2>
@@ -157,89 +215,22 @@
         </div>
     </div>
 
+    <script src="js/mitarbeiter.js"></script>
     <script>
         // Beim Laden prüfen ob Kastellan
         window.addEventListener('load', () => {
             const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user || user.role !== 'kastellan') {
+            if (!user) {
                 window.location.href = 'index.html';
                 return;
             }
-            loadMitarbeiter();
+            
+            // Zeige Kastellan-spezifische Elemente
+            if (user.role === 'kastellan') {
+                document.getElementById('kastellanBereich').style.display = 'block';
+            }
         });
 
-        // Mitarbeiter laden
-        function loadMitarbeiter() {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const mitarbeiter = users.filter(u => u.role !== 'kastellan');
-            const liste = document.getElementById('mitarbeiterListe');
-            
-            liste.innerHTML = '';
-            mitarbeiter.forEach(m => {
-                const div = document.createElement('div');
-                div.className = 'mitarbeiter-item';
-                div.innerHTML = `
-                    <div>${m.vorname || ''}</div>
-                    <div>${m.nachname || ''}</div>
-                    <button class="edit-btn" onclick="editMitarbeiter('${m.username}')">Bearbeiten</button>
-                    <button class="delete-btn" onclick="deleteMitarbeiter('${m.username}')">Löschen</button>
-                `;
-                liste.appendChild(div);
-            });
-        }
-
-        // Mitarbeiter anlegen
-        document.getElementById('mitarbeiterForm').onsubmit = (e) => {
-            e.preventDefault();
-            
-            const mitarbeiter = {
-                vorname: document.getElementById('vorname').value,
-                nachname: document.getElementById('nachname').value,
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                role: 'mitarbeiter'
-            };
-
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            
-            // Prüfen ob Benutzername existiert
-            if (users.some(u => u.username === mitarbeiter.username)) {
-                alert('Dieser Benutzername existiert bereits!');
-                return;
-            }
-
-            users.push(mitarbeiter);
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            // Form zurücksetzen und Liste neu laden
-            e.target.reset();
-            loadMitarbeiter();
-        };
-
-        // Mitarbeiter löschen
-        function deleteMitarbeiter(username) {
-            if (!confirm('Mitarbeiter wirklich löschen?')) return;
-
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const newUsers = users.filter(u => u.username !== username);
-            localStorage.setItem('users', JSON.stringify(newUsers));
-            loadMitarbeiter();
-        }
-
-        // Mitarbeiter bearbeiten
-        function editMitarbeiter(username) {
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const mitarbeiter = users.find(u => u.username === username);
-            
-            if (mitarbeiter) {
-                document.getElementById('vorname').value = mitarbeiter.vorname || '';
-                document.getElementById('nachname').value = mitarbeiter.nachname || '';
-                document.getElementById('username').value = mitarbeiter.username;
-                document.getElementById('password').value = mitarbeiter.password;
-            }
-        }
-
-        // Abmelden
         function logout() {
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Burg Hochosterwitz - Museumsführer Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Museumsführer Dashboard</h1>
+        <button onclick="logout()">Abmelden</button>
+    </div>
+
+    <div class="nav-menu">
+        <a href="#fuehrungen">Führungen</a>
+        <a href="#termine">Termine</a>
+        <a href="#infos">Besucherinfos</a>
+    </div>
+
+    <div class="dashboard-cards">
+        <div class="card">
+            <h2>Führungen</h2>
+            <p>Ihre geplanten Führungen</p>
+            <button onclick="window.location.href='#fuehrungen'">Anzeigen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Termine</h2>
+            <p>Terminkalender und Planung</p>
+            <button onclick="window.location.href='#termine'">Öffnen</button>
+        </div>
+        
+        <div class="card">
+            <h2>Besucherinfos</h2>
+            <p>Aktuelle Informationen</p>
+            <button onclick="window.location.href='#infos'">Anzeigen</button>
+        </div>
+    </div>
+
+    <script>
+        // Prüfen ob Museumsführer
+        function checkMuseumsfuehrer() {
+            const user = localStorage.getItem('user');
+            if(user !== 'museumsfuehrer') {
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Bei Laden und regelmäßig prüfen
+        checkMuseumsfuehrer();
+        setInterval(checkMuseumsfuehrer, 2000);
+        
+        // Abmelden
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
