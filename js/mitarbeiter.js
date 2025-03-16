@@ -124,24 +124,35 @@ class MitarbeiterManager {
             const div = document.createElement('div');
             div.className = 'mitarbeiter-item';
             
-            const lastLoginDate = m.lastLogin ? new Date(m.lastLogin).toLocaleString() : 'Nie';
+            const lastLoginDate = m.lastLogin ? new Date(m.lastLogin).toLocaleString('de-DE') : 'Nie';
             
             if (isKastellan) {
                 div.innerHTML = `
                     <div class="mitarbeiter-info">
-                        <strong>${m.name}</strong><br>
-                        Rolle: ${m.role}<br>
-                        Tel: ${m.telefon || '-'}<br>
-                        Email: ${m.email || '-'}<br>
-                        Logins: ${m.loginCount || 0}<br>
-                        Letzter Login: ${lastLoginDate}
+                        <div class="mitarbeiter-hauptinfo">
+                            <strong>${m.name}</strong>
+                            <span class="rolle">${m.role}</span>
+                        </div>
+                        <div class="mitarbeiter-kontakt">
+                            <div>Tel: ${m.telefon || '-'}</div>
+                            <div>Email: ${m.email || '-'}</div>
+                        </div>
+                        <div class="login-statistik">
+                            <div class="login-count">
+                                <strong>Anzahl Logins:</strong> ${m.loginCount || 0}
+                            </div>
+                            <div class="last-login">
+                                <strong>Letzter Login:</strong> ${lastLoginDate}
+                            </div>
+                        </div>
                     </div>
                     <div class="mitarbeiter-history">
                         <button onclick="toggleHistory('${m.id}')" class="history-btn">Historie</button>
                         <div id="history-${m.id}" class="history-content" style="display:none">
                             ${m.changeHistory.map(h => `
                                 <div class="history-item">
-                                    ${new Date(h.timestamp).toLocaleString()}: ${h.changes}
+                                    ${new Date(h.timestamp).toLocaleString('de-DE')}: ${h.changes}
+                                    ${h.updatedBy ? `<br><em>Geändert von: ${h.updatedBy}</em>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -156,9 +167,22 @@ class MitarbeiterManager {
                 // Mitarbeiter sieht nur seine eigenen Daten
                 div.innerHTML = `
                     <div class="mitarbeiter-info">
-                        <strong>${m.name}</strong><br>
-                        Tel: ${m.telefon || '-'}<br>
-                        Email: ${m.email || '-'}
+                        <div class="mitarbeiter-hauptinfo">
+                            <strong>${m.name}</strong>
+                            <span class="rolle">${m.role}</span>
+                        </div>
+                        <div class="mitarbeiter-kontakt">
+                            <div>Tel: ${m.telefon || '-'}</div>
+                            <div>Email: ${m.email || '-'}</div>
+                        </div>
+                        <div class="login-statistik">
+                            <div class="login-count">
+                                <strong>Meine Logins:</strong> ${m.loginCount || 0}
+                            </div>
+                            <div class="last-login">
+                                <strong>Letzter Login:</strong> ${lastLoginDate}
+                            </div>
+                        </div>
                     </div>
                     <div class="mitarbeiter-actions">
                         <button onclick="editSelfInfo()" class="edit-btn">Daten ändern</button>

@@ -64,9 +64,15 @@
             display: grid;
             grid-template-columns: 2fr 1fr 1fr;
             gap: 1rem;
-            padding: 1rem;
+            padding: 1.5rem;
             border-bottom: 1px solid #eee;
             align-items: start;
+            background: white;
+            transition: background-color 0.2s;
+        }
+
+        .mitarbeiter-item:hover {
+            background: var(--pergament);
         }
 
         .mitarbeiter-item:last-child {
@@ -75,6 +81,45 @@
 
         .mitarbeiter-info {
             line-height: 1.6;
+        }
+
+        .mitarbeiter-hauptinfo {
+            margin-bottom: 1rem;
+        }
+
+        .mitarbeiter-hauptinfo strong {
+            font-size: 1.2rem;
+            color: var(--burg-rot);
+        }
+
+        .rolle {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            background: var(--stein-grau);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+
+        .mitarbeiter-kontakt {
+            margin-bottom: 1rem;
+            color: var(--stein-grau);
+        }
+
+        .login-statistik {
+            background: var(--pergament);
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .login-count {
+            margin-bottom: 0.5rem;
+        }
+
+        .login-count strong, .last-login strong {
+            color: var(--burg-rot);
         }
 
         .mitarbeiter-history {
@@ -88,12 +133,19 @@
             margin-top: 0.5rem;
             max-height: 200px;
             overflow-y: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .history-item {
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #ddd;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
             font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .history-item em {
+            color: var(--burg-rot);
+            font-size: 0.8rem;
         }
 
         .history-item:last-child {
