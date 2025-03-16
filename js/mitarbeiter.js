@@ -20,227 +20,100 @@ function hashPassword(password) {
 // Mitarbeiter-Klasse
 class MitarbeiterManager {
     constructor() {
-        this.loadMitarbeiter();
+        this.mitarbeiter = this.loadMitarbeiter();
+        this.initializeEventListeners();
     }
 
     loadMitarbeiter() {
-        const encryptedData = localStorage.getItem('mitarbeiter');
-        if (encryptedData) {
-            this.mitarbeiter = decryptData(encryptedData);
-        } else {
-            this.mitarbeiter = [];
-        }
-        this.renderMitarbeiterListe();
+        return JSON.parse(localStorage.getItem('mitarbeiter')) || [];
     }
 
     saveMitarbeiter() {
-        const encryptedData = encryptData(this.mitarbeiter);
-        localStorage.setItem('mitarbeiter', encryptedData);
+        localStorage.setItem('mitarbeiter', JSON.stringify(this.mitarbeiter));
     }
 
-    addMitarbeiter(mitarbeiterData) {
-        const timestamp = new Date().toISOString();
-        const newMitarbeiter = {
-            ...mitarbeiterData,
-            id: Date.now().toString(),
-            password: hashPassword(mitarbeiterData.password),
-            loginCount: 0,
-            lastLogin: null,
-            changeHistory: [{
-                timestamp,
-                type: 'created',
-                changes: 'Mitarbeiter angelegt'
-            }]
+    addMitarbeiter(vorname, nachname, positionen) {
+        const id = vorname.toLowerCase().replace(/\s+/g, '');
+        const mitarbeiter = {
+            id,
+            vorname,
+            nachname,
+            name: `${vorname} ${nachname}`,
+            positionen
         };
-        this.mitarbeiter.push(newMitarbeiter);
+        this.mitarbeiter.push(mitarbeiter);
         this.saveMitarbeiter();
-        this.renderMitarbeiterListe();
-    }
-
-    updateMitarbeiter(id, updates, updatedBy) {
-        const index = this.mitarbeiter.findIndex(m => m.id === id);
-        if (index === -1) return false;
-
-        const oldData = { ...this.mitarbeiter[index] };
-        const changes = [];
-
-        // Vergleiche und dokumentiere Änderungen
-        Object.keys(updates).forEach(key => {
-            if (key !== 'password' && oldData[key] !== updates[key]) {
-                changes.push(`${key}: ${oldData[key]} → ${updates[key]}`);
-            }
-        });
-
-        if (updates.password) {
-            updates.password = hashPassword(updates.password);
-            changes.push('Passwort geändert');
-        }
-
-        // Füge Änderung zur Historie hinzu
-        const changeRecord = {
-            timestamp: new Date().toISOString(),
-            type: 'update',
-            changes: changes.join(', '),
-            updatedBy
-        };
-
-        this.mitarbeiter[index] = {
-            ...oldData,
-            ...updates,
-            changeHistory: [...oldData.changeHistory, changeRecord]
-        };
-
-        this.saveMitarbeiter();
-        this.renderMitarbeiterListe();
-        return true;
+        this.updateMitarbeiterListe();
+        return mitarbeiter;
     }
 
     deleteMitarbeiter(id) {
+        // Prüfe ob Mitarbeiter noch Schichten hat
+        const shifts = JSON.parse(localStorage.getItem('shifts')) || {};
+        let hasShifts = false;
+        
+        Object.values(shifts).forEach(dayShifts => {
+            if (dayShifts.some(shift => shift.mitarbeiterId === id)) {
+                hasShifts = true;
+            }
+        });
+
+        if (hasShifts) {
+            alert('Dieser Mitarbeiter hat noch Schichten im Dienstplan. Bitte zuerst alle Schichten löschen.');
+            return false;
+        }
+
         this.mitarbeiter = this.mitarbeiter.filter(m => m.id !== id);
         this.saveMitarbeiter();
-        this.renderMitarbeiterListe();
+        this.updateMitarbeiterListe();
+        return true;
     }
 
-    incrementLoginCount(username) {
-        const mitarbeiter = this.mitarbeiter.find(m => m.username === username);
-        if (mitarbeiter) {
-            mitarbeiter.loginCount = (mitarbeiter.loginCount || 0) + 1;
-            mitarbeiter.lastLogin = new Date().toISOString();
-            this.saveMitarbeiter();
-        }
-    }
-
-    renderMitarbeiterListe() {
+    updateMitarbeiterListe() {
         const liste = document.getElementById('mitarbeiterListe');
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const isKastellan = currentUser?.role === 'kastellan';
+        if (!liste) return;
 
         liste.innerHTML = '';
-        
         this.mitarbeiter.forEach(m => {
-            // Wenn nicht Kastellan, zeige nur eigene Daten
-            if (!isKastellan && m.id !== currentUser.id) return;
-
             const div = document.createElement('div');
             div.className = 'mitarbeiter-item';
             
-            const lastLoginDate = m.lastLogin ? new Date(m.lastLogin).toLocaleString('de-DE') : 'Nie';
-            
-            if (isKastellan) {
-                div.innerHTML = `
-                    <div class="mitarbeiter-info">
-                        <div class="mitarbeiter-hauptinfo">
-                            <strong>${m.name}</strong>
-                            <span class="rolle">${m.role}</span>
-                        </div>
-                        <div class="mitarbeiter-kontakt">
-                            <div>Tel: ${m.telefon || '-'}</div>
-                            <div>Email: ${m.email || '-'}</div>
-                        </div>
-                        <div class="login-statistik">
-                            <div class="login-count">
-                                <strong>Anzahl Logins:</strong> ${m.loginCount || 0}
-                            </div>
-                            <div class="last-login">
-                                <strong>Letzter Login:</strong> ${lastLoginDate}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mitarbeiter-history">
-                        <button onclick="toggleHistory('${m.id}')" class="history-btn">Historie</button>
-                        <div id="history-${m.id}" class="history-content" style="display:none">
-                            ${m.changeHistory.map(h => `
-                                <div class="history-item">
-                                    ${new Date(h.timestamp).toLocaleString('de-DE')}: ${h.changes}
-                                    ${h.updatedBy ? `<br><em>Geändert von: ${h.updatedBy}</em>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    <div class="mitarbeiter-actions">
-                        <button onclick="editMitarbeiter('${m.id}')" class="edit-btn">Bearbeiten</button>
-                        <button onclick="resetPassword('${m.id}')" class="reset-btn">Passwort zurücksetzen</button>
-                        <button onclick="deleteMitarbeiter('${m.id}')" class="delete-btn">Löschen</button>
-                    </div>
-                `;
-            } else {
-                // Mitarbeiter sieht nur seine eigenen Daten
-                div.innerHTML = `
-                    <div class="mitarbeiter-info">
-                        <div class="mitarbeiter-hauptinfo">
-                            <strong>${m.name}</strong>
-                            <span class="rolle">${m.role}</span>
-                        </div>
-                        <div class="mitarbeiter-kontakt">
-                            <div>Tel: ${m.telefon || '-'}</div>
-                            <div>Email: ${m.email || '-'}</div>
-                        </div>
-                        <div class="login-statistik">
-                            <div class="login-count">
-                                <strong>Meine Logins:</strong> ${m.loginCount || 0}
-                            </div>
-                            <div class="last-login">
-                                <strong>Letzter Login:</strong> ${lastLoginDate}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mitarbeiter-actions">
-                        <button onclick="editSelfInfo()" class="edit-btn">Daten ändern</button>
-                        <button onclick="changePassword()" class="edit-btn">Passwort ändern</button>
-                    </div>
-                `;
-            }
-            
+            const info = document.createElement('span');
+            info.textContent = `${m.name} (${m.positionen.join(', ')})`;
+            div.appendChild(info);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.onclick = () => this.deleteMitarbeiter(m.id);
+            div.appendChild(deleteBtn);
+
             liste.appendChild(div);
         });
     }
+
+    initializeEventListeners() {
+        const addForm = document.getElementById('addMitarbeiterForm');
+        if (addForm) {
+            addForm.onsubmit = (e) => {
+                e.preventDefault();
+                const vorname = document.getElementById('vorname').value;
+                const nachname = document.getElementById('nachname').value;
+                const positionen = Array.from(document.getElementById('positionen').selectedOptions)
+                    .map(option => option.value);
+                
+                if (vorname && nachname && positionen.length > 0) {
+                    this.addMitarbeiter(vorname, nachname, positionen);
+                    addForm.reset();
+                }
+            };
+        }
+    }
 }
 
-// Globale Instanz
-const mitarbeiterManager = new MitarbeiterManager();
-
-// Demo-Mitarbeiter für die Burg
-const demoMitarbeiter = [
-    {
-        id: 'anna',
-        name: 'Anna Müller',
-        position: ['shop', 'shop_museum', 'kasse'],
-        role: 'mitarbeiter'
-    },
-    {
-        id: 'peter',
-        name: 'Peter Wagner',
-        position: ['shop', 'fuehrung'],
-        role: 'museumsfuehrer'
-    },
-    {
-        id: 'maria',
-        name: 'Maria Huber',
-        position: ['shop', 'shop_museum', 'kasse'],
-        role: 'mitarbeiter'
-    },
-    {
-        id: 'josef',
-        name: 'Josef Bauer',
-        position: ['shop', 'fuehrung'],
-        role: 'museumsfuehrer'
-    },
-    {
-        id: 'lisa',
-        name: 'Lisa Berger',
-        position: ['shop', 'shop_museum'],
-        role: 'mitarbeiter'
-    },
-    {
-        id: 'kastellan',
-        name: 'Hans Burgverwalter',
-        position: ['all'],
-        role: 'kastellan'
-    }
-];
-
-// Speichere Demo-Mitarbeiter im localStorage
-localStorage.setItem('mitarbeiter', JSON.stringify(demoMitarbeiter));
+// Initialisierung
+document.addEventListener('DOMContentLoaded', () => {
+    window.mitarbeiterManager = new MitarbeiterManager();
+});
 
 // UI Funktionen
 function toggleHistory(id) {

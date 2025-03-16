@@ -360,6 +360,62 @@
             border-left: 4px solid #1976d2;
             font-weight: bold;
         }
+
+        /* Mitarbeiter-Verwaltung */
+        #addMitarbeiterForm {
+            background: var(--parchment-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #addMitarbeiterForm input,
+        #addMitarbeiterForm select {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #addMitarbeiterForm button {
+            background: var(--burg-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #addMitarbeiterForm button:hover {
+            background: #660000;
+        }
+
+        .mitarbeiter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .mitarbeiter-item button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+            margin-left: 10px;
+        }
+
+        .mitarbeiter-item button:hover {
+            color: var(--burg-color);
+        }
     </style>
 </head>
 <body>
@@ -378,6 +434,58 @@
 
         <!-- Planungswarnung -->
         <div id="planningWarning"></div>
+
+        <!-- Admin-Bereich (nur für Kastellan sichtbar) -->
+        <div id="adminControls" style="display: none;">
+            <h2>Mitarbeiter verwalten</h2>
+            <form id="addMitarbeiterForm">
+                <input type="text" id="vorname" placeholder="Vorname" required>
+                <input type="text" id="nachname" placeholder="Nachname" required>
+                <select id="positionen" multiple required>
+                    <option value="shop">Shop Eingang</option>
+                    <option value="shop_museum">Shop Museum</option>
+                    <option value="kasse">Kasse</option>
+                    <option value="fuehrung">Führung</option>
+                </select>
+                <button type="submit">Mitarbeiter hinzufügen</button>
+            </form>
+            <div id="mitarbeiterListe"></div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <select id="mitarbeiter">
+                        <option value="">Mitarbeiter auswählen...</option>
+                    </select>
+                    <select id="position">
+                        <option value="shop">Shop Eingang</option>
+                        <option value="shop_museum">Shop Museum</option>
+                        <option value="kasse">Kasse</option>
+                        <option value="fuehrung">Führung</option>
+                    </select>
+                    <input type="date" id="datum">
+                    <button id="addShift">Schicht hinzufügen</button>
+                    <button id="markRuhetag">Als Ruhetag markieren</button>
+                </div>
+            </div>
+
+            <!-- Dienstanfragen -->
+            <div id="dienstAnfragen" class="controls">
+                <h3>Dienstanfragen</h3>
+                <!-- Hier werden die Dienstanfragen dynamisch eingefügt -->
+            </div>
+
+            <!-- Urlaubsanfragen -->
+            <div id="urlaubsanfragen" class="controls">
+                <h3>Urlaubsanfragen</h3>
+                <div id="urlaubsanfragenListe"></div>
+            </div>
+
+            <!-- Führungsvorschläge -->
+            <div id="fuehrungsvorschlaege" class="controls">
+                <h3>Führungsvorschläge</h3>
+                <div id="fuehrungsvorschlaegeListe"></div>
+            </div>
+        </div>
 
         <!-- Kalender -->
         <div class="calendar">
@@ -419,44 +527,6 @@
                     <div class="legend-color" style="background: var(--outside-color)"></div>
                     Außerhalb der Saison
                 </div>
-            </div>
-        </div>
-
-        <!-- Admin-Bereich (nur für Kastellan sichtbar) -->
-        <div id="adminControls" style="display: none;">
-            <div class="controls">
-                <div class="control-group">
-                    <select id="mitarbeiter">
-                        <option value="">Mitarbeiter auswählen...</option>
-                    </select>
-                    <select id="position">
-                        <option value="shop">Shop Eingang</option>
-                        <option value="shop_museum">Shop Museum</option>
-                        <option value="kasse">Kasse</option>
-                        <option value="fuehrung">Führung</option>
-                    </select>
-                    <input type="date" id="datum">
-                    <button id="addShift">Schicht hinzufügen</button>
-                    <button id="markRuhetag">Als Ruhetag markieren</button>
-                </div>
-            </div>
-
-            <!-- Dienstanfragen -->
-            <div id="dienstAnfragen" class="controls">
-                <h3>Dienstanfragen</h3>
-                <!-- Hier werden die Dienstanfragen dynamisch eingefügt -->
-            </div>
-
-            <!-- Urlaubsanfragen -->
-            <div id="urlaubsanfragen" class="controls">
-                <h3>Urlaubsanfragen</h3>
-                <div id="urlaubsanfragenListe"></div>
-            </div>
-
-            <!-- Führungsvorschläge -->
-            <div id="fuehrungsvorschlaege" class="controls">
-                <h3>Führungsvorschläge</h3>
-                <div id="fuehrungsvorschlaegeListe"></div>
             </div>
         </div>
 
