@@ -55,41 +55,41 @@ class Database {
     }
 
     // Basis-Funktionen
-    async getItem(key) {
+    getItem(key) {
         return JSON.parse(localStorage.getItem(key));
     }
 
-    async setItem(key, value) {
+    setItem(key, value) {
         localStorage.setItem(key, JSON.stringify(value));
     }
 
-    async removeItem(key) {
+    removeItem(key) {
         localStorage.removeItem(key);
     }
 
     // Mitarbeiter-Funktionen
-    async getMitarbeiter() {
+    getMitarbeiter() {
         return this.getItem('mitarbeiter') || [];
     }
 
-    async addMitarbeiter(mitarbeiter) {
-        const mitarbeiterListe = await this.getMitarbeiter();
+    addMitarbeiter(mitarbeiter) {
+        const mitarbeiterListe = this.getMitarbeiter();
         mitarbeiterListe.push(mitarbeiter);
-        await this.setItem('mitarbeiter', mitarbeiterListe);
+        this.setItem('mitarbeiter', mitarbeiterListe);
     }
 
-    async updateMitarbeiter(id, updates) {
-        const mitarbeiterListe = await this.getMitarbeiter();
+    updateMitarbeiter(id, updates) {
+        const mitarbeiterListe = this.getMitarbeiter();
         const index = mitarbeiterListe.findIndex(m => m.id === id);
         if (index !== -1) {
             mitarbeiterListe[index] = { ...mitarbeiterListe[index], ...updates };
-            await this.setItem('mitarbeiter', mitarbeiterListe);
+            this.setItem('mitarbeiter', mitarbeiterListe);
         }
     }
 
     // Schicht-Funktionen
-    async getShifts(startDate, endDate) {
-        const shifts = await this.getItem('shifts') || [];
+    getShifts(startDate, endDate) {
+        const shifts = this.getItem('shifts') || [];
         if (!startDate) return shifts;
 
         return shifts.filter(shift => {
@@ -100,65 +100,65 @@ class Database {
         });
     }
 
-    async addShift(shift) {
-        const shifts = await this.getShifts();
+    addShift(shift) {
+        const shifts = this.getShifts();
         shift.id = crypto.randomUUID();
         shifts.push(shift);
-        await this.setItem('shifts', shifts);
+        this.setItem('shifts', shifts);
         return shift;
     }
 
-    async updateShift(id, updates) {
-        const shifts = await this.getShifts();
+    updateShift(id, updates) {
+        const shifts = this.getShifts();
         const index = shifts.findIndex(s => s.id === id);
         if (index !== -1) {
             shifts[index] = { ...shifts[index], ...updates };
-            await this.setItem('shifts', shifts);
+            this.setItem('shifts', shifts);
         }
     }
 
-    async deleteShift(id) {
-        const shifts = await this.getShifts();
+    deleteShift(id) {
+        const shifts = this.getShifts();
         const filteredShifts = shifts.filter(s => s.id !== id);
-        await this.setItem('shifts', filteredShifts);
+        this.setItem('shifts', filteredShifts);
     }
 
     // Urlaub-Funktionen
-    async getUrlaubsanfragen() {
+    getUrlaubsanfragen() {
         return this.getItem('urlaube') || [];
     }
 
-    async addUrlaubsanfrage(anfrage) {
-        const urlaube = await this.getUrlaubsanfragen();
+    addUrlaubsanfrage(anfrage) {
+        const urlaube = this.getUrlaubsanfragen();
         anfrage.id = crypto.randomUUID();
         urlaube.push(anfrage);
-        await this.setItem('urlaube', urlaube);
+        this.setItem('urlaube', urlaube);
         return anfrage;
     }
 
-    async updateUrlaubsanfrage(id, status) {
-        const urlaube = await this.getUrlaubsanfragen();
+    updateUrlaubsanfrage(id, status) {
+        const urlaube = this.getUrlaubsanfragen();
         const index = urlaube.findIndex(u => u.id === id);
         if (index !== -1) {
             urlaube[index].status = status;
-            await this.setItem('urlaube', urlaube);
+            this.setItem('urlaube', urlaube);
         }
     }
 
     // Feiertag-Funktionen
-    async getFeiertage() {
+    getFeiertage() {
         return this.getItem('feiertage') || [];
     }
 
-    async addFeiertag(feiertag) {
-        const feiertage = await this.getFeiertage();
+    addFeiertag(feiertag) {
+        const feiertage = this.getFeiertage();
         feiertage.push(feiertag);
-        await this.setItem('feiertage', feiertage);
+        this.setItem('feiertage', feiertage);
     }
 
     // Authentifizierung
-    async login(username, password) {
-        const mitarbeiter = await this.getMitarbeiter();
+    login(username, password) {
+        const mitarbeiter = this.getMitarbeiter();
         const user = mitarbeiter.find(m => 
             m.username === username && 
             m.password === password && 

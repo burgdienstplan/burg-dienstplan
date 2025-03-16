@@ -160,20 +160,20 @@
     <script>
         const db = new Database();
 
-        async function handleLogin(event) {
+        function handleLogin(event) {
             event.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
             try {
-                const mitarbeiter = await db.getMitarbeiter();
+                const mitarbeiter = db.getMitarbeiter();
                 const user = mitarbeiter.find(m => 
                     m.username === username && 
                     m.password === password
                 );
 
                 if (user) {
-                    await db.setItem('currentUser', {
+                    db.setItem('currentUser', {
                         id: user.id,
                         username: user.username,
                         vorname: user.vorname,
@@ -181,16 +181,16 @@
                         rolle: user.rolle
                     });
 
-                    showNotification('Login erfolgreich! Sie werden weitergeleitet...', 'success');
+                    showNotification('Login erfolgreich!', 'success');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1000);
                 } else {
-                    showNotification('Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.', 'error');
+                    showNotification('Ungültige Anmeldedaten', 'error');
                 }
             } catch (error) {
                 console.error('Login-Fehler:', error);
-                showNotification('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.', 'error');
+                showNotification('Ein Fehler ist aufgetreten', 'error');
             }
         }
 
@@ -211,8 +211,8 @@
         }
 
         // Prüfe ob bereits eingeloggt
-        window.addEventListener('load', async () => {
-            const currentUser = await db.getItem('currentUser');
+        window.addEventListener('load', () => {
+            const currentUser = db.getItem('currentUser');
             if (currentUser) {
                 window.location.href = 'dashboard.html';
             }
