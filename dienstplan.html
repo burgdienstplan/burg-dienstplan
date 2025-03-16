@@ -362,7 +362,7 @@
         }
 
         /* Mitarbeiter-Verwaltung */
-        #addMitarbeiterForm {
+        .admin-form {
             background: var(--parchment-color);
             padding: 20px;
             border-radius: 8px;
@@ -370,27 +370,61 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        #addMitarbeiterForm input,
-        #addMitarbeiterForm select {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .form-group {
+            margin-bottom: 15px;
         }
 
-        #addMitarbeiterForm button {
-            background: var(--burg-color);
-            color: white;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--burg-color);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .form-group select[multiple] {
+            height: 120px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .save-btn,
+        .cancel-btn {
             padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: bold;
         }
 
-        #addMitarbeiterForm button:hover {
+        .save-btn {
+            background: var(--burg-color);
+            color: white;
+        }
+
+        .save-btn:hover {
             background: #660000;
+        }
+
+        .cancel-btn {
+            background: #9E9E9E;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: #757575;
         }
 
         .mitarbeiter-item {
@@ -411,6 +445,7 @@
             font-size: 1.2em;
             padding: 5px;
             margin-left: 10px;
+            transition: color 0.2s;
         }
 
         .mitarbeiter-item button:hover {
@@ -438,16 +473,28 @@
         <!-- Admin-Bereich (nur für Kastellan sichtbar) -->
         <div id="adminControls" style="display: none;">
             <h2>Mitarbeiter verwalten</h2>
-            <form id="addMitarbeiterForm">
-                <input type="text" id="vorname" placeholder="Vorname" required>
-                <input type="text" id="nachname" placeholder="Nachname" required>
-                <select id="positionen" multiple required>
-                    <option value="shop">Shop Eingang</option>
-                    <option value="shop_museum">Shop Museum</option>
-                    <option value="kasse">Kasse</option>
-                    <option value="fuehrung">Führung</option>
-                </select>
-                <button type="submit">Mitarbeiter hinzufügen</button>
+            <form id="addMitarbeiterForm" class="admin-form">
+                <div class="form-group">
+                    <label for="vorname">Vorname:</label>
+                    <input type="text" id="vorname" placeholder="z.B. Thomas" required>
+                </div>
+                <div class="form-group">
+                    <label for="nachname">Nachname:</label>
+                    <input type="text" id="nachname" placeholder="z.B. Gruber" required>
+                </div>
+                <div class="form-group">
+                    <label for="positionen">Positionen (STRG/CMD + Klick für Mehrfachauswahl):</label>
+                    <select id="positionen" multiple required>
+                        <option value="shop">Shop Eingang</option>
+                        <option value="shop_museum">Shop Museum</option>
+                        <option value="kasse">Kasse</option>
+                        <option value="fuehrung">Führung</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="save-btn">Speichern</button>
+                    <button type="reset" class="cancel-btn">Abbrechen</button>
+                </div>
             </form>
             <div id="mitarbeiterListe"></div>
 
