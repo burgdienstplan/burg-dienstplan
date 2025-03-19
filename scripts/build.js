@@ -14,8 +14,8 @@ const templateVars = {
     message: '',
     error: '',
     user: null,
-    Version: packageJson.version,
-    Entwickler: 'Martin Steindorfer'
+    version: packageJson.version,
+    developer: 'Martin Steindorfer'
 };
 
 // Liste der EJS-Dateien zum Konvertieren
