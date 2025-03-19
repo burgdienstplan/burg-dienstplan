@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "netlify dev",
     "build": "npm run build:client",
-    "build:client": "mkdir -p public && cp -r views/index.ejs public/index.html && cp -r views/login.ejs public/login.html && cp -r views/error.ejs public/error.html && cp -r views/css public/css",
+    "build:client": "node scripts/build.js",
     "start": "netlify dev"
   },
   "dependencies": {
