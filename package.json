@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "netlify dev",
     "build": "npm run build:client",
-    "build:client": "mkdir -p public && cp -r views/* public/",
+    "build:client": "mkdir -p public && cp -r views/* public/ && cp -r views/.* public/ 2>/dev/null || true",
     "start": "netlify dev"
   },
   "dependencies": {
