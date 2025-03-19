@@ -19,10 +19,22 @@ exports.handler = async (event, context) => {
 
         const { username, password, role, displayName } = JSON.parse(event.body);
 
-        // Passwort hashen
+        // Prüfen ob es bereits Benutzer gibt
+        const userCount = await User.countDocuments();
+        
+        // Wenn es bereits Benutzer gibt, mehr Sicherheitsprüfungen durchführen
+        if (userCount > 0) {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ 
+                    message: 'Benutzer können nur vom Administrator erstellt werden' 
+                })
+            };
+        }
+
+        // Wenn es noch keine Benutzer gibt, ersten Admin erstellen
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Benutzer erstellen
         const user = new User({
             username,
             password: hashedPassword,
@@ -35,7 +47,7 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 201,
             body: JSON.stringify({ 
-                message: 'Benutzer erfolgreich erstellt',
+                message: 'Administrator erfolgreich erstellt',
                 user: {
                     username: user.username,
                     role: user.role,
@@ -44,6 +56,7 @@ exports.handler = async (event, context) => {
             })
         };
     } catch (error) {
+        console.error('Fehler:', error);
         return {
             statusCode: 500,
             body: JSON.stringify({ 
