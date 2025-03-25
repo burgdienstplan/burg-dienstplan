@@ -1,7 +1,13 @@
 [build]
-  publish = "/"
-  
+  command = "npm install"
+  functions = "netlify/functions"
+  publish = "public"
+
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/.netlify/functions/server"
   status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/views/**/*"]
