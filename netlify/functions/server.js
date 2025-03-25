@@ -4,7 +4,6 @@ const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const path = require('path');
-const User = require('../../models/User');
 
 const app = express();
 
@@ -20,7 +19,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Session-Konfiguration
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'burgHochosterwitzSecretKey2024',
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -34,88 +33,175 @@ app.use(session({
 
 // EJS als Template Engine
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../../views'));
+app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '../../public')));
-
-// Auth-Middleware
-const { requireAuth, requireRole } = require('../../middleware/auth');
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Login-Route
 app.get('/', (req, res) => {
-    res.render('login', { error: req.query.error });
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Burg Hochosterwitz - Login</title>
+            <style>
+                body {
+                    font-family: 'Cinzel', serif;
+                    background-color: #f5e6d3;
+                    margin: 0;
+                    padding: 0;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    min-height: 100vh;
+                    background-image: url('https://www.burghochosterwitz.com/fileadmin/_processed_/1/1/csm_Burg-Hochosterwitz-Luftaufnahme_2d1b3b6c3c.jpg');
+                    background-size: cover;
+                    background-position: center;
+                }
+                .login-container {
+                    background-color: rgba(255, 255, 255, 0.9);
+                    padding: 2rem;
+                    border-radius: 10px;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+                    width: 90%;
+                    max-width: 400px;
+                }
+                h1 {
+                    color: #8b0000;
+                    text-align: center;
+                    margin-bottom: 2rem;
+                }
+                .form-group {
+                    margin-bottom: 1rem;
+                }
+                label {
+                    display: block;
+                    margin-bottom: 0.5rem;
+                    color: #4a4a4a;
+                }
+                input {
+                    width: 100%;
+                    padding: 0.5rem;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    font-size: 1rem;
+                }
+                button {
+                    width: 100%;
+                    padding: 0.75rem;
+                    background-color: #8b0000;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+                button:hover {
+                    background-color: #6d0000;
+                }
+                .error-message {
+                    color: #8b0000;
+                    text-align: center;
+                    margin-top: 1rem;
+                }
+            </style>
+            <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+        </head>
+        <body>
+            <div class="login-container">
+                <h1>Burg Hochosterwitz</h1>
+                <form action="/login" method="POST">
+                    <div class="form-group">
+                        <label for="username">Benutzername</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Passwort</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit">Anmelden</button>
+                    ${req.query.error ? `<div class="error-message">${req.query.error}</div>` : ''}
+                </form>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
-app.post('/login', async (req, res) => {
+// Login verarbeiten
+app.post('/login', (req, res) => {
     const { username, password } = req.body;
-
-    try {
-        // Admin-Login für Tests
-        if (username === 'admin' && password === 'Ratzendorf55') {
-            req.session.userId = 'admin';
-            req.session.role = 'kastellan';
-            req.session.username = 'admin';
-            return res.redirect('/kastellan/dashboard');
-        }
-
-        // Normaler Login
-        const user = await User.findOne({ username });
-        if (!user || !(await user.comparePassword(password))) {
-            return res.redirect('/?error=Ungültige Anmeldedaten');
-        }
-
-        req.session.userId = user._id;
-        req.session.role = user.role;
-        req.session.username = user.username;
-
-        switch (user.role) {
-            case 'kastellan':
-                res.redirect('/kastellan/dashboard');
-                break;
-            case 'hausmeister':
-                res.redirect('/hausmeister/dashboard');
-                break;
-            case 'shop':
-                res.redirect('/shop/dashboard');
-                break;
-            default:
-                res.redirect('/');
-        }
-    } catch (error) {
-        console.error('Login-Fehler:', error);
-        res.redirect('/?error=Ein Fehler ist aufgetreten');
+    
+    if (username === 'admin' && password === 'Ratzendorf55') {
+        req.session.userId = 'admin';
+        req.session.role = 'kastellan';
+        return res.redirect('/dashboard');
     }
+    
+    res.redirect('/?error=Ungültige Anmeldedaten');
 });
 
-// Dashboard-Routen
-app.get('/kastellan/dashboard', requireAuth, requireRole('kastellan'), (req, res) => {
-    res.render('kastellan/dashboard', {
-        user: {
-            username: req.session.username,
-            role: req.session.role
-        }
-    });
-});
+// Dashboard
+app.get('/dashboard', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/?error=Bitte melden Sie sich an');
+    }
 
-app.get('/hausmeister/dashboard', requireAuth, requireRole('hausmeister'), (req, res) => {
-    res.render('hausmeister/dashboard', {
-        user: {
-            username: req.session.username,
-            role: req.session.role
-        }
-    });
-});
-
-app.get('/shop/dashboard', requireAuth, requireRole('shop'), (req, res) => {
-    res.render('shop/dashboard', {
-        user: {
-            username: req.session.username,
-            role: req.session.role
-        }
-    });
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Dashboard - Burg Hochosterwitz</title>
+            <style>
+                body {
+                    font-family: 'Cinzel', serif;
+                    background-color: #f5e6d3;
+                    margin: 0;
+                    padding: 20px;
+                }
+                .dashboard {
+                    background-color: white;
+                    padding: 2rem;
+                    border-radius: 10px;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                }
+                h1 {
+                    color: #8b0000;
+                    margin-bottom: 2rem;
+                }
+                .welcome {
+                    font-size: 1.2rem;
+                    margin-bottom: 2rem;
+                }
+                .logout {
+                    color: #8b0000;
+                    text-decoration: none;
+                }
+                .logout:hover {
+                    text-decoration: underline;
+                }
+            </style>
+            <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+        </head>
+        <body>
+            <div class="dashboard">
+                <h1>Willkommen im Dashboard</h1>
+                <div class="welcome">
+                    Sie sind eingeloggt als: ${req.session.role}
+                </div>
+                <a href="/logout" class="logout">Ausloggen</a>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 // Logout
