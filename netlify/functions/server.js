@@ -15,6 +15,19 @@ async function connectDB() {
     const client = await MongoClient.connect(MONGODB_URI);
     db = client.db('burgdienstplan');
     console.log('Connected to MongoDB');
+    
+    // Erstelle Admin-Benutzer, wenn noch keiner existiert
+    const adminExists = await db.collection('users').findOne({ role: 'kastellan' });
+    if (!adminExists) {
+      await db.collection('users').insertOne({
+        username: 'admin',
+        password: 'admin2025', // Später durch gehashtes Passwort ersetzen
+        role: 'kastellan',
+        name: 'Administrator',
+        email: 'admin@burghochosterwitz.com'
+      });
+      console.log('Admin-Benutzer erstellt');
+    }
   } catch (err) {
     console.error('MongoDB connection error:', err);
   }
