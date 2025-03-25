@@ -6,44 +6,25 @@
     <title>Dienstplan - Kastellan Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #8B4513;
-            --secondary-color: #f5e6d3;
-            --text-color: #4a4a4a;
-            --border-color: #ddd;
-        }
-        
         body {
             font-family: 'Cinzel', serif;
             margin: 0;
             padding: 0;
-            background-color: var(--secondary-color);
+            background-color: #f5f5f5;
+            color: #2c3e50;
         }
         
-        .navbar {
-            background-color: var(--primary-color);
+        .header {
+            background-color: #34495e;
+            color: white;
             padding: 1rem;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        
-        .navbar-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 1rem;
+            text-align: center;
         }
         
         .container {
             max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            margin: 0 auto;
+            padding: 2rem;
         }
         
         .dashboard-grid {
@@ -53,86 +34,71 @@
             margin-top: 2rem;
         }
         
-        .card {
-            background: white;
-            border-radius: 10px;
+        .dashboard-card {
+            background-color: white;
+            border-radius: 8px;
             padding: 1.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .card h2 {
-            color: var(--primary-color);
+        .dashboard-card h3 {
             margin-top: 0;
-            font-size: 1.2rem;
-            border-bottom: 2px solid var(--border-color);
+            color: #34495e;
+            border-bottom: 2px solid #34495e;
             padding-bottom: 0.5rem;
         }
         
-        .card-content {
-            margin-top: 1rem;
-        }
-        
-        .btn {
+        .button {
             display: inline-block;
             padding: 0.5rem 1rem;
-            background-color: var(--primary-color);
+            background-color: #34495e;
             color: white;
             text-decoration: none;
             border-radius: 4px;
             transition: background-color 0.3s;
         }
         
-        .btn:hover {
-            background-color: #6d3610;
+        .button:hover {
+            background-color: #2c3e50;
         }
         
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
+        .logout {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
+    <div class="header">
         <h1>Dienstplan Dashboard</h1>
-        <div class="navbar-links">
-            <a href="/auth/logout">Ausloggen</a>
-        </div>
-    </nav>
+        <a href="/auth/logout" class="button logout">Abmelden</a>
+    </div>
     
     <div class="container">
         <div class="dashboard-grid">
-            <div class="card">
-                <h2>Dienstplan</h2>
-                <div class="card-content">
-                    <p>Verwalten Sie den Dienstplan für alle Mitarbeiter.</p>
-                    <a href="/dienstplan" class="btn">Zum Dienstplan</a>
-                </div>
+            <div class="dashboard-card">
+                <h3>Dienstplan</h3>
+                <p>Verwalten Sie den Dienstplan für alle Mitarbeiter.</p>
+                <a href="/kastellan/dienstplan" class="button">Zum Dienstplan</a>
             </div>
             
-            <div class="card">
-                <h2>Mitarbeiterverwaltung</h2>
-                <div class="card-content">
-                    <p>Verwalten Sie Mitarbeiter und deren Berechtigungen.</p>
-                    <a href="/mitarbeiter" class="btn">Zu den Mitarbeitern</a>
-                </div>
+            <div class="dashboard-card">
+                <h3>Mitarbeiter</h3>
+                <p>Verwalten Sie Mitarbeiter und deren Berechtigungen.</p>
+                <a href="/kastellan/mitarbeiter" class="button">Mitarbeiter verwalten</a>
             </div>
             
-            <div class="card">
-                <h2>Hausmeister-Aufgaben</h2>
-                <div class="card-content">
-                    <p>Überblick über alle Hausmeister-Aufgaben.</p>
-                    <a href="/aufgaben" class="btn">Zu den Aufgaben</a>
-                </div>
+            <div class="dashboard-card">
+                <h3>Hausmeister-Aufgaben</h3>
+                <p>Erstellen und verwalten Sie Aufgaben für den Hausmeister.</p>
+                <a href="/kastellan/hausmeister-aufgaben" class="button">Aufgaben verwalten</a>
             </div>
             
-            <div class="card">
-                <h2>Burglift-Verwaltung</h2>
-                <div class="card-content">
-                    <p>Verwalten Sie Wartung und Reparaturen des Burglifts.</p>
-                    <a href="/lift" class="btn">Zum Burglift</a>
-                </div>
+            <div class="dashboard-card">
+                <h3>Lift-Management</h3>
+                <p>Verwalten Sie Wartungstermine und Reparaturen.</p>
+                <a href="/kastellan/lift" class="button">Lift verwalten</a>
             </div>
         </div>
     </div>
