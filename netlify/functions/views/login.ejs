@@ -8,61 +8,74 @@
     <style>
         body {
             font-family: 'Cinzel', serif;
-            background-color: #f5e6d3;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            background-image: url('https://www.burghochosterwitz.com/fileadmin/_processed_/1/1/csm_Burg-Hochosterwitz-Luftaufnahme_2d1b3b6c3c.jpg');
-            background-size: cover;
-            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            color: #2c3e50;
         }
+
         .login-container {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            width: 90%;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
             max-width: 400px;
         }
-        h1 {
-            color: #8b0000;
+
+        .login-header {
             text-align: center;
             margin-bottom: 2rem;
         }
+
+        .login-header h1 {
+            color: #34495e;
+            margin: 0;
+            font-size: 2rem;
+        }
+
         .form-group {
             margin-bottom: 1rem;
         }
-        label {
+
+        .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #4a4a4a;
+            color: #34495e;
         }
-        input {
+
+        .form-group input {
             width: 100%;
             padding: 0.5rem;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 1rem;
+            font-family: inherit;
         }
-        button {
+
+        .button {
             width: 100%;
             padding: 0.75rem;
-            background-color: #8b0000;
+            background-color: #34495e;
             color: white;
             border: none;
             border-radius: 4px;
             font-size: 1rem;
             cursor: pointer;
+            font-family: inherit;
             transition: background-color 0.3s;
         }
-        button:hover {
-            background-color: #6d0000;
+
+        .button:hover {
+            background-color: #2c3e50;
         }
+
         .error-message {
-            color: #8b0000;
+            color: #e74c3c;
             text-align: center;
             margin-top: 1rem;
         }
@@ -70,19 +83,27 @@
 </head>
 <body>
     <div class="login-container">
-        <h1>Dienstplan</h1>
+        <div class="login-header">
+            <h1>Dienstplan</h1>
+        </div>
+        
         <form action="/auth/login" method="POST">
             <div class="form-group">
                 <label for="username">Benutzername</label>
                 <input type="text" id="username" name="username" required>
             </div>
+            
             <div class="form-group">
                 <label for="password">Passwort</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit">Anmelden</button>
-            <% if (locals.error) { %>
-                <div class="error-message"><%= error %></div>
+            
+            <button type="submit" class="button">Anmelden</button>
+            
+            <% if (typeof error !== 'undefined') { %>
+                <div class="error-message">
+                    <%= error %>
+                </div>
             <% } %>
         </form>
     </div>

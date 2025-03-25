@@ -8,57 +8,56 @@
     <style>
         body {
             font-family: 'Cinzel', serif;
-            background-color: #f5e6d3;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            color: #2c3e50;
         }
-        
+
         .error-container {
             background-color: white;
             padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
             max-width: 400px;
-            width: 90%;
+            text-align: center;
         }
-        
-        h1 {
-            color: #8b0000;
+
+        .error-header {
+            color: #34495e;
             margin-bottom: 1rem;
         }
-        
+
         .error-message {
-            color: #4a4a4a;
+            color: #e74c3c;
             margin-bottom: 2rem;
         }
-        
-        .back-button {
+
+        .button {
             display: inline-block;
             padding: 0.75rem 1.5rem;
-            background-color: #8b0000;
+            background-color: #34495e;
             color: white;
             text-decoration: none;
             border-radius: 4px;
             transition: background-color 0.3s;
         }
-        
-        .back-button:hover {
-            background-color: #6d0000;
+
+        .button:hover {
+            background-color: #2c3e50;
         }
     </style>
 </head>
 <body>
     <div class="error-container">
-        <h1>Ein Fehler ist aufgetreten</h1>
-        <div class="error-message">
-            <%= error %>
-        </div>
-        <a href="/" class="back-button">Zurück zur Startseite</a>
+        <h1 class="error-header">Ein Fehler ist aufgetreten</h1>
+        <p class="error-message"><%= error %></p>
+        <a href="/" class="button">Zurück zur Startseite</a>
     </div>
 </body>
 </html>
