@@ -36,6 +36,14 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
+// Base path middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/.netlify/functions/server')) {
+    req.url = req.url.replace('/.netlify/functions/server', '');
+  }
+  next();
+});
+
 // Routes
 app.get('/', (req, res) => {
   res.render('login');
@@ -122,10 +130,5 @@ app.use((err, req, res, next) => {
 const handler = serverless(app);
 
 exports.handler = async (event, context) => {
-  // Pfad korrigieren für Netlify Functions
-  if (!event.path.startsWith('/.netlify/functions/')) {
-    event.path = `/.netlify/functions/server${event.path}`;
-  }
-  
   return await handler(event, context);
 };
