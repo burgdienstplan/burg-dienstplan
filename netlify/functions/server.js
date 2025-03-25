@@ -38,6 +38,8 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// View Engine Setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -57,16 +59,26 @@ app.use((req, res, next) => {
   next();
 });
 
+// Debug Middleware
+app.use((req, res, next) => {
+  console.log('Request URL:', req.url);
+  console.log('Views Directory:', app.get('views'));
+  next();
+});
+
 // Routes
 app.get('/', (req, res) => {
-  res.render('login');
+  console.log('Rendering login page');
+  res.render('login', { error: null });
 });
 
 app.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log('Login attempt:', username);
   
   try {
     const user = await db.collection('users').findOne({ username });
+    console.log('Found user:', user ? 'yes' : 'no');
     
     if (user && password === user.password) {
       req.session.user = {
@@ -74,6 +86,8 @@ app.post('/auth/login', async (req, res) => {
         username: user.username,
         role: user.role
       };
+      
+      console.log('Login successful, role:', user.role);
       
       switch (user.role) {
         case 'kastellan':
@@ -89,6 +103,7 @@ app.post('/auth/login', async (req, res) => {
           res.redirect('/');
       }
     } else {
+      console.log('Login failed');
       res.render('login', { error: 'Ungültige Anmeldedaten' });
     }
   } catch (err) {
@@ -107,6 +122,7 @@ const requireLogin = (req, res, next) => {
 
 // Dashboard routes
 app.get('/kastellan/dashboard', requireLogin, (req, res) => {
+  console.log('Accessing kastellan dashboard');
   if (req.session.user.role !== 'kastellan') {
     return res.redirect('/');
   }
@@ -135,7 +151,7 @@ app.get('/auth/logout', (req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err);
   res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
 });
 
