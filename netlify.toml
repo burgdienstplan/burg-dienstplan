@@ -1,5 +1,5 @@
 [build]
-  command = "npm install"
+  command = "npm install && cd netlify/functions && npm install"
   functions = "netlify/functions"
   publish = "public"
 
@@ -18,4 +18,4 @@
 [functions]
   node_bundler = "esbuild"
   included_files = ["netlify/functions/views/**/*"]
-  external_node_modules = ["express"]
+  external_node_modules = ["express", "ejs"]
