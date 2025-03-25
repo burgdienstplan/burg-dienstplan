@@ -7,6 +7,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
 // Session
 app.use(session({
@@ -116,7 +117,7 @@ const loginPage = `
 </head>
 <body>
     <div class="login-container">
-        <img src="https://www.burghochosterwitz.com/wp-content/uploads/2023/05/Logo-Burg-Hochosterwitz.png" alt="Burg Hochosterwitz Logo" class="logo">
+        <img src="/images/logo.jpg" alt="Burg Hochosterwitz Logo" class="logo">
         <h2>Dienstplan Login</h2>
         <form action="/auth/login" method="POST">
             <div class="input-group">
@@ -243,7 +244,7 @@ const dashboardPage = `
 </head>
 <body>
     <div class="header">
-        <img src="https://www.burghochosterwitz.com/wp-content/uploads/2023/05/Logo-Burg-Hochosterwitz.png" alt="Burg Hochosterwitz Logo" class="logo">
+        <img src="/images/logo.jpg" alt="Burg Hochosterwitz Logo" class="logo">
         <a href="/auth/logout" class="logout-btn">Abmelden</a>
     </div>
     
