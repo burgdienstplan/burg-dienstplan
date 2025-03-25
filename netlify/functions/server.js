@@ -17,7 +17,7 @@ async function connectDB() {
     console.log('Connected to MongoDB');
     
     // Erstelle Admin-Benutzer, wenn noch keiner existiert
-    const adminExists = await db.collection('users').findOne({ role: 'kastellan' });
+    const adminExists = await db.collection('users').findOne({ username: 'admin' });
     if (!adminExists) {
       await db.collection('users').insertOne({
         username: 'admin',
@@ -63,6 +63,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   console.log('Request URL:', req.url);
   console.log('Views Directory:', app.get('views'));
+  console.log('Session:', req.session);
   next();
 });
 
@@ -77,7 +78,11 @@ app.post('/auth/login', async (req, res) => {
   console.log('Login attempt:', username);
   
   try {
-    const user = await db.collection('users').findOne({ username });
+    // Case-insensitive Suche für den Benutzernamen
+    const user = await db.collection('users').findOne({
+      username: { $regex: new RegExp('^' + username + '$', 'i') }
+    });
+    
     console.log('Found user:', user ? 'yes' : 'no');
     
     if (user && password === user.password) {
@@ -91,24 +96,21 @@ app.post('/auth/login', async (req, res) => {
       
       switch (user.role) {
         case 'kastellan':
-          res.redirect('/kastellan/dashboard');
-          break;
+          return res.redirect('/kastellan/dashboard');
         case 'hausmeister':
-          res.redirect('/hausmeister/dashboard');
-          break;
+          return res.redirect('/hausmeister/dashboard');
         case 'mitarbeiter':
-          res.redirect('/mitarbeiter/dashboard');
-          break;
+          return res.redirect('/mitarbeiter/dashboard');
         default:
-          res.redirect('/');
+          return res.redirect('/');
       }
     } else {
       console.log('Login failed');
-      res.render('login', { error: 'Ungültige Anmeldedaten' });
+      return res.render('login', { error: 'Ungültige Anmeldedaten' });
     }
   } catch (err) {
     console.error('Login error:', err);
-    res.render('login', { error: 'Ein Fehler ist aufgetreten' });
+    return res.render('login', { error: 'Ein Fehler ist aufgetreten' });
   }
 });
 
@@ -126,21 +128,48 @@ app.get('/kastellan/dashboard', requireLogin, (req, res) => {
   if (req.session.user.role !== 'kastellan') {
     return res.redirect('/');
   }
-  res.render('kastellan/dashboard');
+  
+  try {
+    return res.render('kastellan/dashboard', {
+      user: req.session.user,
+      error: null
+    });
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    return res.render('error', { error: 'Fehler beim Laden des Dashboards' });
+  }
 });
 
 app.get('/hausmeister/dashboard', requireLogin, (req, res) => {
   if (req.session.user.role !== 'hausmeister') {
     return res.redirect('/');
   }
-  res.render('hausmeister/dashboard');
+  
+  try {
+    return res.render('hausmeister/dashboard', {
+      user: req.session.user,
+      error: null
+    });
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    return res.render('error', { error: 'Fehler beim Laden des Dashboards' });
+  }
 });
 
 app.get('/mitarbeiter/dashboard', requireLogin, (req, res) => {
   if (req.session.user.role !== 'mitarbeiter') {
     return res.redirect('/');
   }
-  res.render('mitarbeiter/dashboard');
+  
+  try {
+    return res.render('mitarbeiter/dashboard', {
+      user: req.session.user,
+      error: null
+    });
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    return res.render('error', { error: 'Fehler beim Laden des Dashboards' });
+  }
 });
 
 // Logout route
@@ -152,7 +181,7 @@ app.get('/auth/logout', (req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
+  return res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
 });
 
 // Handler für Netlify Functions
