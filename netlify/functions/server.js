@@ -118,5 +118,14 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
 });
 
-// Export the serverless app
-exports.handler = serverless(app);
+// Handler für Netlify Functions
+const handler = serverless(app);
+
+exports.handler = async (event, context) => {
+  // Pfad korrigieren für Netlify Functions
+  if (!event.path.startsWith('/.netlify/functions/')) {
+    event.path = `/.netlify/functions/server${event.path}`;
+  }
+  
+  return await handler(event, context);
+};
