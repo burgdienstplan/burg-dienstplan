@@ -5,8 +5,8 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["netlify/functions/views/**/*"]
-  external_node_modules = ["ejs"]
+  included_files = ["netlify/functions/views/**/*", "netlify/functions/models/**/*"]
+  external_node_modules = ["ejs", "bcryptjs", "mongoose"]
 
 [[redirects]]
   from = "/*"
