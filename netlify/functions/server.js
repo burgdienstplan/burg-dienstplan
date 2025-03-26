@@ -12,20 +12,37 @@ const Employee = require('./models/employee');
 
 const app = express();
 
-// MongoDB Verbindung
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/burgdienstplan', {
+// MongoDB Verbindung mit Fehlerbehandlung
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
+}).then(() => {
+  console.log('MongoDB verbunden');
+}).catch(err => {
+  console.error('MongoDB Verbindungsfehler:', err);
 });
+
+// Session-Konfiguration für Netlify
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 Stunden
+  }
+};
+
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+  sessionConfig.cookie.secure = true;
+}
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'burggeheimnis',
-  resave: false,
-  saveUninitialized: false
-}));
+app.use(session(sessionConfig));
 
 // View Engine
 app.set('view engine', 'ejs');
@@ -156,5 +173,15 @@ app.use((err, req, res, next) => {
 // Export für Netlify Functions
 const handler = serverless(app);
 exports.handler = async (event, context) => {
-  return await handler(event, context);
+  context.callbackWaitsForEmptyEventLoop = false;
+  try {
+    const result = await handler(event, context);
+    return result;
+  } catch (error) {
+    console.error('Handler Error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Ein Fehler ist aufgetreten' })
+    };
+  }
 };
