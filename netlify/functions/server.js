@@ -23,7 +23,7 @@ const MONGODB_URI = 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongo
 // Login-Seite
 app.get('/', (req, res) => {
   if (req.session.user) {
-    return res.redirect('/dashboard');
+    return res.redirect('/.netlify/functions/server/dashboard');
   }
   res.send(`
     <!DOCTYPE html>
@@ -131,7 +131,7 @@ app.get('/', (req, res) => {
                 error.textContent = '';
                 
                 try {
-                    const res = await fetch('/auth/login', {
+                    const res = await fetch('/.netlify/functions/server/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -141,12 +141,13 @@ app.get('/', (req, res) => {
                     });
                     const data = await res.json();
                     
-                    if (res.ok) {
-                        window.location.href = '/dashboard';
+                    if (data.success) {
+                        window.location.href = '/.netlify/functions/server/dashboard';
                     } else {
                         error.textContent = data.error || 'Anmeldung fehlgeschlagen';
                     }
                 } catch (err) {
+                    console.error('Login error:', err);
                     error.textContent = 'Ein Fehler ist aufgetreten';
                 }
             };
@@ -154,6 +155,38 @@ app.get('/', (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Kastellan erstellen
+app.get('/setup', async (req, res) => {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    
+    // Prüfen ob der Kastellan bereits existiert
+    const exists = await Employee.findOne({ username: 'steindorfer' });
+    if (exists) {
+      return res.json({ message: 'Kastellan existiert bereits' });
+    }
+    
+    // Passwort hashen
+    const hashedPassword = await bcrypt.hash('Ratzendorf55', 10);
+    
+    // Kastellan erstellen
+    const kastellan = new Employee({
+      username: 'steindorfer',
+      password: hashedPassword,
+      firstName: 'Steindorfer',
+      lastName: 'Kastellan',
+      role: 'kastellan',
+      isActive: true
+    });
+    
+    await kastellan.save();
+    res.json({ message: 'Kastellan erfolgreich erstellt' });
+  } catch (error) {
+    console.error('Setup error:', error);
+    res.status(500).json({ error: 'Server-Fehler', details: error.message });
+  }
 });
 
 // Login Route
@@ -189,7 +222,7 @@ app.post('/auth/login', async (req, res) => {
 });
 
 // Dashboard
-app.get('/dashboard', async (req, res) => {
+app.get('/dashboard', (req, res) => {
   if (!req.session.user) {
     return res.redirect('/');
   }
@@ -205,22 +238,22 @@ app.get('/dashboard', async (req, res) => {
         <div class="dashboard-item">
           <h3>Dienstplan</h3>
           <p>Aktuelle Woche verwalten</p>
-          <a href="/schedule" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/schedule" class="button">Öffnen</a>
         </div>
         <div class="dashboard-item">
           <h3>Mitarbeiter</h3>
           <p>Mitarbeiter verwalten</p>
-          <a href="/employees" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/employees" class="button">Öffnen</a>
         </div>
         <div class="dashboard-item">
           <h3>Hausmeister-Aufgaben</h3>
           <p>Aufgaben erstellen und zuweisen</p>
-          <a href="/tasks" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/tasks" class="button">Öffnen</a>
         </div>
         <div class="dashboard-item">
           <h3>Lift-Wartung</h3>
           <p>Wartungsplan verwalten</p>
-          <a href="/maintenance" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/maintenance" class="button">Öffnen</a>
         </div>
       </div>
     `;
@@ -234,12 +267,12 @@ app.get('/dashboard', async (req, res) => {
         <div class="dashboard-item">
           <h3>Meine Aufgaben</h3>
           <p>Aktuelle Aufgaben anzeigen</p>
-          <a href="/tasks" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/tasks" class="button">Öffnen</a>
         </div>
         <div class="dashboard-item">
           <h3>Lift-Wartung</h3>
           <p>Wartungstermine anzeigen</p>
-          <a href="/maintenance" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/maintenance" class="button">Öffnen</a>
         </div>
       </div>
     `;
@@ -253,7 +286,7 @@ app.get('/dashboard', async (req, res) => {
         <div class="dashboard-item">
           <h3>Mein Dienstplan</h3>
           <p>Aktuelle Woche anzeigen</p>
-          <a href="/schedule" class="button">Öffnen</a>
+          <a href="/.netlify/functions/server/schedule" class="button">Öffnen</a>
         </div>
       </div>
     `;
@@ -270,37 +303,36 @@ app.get('/dashboard', async (req, res) => {
             body {
                 font-family: Arial, sans-serif;
                 margin: 0;
-                padding: 0;
+                padding: 20px;
                 background: #f5f5f5;
             }
             .header {
                 background: #9B0600;
                 color: white;
                 padding: 1rem;
+                margin-bottom: 2rem;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
             }
-            .header h1 {
+            .welcome {
                 margin: 0;
-                font-size: 1.2rem;
-            }
-            .user-info {
-                display: flex;
-                align-items: center;
-                gap: 1rem;
             }
             .logout {
-                color: white;
-                text-decoration: none;
-                padding: 0.5rem 1rem;
+                background: none;
                 border: 1px solid white;
+                color: white;
+                padding: 0.5rem 1rem;
+                cursor: pointer;
                 border-radius: 4px;
             }
-            .container {
+            .logout:hover {
+                background: rgba(255,255,255,0.1);
+            }
+            .content {
                 max-width: 1200px;
-                margin: 2rem auto;
-                padding: 0 1rem;
+                margin: 0 auto;
+                padding: 20px;
             }
             .dashboard-grid {
                 display: grid;
@@ -338,22 +370,23 @@ app.get('/dashboard', async (req, res) => {
     </head>
     <body>
         <div class="header">
-            <h1>Burg Hochosterwitz</h1>
-            <div class="user-info">
-                <span>${user.firstName} ${user.lastName} (${user.role})</span>
-                <a href="/auth/logout" class="logout">Abmelden</a>
-            </div>
+            <h1 class="welcome">Willkommen, ${user.firstName} ${user.lastName}</h1>
+            <button class="logout" onclick="logout()">Abmelden</button>
         </div>
-        <div class="container">
+        <div class="content">
             ${content}
         </div>
         <script>
-            // Abmelden
-            document.querySelector('.logout').onclick = async (e) => {
-                e.preventDefault();
-                await fetch('/auth/logout', { method: 'POST' });
-                window.location.href = '/';
-            };
+            async function logout() {
+                try {
+                    await fetch('/.netlify/functions/server/auth/logout', {
+                        method: 'POST'
+                    });
+                    window.location.href = '/';
+                } catch (err) {
+                    console.error('Logout error:', err);
+                }
+            }
         </script>
     </body>
     </html>
@@ -366,36 +399,4 @@ app.post('/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Kastellan erstellen
-app.get('/setup', async (req, res) => {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    
-    // Prüfen ob der Kastellan bereits existiert
-    const exists = await Employee.findOne({ username: 'steindorfer' });
-    if (exists) {
-      return res.json({ message: 'Kastellan existiert bereits' });
-    }
-    
-    // Passwort hashen
-    const hashedPassword = await bcrypt.hash('Ratzendorf55', 10);
-    
-    // Kastellan erstellen
-    const kastellan = new Employee({
-      username: 'steindorfer',
-      password: hashedPassword,
-      firstName: 'Steindorfer',
-      lastName: 'Kastellan',
-      role: 'kastellan',
-      isActive: true
-    });
-    
-    await kastellan.save();
-    res.json({ message: 'Kastellan erfolgreich erstellt' });
-  } catch (error) {
-    console.error('Setup error:', error);
-    res.status(500).json({ error: 'Server-Fehler', details: error.message });
-  }
-});
-
-exports.handler = serverless(app);
+module.exports.handler = serverless(app);
