@@ -9,6 +9,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes');
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 const maintenanceController = require('./controllers/maintenanceController');
 const Employee = require('./models/employee');
+require('dotenv').config();
 
 const app = express();
 
@@ -20,12 +21,13 @@ const debug = (msg, obj = '') => {
 // MongoDB Verbindung mit Fehlerbehandlung
 const connectDB = async () => {
   try {
-    const MONGODB_URI = 'mongodb+srv://burgadmin:BurgHochosterwitz2024@burgdienstplan.8wjmxqr.mongodb.net/burgdienstplan?retryWrites=true&w=majority';
+    const MONGODB_URI = process.env.MONGODB_URI;
     debug('MongoDB URI vorhanden');
     
     await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      dbName: 'burgdienstplan'
     });
     debug('MongoDB erfolgreich verbunden');
   } catch (err) {
