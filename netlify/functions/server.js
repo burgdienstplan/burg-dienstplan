@@ -20,7 +20,7 @@ const debug = (msg, obj = '') => {
 // MongoDB Verbindung mit Fehlerbehandlung
 const connectDB = async () => {
   try {
-    const MONGODB_URI = 'mongodb+srv://burgadmin:BurgHochosterwitz2024@cluster0.mongodb.net/burgdienstplan?retryWrites=true&w=majority';
+    const MONGODB_URI = 'mongodb+srv://burgadmin:BurgHochosterwitz2024@burgdienstplan.8wjmxqr.mongodb.net/burgdienstplan?retryWrites=true&w=majority';
     debug('MongoDB URI vorhanden');
     
     await mongoose.connect(MONGODB_URI, {
