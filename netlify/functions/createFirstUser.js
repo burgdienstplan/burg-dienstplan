@@ -1,44 +1,56 @@
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const Employee = require('./models/employee');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/burgdienstplan?retryWrites=true&w=majority&appName=Cluster0';
 
 exports.handler = async function(event, context) {
-  let client;
-  
   try {
-    client = await MongoClient.connect(MONGODB_URI);
-    const db = client.db('burgdienstplan');
+    await mongoose.connect(MONGODB_URI);
+    console.log('MongoDB verbunden');
     
-    // Check if admin user already exists
-    const existingUser = await db.collection('users').findOne({ username: 'admin' });
+    // Prüfen ob Admin existiert
+    const existingUser = await Employee.findOne({ username: 'admin' });
     
     if (existingUser) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Admin user already exists' })
+        body: JSON.stringify({ message: 'Admin existiert bereits' })
       };
     }
     
-    // Create admin user
-    const result = await db.collection('users').insertOne({
+    // Admin erstellen
+    const hashedPassword = await bcrypt.hash('Ratzendorf55', 10);
+    
+    const admin = new Employee({
       username: 'admin',
-      password: 'Ratzendorf55',
+      password: hashedPassword,
+      firstName: 'Admin',
+      lastName: 'Kastellan',
       role: 'kastellan',
-      created_at: new Date()
+      isActive: true,
+      email: 'admin@burghochosterwitz.com'
     });
+    
+    await admin.save();
     
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Admin user created successfully', userId: result.insertedId })
+      body: JSON.stringify({ 
+        message: 'Admin erfolgreich erstellt',
+        username: admin.username,
+        role: admin.role
+      })
     };
     
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Fehler:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Error creating admin user' })
+      body: JSON.stringify({ 
+        message: 'Fehler beim Erstellen des Admins',
+        error: error.message
+      })
     };
-  } finally {
-    if (client) await client.close();
   }
 };
