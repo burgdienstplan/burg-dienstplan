@@ -366,28 +366,32 @@ app.post('/auth/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Admin erstellen
+// Kastellan erstellen
 app.get('/setup', async (req, res) => {
   try {
     await mongoose.connect(MONGODB_URI);
     
-    const exists = await Employee.findOne({ username: 'admin' });
+    // Prüfen ob der Kastellan bereits existiert
+    const exists = await Employee.findOne({ username: 'steindorfer' });
     if (exists) {
-      return res.json({ message: 'Admin existiert bereits' });
+      return res.json({ message: 'Kastellan existiert bereits' });
     }
     
+    // Passwort hashen
     const hashedPassword = await bcrypt.hash('Ratzendorf55', 10);
-    const admin = new Employee({
-      username: 'admin',
+    
+    // Kastellan erstellen
+    const kastellan = new Employee({
+      username: 'steindorfer',
       password: hashedPassword,
-      firstName: 'Admin',
+      firstName: 'Steindorfer',
       lastName: 'Kastellan',
       role: 'kastellan',
       isActive: true
     });
     
-    await admin.save();
-    res.json({ message: 'Admin erfolgreich erstellt' });
+    await kastellan.save();
+    res.json({ message: 'Kastellan erfolgreich erstellt' });
   } catch (error) {
     console.error('Setup error:', error);
     res.status(500).json({ error: 'Server-Fehler', details: error.message });
