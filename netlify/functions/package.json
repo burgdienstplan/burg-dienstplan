@@ -1,13 +1,13 @@
 {
-  "name": "dienstplan-functions",
+  "name": "burg-dienstplan-functions",
   "version": "1.0.0",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "serverless-http": "^3.1.1",
-    "mongoose": "^8.0.0",
-    "bcryptjs": "^2.4.3",
-    "moment": "^2.29.4",
-    "date-holidays": "^3.23.7"
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.1.1",
+    "serverless-http": "^3.2.0"
   }
 }
