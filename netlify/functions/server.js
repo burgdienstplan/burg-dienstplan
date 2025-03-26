@@ -9,7 +9,7 @@ const app = express();
 
 // Debugging
 const debug = (msg, obj = '') => {
-  console.log(`[DEBUG] ${msg}`, obj);
+  console.log(`[DEBUG] ${msg}`, typeof obj === 'object' ? JSON.stringify(obj, null, 2) : obj);
 };
 
 // MongoDB Verbindung
@@ -20,6 +20,11 @@ const connectDB = async () => {
     debug('Versuche MongoDB-Verbindung...');
     await mongoose.connect(MONGODB_URI);
     debug('MongoDB erfolgreich verbunden');
+    
+    // Test: Liste alle Employees
+    const employees = await Employee.find({});
+    debug('Gefundene Mitarbeiter:', employees);
+    
   } catch (err) {
     debug('MongoDB Verbindungsfehler:', err);
     throw err;
@@ -129,12 +134,18 @@ app.post('/auth/login', async (req, res) => {
     const { username, password } = req.body;
     
     const employee = await Employee.findOne({ username });
+    debug('Gefundener Mitarbeiter:', employee);
+    
     if (!employee) {
+      debug('Kein Mitarbeiter gefunden');
       return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
     }
     
     const isValid = await bcrypt.compare(password, employee.password);
+    debug('Passwort-Vergleich:', { isValid });
+    
     if (!isValid) {
+      debug('Falsches Passwort');
       return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
     }
     
@@ -144,6 +155,7 @@ app.post('/auth/login', async (req, res) => {
       role: employee.role
     };
     
+    debug('Login erfolgreich:', req.session.user);
     res.json({ role: employee.role });
   } catch (error) {
     debug('Login-Fehler:', error);
@@ -165,9 +177,16 @@ app.get('/dashboard', (req, res) => {
 // Netlify Function Handler
 exports.handler = async (event, context) => {
   try {
+    debug('Netlify Function aufgerufen:', { 
+      path: event.path,
+      method: event.httpMethod,
+      body: event.body 
+    });
+    
     await connectDB();
     return await serverless(app)(event, context);
   } catch (error) {
+    debug('Handler-Fehler:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Server-Fehler', details: error.message })
