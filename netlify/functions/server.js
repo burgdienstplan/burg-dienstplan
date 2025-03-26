@@ -17,27 +17,13 @@ const debug = (msg, obj = '') => {
   console.log(`[DEBUG] ${msg}`, obj);
 };
 
-// Umgebungsvariablen prüfen
-const checkRequiredEnvVars = () => {
-  const required = ['MONGODB_URI', 'SESSION_SECRET'];
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    throw new Error(`Fehlende Umgebungsvariablen: ${missing.join(', ')}`);
-  }
-};
-
 // MongoDB Verbindung mit Fehlerbehandlung
 const connectDB = async () => {
   try {
-    checkRequiredEnvVars();
+    const MONGODB_URI = 'mongodb+srv://burgadmin:BurgHochosterwitz2024@cluster0.mongodb.net/burgdienstplan?retryWrites=true&w=majority';
     debug('MongoDB URI vorhanden');
     
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI ist nicht definiert');
-    }
-    
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
@@ -50,7 +36,7 @@ const connectDB = async () => {
 
 // Session-Konfiguration für Netlify
 const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'fallback-secret-dev-only',
+  secret: 'BurgHochosterwitzSecretKey2024',
   resave: false,
   saveUninitialized: false,
   cookie: {
