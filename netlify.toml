@@ -1,14 +1,14 @@
 [build]
-  command = "npm install"
+  command = "npm install && npm run build"
   functions = "netlify/functions"
   publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/views/**/*"]
 
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"
   status = 200
   force = true
-
-[functions]
-  node_bundler = "esbuild"
-  included_files = ["netlify/functions/views/**/*"]
