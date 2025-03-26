@@ -17,10 +17,26 @@ const debug = (msg, obj = '') => {
   console.log(`[DEBUG] ${msg}`, obj);
 };
 
+// Umgebungsvariablen prüfen
+const checkRequiredEnvVars = () => {
+  const required = ['MONGODB_URI', 'SESSION_SECRET'];
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(`Fehlende Umgebungsvariablen: ${missing.join(', ')}`);
+  }
+};
+
 // MongoDB Verbindung mit Fehlerbehandlung
 const connectDB = async () => {
   try {
-    debug('MongoDB URI:', process.env.MONGODB_URI ? 'Vorhanden' : 'Fehlt');
+    checkRequiredEnvVars();
+    debug('MongoDB URI vorhanden');
+    
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI ist nicht definiert');
+    }
+    
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true
