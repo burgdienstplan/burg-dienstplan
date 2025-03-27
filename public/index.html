@@ -1,12 +1,23 @@
 <!DOCTYPE html>
-<html lang="de">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="0;url=/.netlify/functions/server">
-    <title>Dienstplan - Weiterleitung</title>
+    <title>Burg Hochosterwitz</title>
 </head>
 <body>
-    <p>Sie werden weitergeleitet...</p>
+    <h1>Willkommen auf Burg Hochosterwitz</h1>
+    <p>API-Status: <span id="status">Prüfe...</span></p>
+
+    <script>
+        fetch('/.netlify/functions/server')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('status').textContent = data.message;
+            })
+            .catch(err => {
+                document.getElementById('status').textContent = 'Fehler: ' + err.message;
+            });
+    </script>
 </body>
 </html>
