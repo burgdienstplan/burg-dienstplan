@@ -1,11 +1,11 @@
 [build]
-  command = "npm install"
+  command = "cd netlify/functions && npm install"
   functions = "netlify/functions"
   publish = "public"
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express-session", "bcryptjs"]
+  external_node_modules = ["express-session", "bcryptjs", "mongoose"]
   included_files = ["netlify/functions/views/**/*", "netlify/functions/models/**/*"]
 
 [[redirects]]

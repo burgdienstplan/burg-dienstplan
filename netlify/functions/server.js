@@ -7,18 +7,29 @@ const Employee = require('./models/employee');
 
 const app = express();
 
+// MongoDB Verbindung
+const MONGODB_URI = 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/burgdienstplan?retryWrites=true&w=majority&appName=Cluster0';
+
+// Verbindung herstellen
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('MongoDB verbunden'))
+  .catch(err => console.error('MongoDB Verbindungsfehler:', err));
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Session Middleware
 app.use(session({
   secret: 'BurgHochosterwitzSecretKey2024',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 Stunden
+  }
 }));
-
-// MongoDB Verbindung
-const MONGODB_URI = 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/burgdienstplan?retryWrites=true&w=majority&appName=Cluster0';
 
 // Login-Seite
 app.get('/', (req, res) => {
@@ -130,16 +141,20 @@ app.get('/', (req, res) => {
                 const error = document.getElementById('error');
                 error.textContent = '';
                 
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
                 try {
+                    console.log('Login-Versuch für:', username);
                     const res = await fetch('/.netlify/functions/server/auth/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: document.getElementById('username').value,
-                            password: document.getElementById('password').value
-                        })
+                        body: JSON.stringify({ username, password })
                     });
+                    
+                    console.log('Server-Antwort Status:', res.status);
                     const data = await res.json();
+                    console.log('Server-Antwort:', data);
                     
                     if (data.success) {
                         window.location.href = '/.netlify/functions/server/dashboard';
@@ -147,7 +162,7 @@ app.get('/', (req, res) => {
                         error.textContent = data.error || 'Anmeldung fehlgeschlagen';
                     }
                 } catch (err) {
-                    console.error('Login error:', err);
+                    console.error('Login-Fehler:', err);
                     error.textContent = 'Ein Fehler ist aufgetreten';
                 }
             };
@@ -157,14 +172,50 @@ app.get('/', (req, res) => {
   `);
 });
 
+// Login Route
+app.post('/auth/login', async (req, res) => {
+  try {
+    console.log('Login-Anfrage erhalten:', req.body);
+    
+    const { username, password } = req.body;
+    const employee = await Employee.findOne({ username, isActive: true });
+    
+    if (!employee) {
+      console.log('Benutzer nicht gefunden:', username);
+      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+    }
+    
+    const isValid = await bcrypt.compare(password, employee.password);
+    if (!isValid) {
+      console.log('Falsches Passwort für:', username);
+      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+    }
+    
+    req.session.user = {
+      id: employee._id,
+      username: employee.username,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      role: employee.role
+    };
+    
+    console.log('Login erfolgreich für:', username);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Login-Fehler:', error);
+    res.status(500).json({ error: 'Server-Fehler' });
+  }
+});
+
 // Kastellan erstellen
 app.get('/setup', async (req, res) => {
   try {
-    await mongoose.connect(MONGODB_URI);
+    console.log('Setup-Anfrage erhalten');
     
     // Prüfen ob der Kastellan bereits existiert
     const exists = await Employee.findOne({ username: 'steindorfer' });
     if (exists) {
+      console.log('Kastellan existiert bereits');
       return res.json({ message: 'Kastellan existiert bereits' });
     }
     
@@ -182,50 +233,22 @@ app.get('/setup', async (req, res) => {
     });
     
     await kastellan.save();
+    console.log('Kastellan erfolgreich erstellt');
     res.json({ message: 'Kastellan erfolgreich erstellt' });
   } catch (error) {
-    console.error('Setup error:', error);
+    console.error('Setup-Fehler:', error);
     res.status(500).json({ error: 'Server-Fehler', details: error.message });
-  }
-});
-
-// Login Route
-app.post('/auth/login', async (req, res) => {
-  try {
-    await mongoose.connect(MONGODB_URI);
-    
-    const { username, password } = req.body;
-    const employee = await Employee.findOne({ username, isActive: true });
-    
-    if (!employee) {
-      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
-    }
-    
-    const isValid = await bcrypt.compare(password, employee.password);
-    if (!isValid) {
-      return res.status(401).json({ error: 'Ungültige Anmeldedaten' });
-    }
-    
-    req.session.user = {
-      id: employee._id,
-      username: employee.username,
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      role: employee.role
-    };
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Server-Fehler' });
   }
 });
 
 // Dashboard
 app.get('/dashboard', (req, res) => {
   if (!req.session.user) {
+    console.log('Nicht eingeloggt, Weiterleitung zum Login');
     return res.redirect('/');
   }
+  
+  console.log('Dashboard-Zugriff für:', req.session.user.username);
   
   const user = req.session.user;
   let content = '';
@@ -384,7 +407,7 @@ app.get('/dashboard', (req, res) => {
                     });
                     window.location.href = '/';
                 } catch (err) {
-                    console.error('Logout error:', err);
+                    console.error('Logout-Fehler:', err);
                 }
             }
         </script>
@@ -395,6 +418,7 @@ app.get('/dashboard', (req, res) => {
 
 // Logout Route
 app.post('/auth/logout', (req, res) => {
+  console.log('Logout für:', req.session.user?.username);
   req.session.destroy();
   res.json({ success: true });
 });
