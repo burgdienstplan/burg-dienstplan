@@ -12,6 +12,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Statische Dateien
+app.use(express.static(path.join(__dirname, '..', '..', 'public')));
+
 // EJS Setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
