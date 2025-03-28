@@ -80,6 +80,18 @@
     </div>
 
     <script>
+        // Überprüfen ob bereits eingeloggt
+        fetch('/api/check-auth')
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) {
+                    window.location.href = '/dashboard.html';
+                }
+            })
+            .catch(err => {
+                console.error('Auth-Check Fehler:', err);
+            });
+
         // API-Status prüfen
         fetch('/api/status')
             .then(res => res.json())
@@ -111,7 +123,7 @@
                 
                 if (response.ok) {
                     // Erfolgreich eingeloggt
-                    window.location.href = '/dashboard';
+                    window.location.href = '/dashboard.html';
                 } else {
                     // Fehler anzeigen
                     error.textContent = data.message || 'Login fehlgeschlagen';
