@@ -3,27 +3,12 @@ const serverless = require('serverless-http');
 
 const app = express();
 
-// Einfache Test-Route
+// Nur JSON zurückgeben
 app.get('/', (req, res) => {
-  res.send(`
-    <html>
-      <head>
-        <title>Burg Hochosterwitz</title>
-        <style>
-          body { font-family: Arial; margin: 40px; }
-        </style>
-      </head>
-      <body>
-        <h1>Willkommen auf Burg Hochosterwitz</h1>
-        <p>Der Server läuft!</p>
-      </body>
-    </html>
-  `);
-});
-
-// API Test-Route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API läuft!' });
+  res.json({ 
+    message: 'Willkommen auf Burg Hochosterwitz',
+    status: 'Server läuft'
+  });
 });
 
 module.exports.handler = serverless(app);
