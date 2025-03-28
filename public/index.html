@@ -9,17 +9,78 @@
             font-family: Arial, sans-serif;
             margin: 40px;
             line-height: 1.6;
+            background-color: #f0f0f0;
         }
-        #status {
-            font-weight: bold;
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #6B3410;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+        .status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #e8e8e8;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <h1>Willkommen auf Burg Hochosterwitz</h1>
-    <p>API-Status: <span id="status">Prüfe...</span></p>
+    <div class="container">
+        <h1>Burg Hochosterwitz</h1>
+        
+        <div class="status">
+            API-Status: <span id="status">Prüfe...</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Benutzername:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Passwort:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">Anmelden</button>
+            <div id="error" class="error"></div>
+        </form>
+    </div>
 
     <script>
+        // API-Status prüfen
         fetch('/api/status')
             .then(res => res.json())
             .then(data => {
@@ -28,6 +89,39 @@
             .catch(err => {
                 document.getElementById('status').textContent = 'Fehler: ' + err.message;
             });
+
+        // Login-Formular
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const error = document.getElementById('error');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Erfolgreich eingeloggt
+                    window.location.href = '/dashboard';
+                } else {
+                    // Fehler anzeigen
+                    error.textContent = data.message || 'Login fehlgeschlagen';
+                    error.style.display = 'block';
+                }
+            } catch (err) {
+                error.textContent = 'Verbindungsfehler';
+                error.style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>
