@@ -3,11 +3,19 @@ const serverless = require('serverless-http');
 
 const app = express();
 
-// Nur JSON zurückgeben
-app.get('/', (req, res) => {
+// API-Route
+app.get('/api/status', (req, res) => {
   res.json({ 
-    message: 'Willkommen auf Burg Hochosterwitz',
-    status: 'Server läuft'
+    message: 'API ist online',
+    status: 'OK'
+  });
+});
+
+// Catch-all Route
+app.get('*', (req, res) => {
+  res.json({ 
+    error: 'Route nicht gefunden',
+    path: req.path
   });
 });
 

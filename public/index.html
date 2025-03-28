@@ -4,16 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Burg Hochosterwitz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        #status {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Willkommen auf Burg Hochosterwitz</h1>
     <p>API-Status: <span id="status">Prüfe...</span></p>
 
     <script>
-        fetch('/.netlify/functions/server')
+        fetch('/api/status')
             .then(res => res.json())
             .then(data => {
-                document.getElementById('status').textContent = data.message;
+                document.getElementById('status').textContent = 'OK - ' + data.message;
             })
             .catch(err => {
                 document.getElementById('status').textContent = 'Fehler: ' + err.message;
