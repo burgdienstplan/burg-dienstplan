@@ -6,7 +6,11 @@
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["bcryptjs", "passport", "passport-local", "passport-jwt"]
-  included_files = ["dist/**/*"]
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
 
 [[redirects]]
   from = "/api/*"

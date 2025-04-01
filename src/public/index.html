@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Dienstplan</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Burg Hochosterwitz</h1>
+            <nav>
+                <ul>
+                    <li><a href="/dienstplan">Dienstplan</a></li>
+                    <li><a href="/mitarbeiter">Mitarbeiter</a></li>
+                    <li><a href="/wartung">Wartung</a></li>
+                    <li><a href="/logout">Abmelden</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="login-section" id="loginSection">
+                <h2>Anmeldung</h2>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username">Benutzername</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Passwort</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Anmelden</button>
+                </form>
+            </section>
+
+            <section class="dashboard" id="dashboardSection" style="display: none;">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-calendar"></i>
+                        <h3>Nächste Schicht</h3>
+                        <p id="nextShift">Wird geladen...</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-wrench"></i>
+                        <h3>Wartungen</h3>
+                        <p id="maintenanceCount">Wird geladen...</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Aktive Mitarbeiter</h3>
+                        <p id="activeEmployees">Wird geladen...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Burg Hochosterwitz</p>
+        </footer>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
