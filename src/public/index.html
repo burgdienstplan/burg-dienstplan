@@ -11,7 +11,7 @@
     <div class="container">
         <header>
             <h1>Burg Hochosterwitz</h1>
-            <nav>
+            <nav id="mainNav" style="display: none;">
                 <ul>
                     <li><a href="/dienstplan">Dienstplan</a></li>
                     <li><a href="/mitarbeiter">Mitarbeiter</a></li>
@@ -38,7 +38,7 @@
             </section>
 
             <section class="dashboard" id="dashboardSection" style="display: none;">
-                <h2>Dashboard</h2>
+                <h2>Willkommen</h2>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <i class="fas fa-calendar"></i>
@@ -65,5 +65,49 @@
     </div>
 
     <script src="/js/main.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/.netlify/functions/server/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    // Login erfolgreich
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('mainNav').style.display = 'block';
+                    document.getElementById('dashboardSection').style.display = 'block';
+                    loadDashboardData();
+                } else {
+                    alert('Benutzername oder Passwort falsch');
+                }
+            } catch (error) {
+                console.error('Login-Fehler:', error);
+                alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+            }
+        });
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/.netlify/functions/server/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('nextShift').textContent = data.nextShift || 'Keine geplant';
+                    document.getElementById('maintenanceCount').textContent = data.maintenanceCount || '0';
+                    document.getElementById('activeEmployees').textContent = data.activeEmployees || '0';
+                }
+            } catch (error) {
+                console.error('Dashboard-Fehler:', error);
+            }
+        }
+    </script>
 </body>
 </html>
