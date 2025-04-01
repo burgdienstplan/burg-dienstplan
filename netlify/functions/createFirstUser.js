@@ -1,57 +1,55 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const Employee = require('./models/employee');
+const User = require('./models/user');
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
 exports.handler = async function(event, context) {
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('MongoDB verbunden');
-    
-    // Prüfen ob Admin existiert
-    const existingUser = await Employee.findOne({ username: 'admin' });
-    
-    if (existingUser) {
+    // Verbindung zur Datenbank herstellen
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+
+    // Prüfen, ob bereits Benutzer existieren
+    const existingUsers = await User.find();
+    if (existingUsers.length > 0) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Admin existiert bereits' })
+        body: JSON.stringify({ message: 'Es existieren bereits Benutzer im System.' })
       };
     }
-    
-    // Admin erstellen
-    const hashedPassword = await bcrypt.hash('Ratzendorf55', 10);
-    
-    const admin = new Employee({
-      username: 'admin',
+
+    // Admin-Benutzer erstellen
+    const hashedPassword = await bcrypt.hash('BurgAdmin2025!', 10);
+    const adminUser = new User({
+      username: 'kastellan',
       password: hashedPassword,
-      firstName: 'Admin',
-      lastName: 'Kastellan',
+      email: 'kastellan@burghochosterwitz.at',
       role: 'kastellan',
-      isActive: true,
-      email: 'admin@burghochosterwitz.com'
+      name: 'Kastellan',
+      active: true
     });
-    
-    await admin.save();
-    
+
+    await adminUser.save();
+
     return {
       statusCode: 200,
       body: JSON.stringify({ 
-        message: 'Admin erfolgreich erstellt',
-        username: admin.username,
-        role: admin.role
+        message: 'Admin-Benutzer wurde erfolgreich erstellt',
+        username: 'kastellan',
+        password: 'BurgAdmin2025!'
       })
     };
-    
   } catch (error) {
-    console.error('Fehler:', error);
+    console.error('Fehler beim Erstellen des Admin-Benutzers:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ 
-        message: 'Fehler beim Erstellen des Admins',
-        error: error.message
-      })
+      body: JSON.stringify({ message: 'Interner Serverfehler beim Erstellen des Admin-Benutzers.' })
     };
+  } finally {
+    await mongoose.disconnect();
   }
 };
