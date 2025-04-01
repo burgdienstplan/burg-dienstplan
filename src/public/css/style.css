@@ -1,9 +1,10 @@
 :root {
     --primary-color: #8b0000;
     --secondary-color: #4a4a4a;
-    --background-color: #f5f5f5;
+    --background-color: #f4f1ea;
     --text-color: #333;
-    --border-color: #ddd;
+    --border-color: #d3c5a9;
+    --accent-color: #c19b6e;
 }
 
 * {
@@ -13,13 +14,15 @@
 }
 
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: 'Cinzel', 'Times New Roman', serif;
     line-height: 1.6;
     background-color: var(--background-color);
     color: var(--text-color);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background-image: url('https://www.burghochosterwitz.com/wp-content/uploads/2020/04/bg-pattern.png');
+    background-repeat: repeat;
 }
 
 .container {
@@ -33,19 +36,43 @@ body {
 header {
     background-color: var(--primary-color);
     color: white;
-    padding: 1rem;
+    padding: 1.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     width: 100%;
+    background-image: url('https://www.burghochosterwitz.com/wp-content/uploads/2020/04/header-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
 }
 
 header h1 {
+    position: relative;
+    z-index: 2;
     text-align: center;
     margin-bottom: 1rem;
-    font-family: 'Cinzel', serif;
+    font-family: 'Cinzel Decorative', 'Cinzel', serif;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    font-size: 2rem;
+    letter-spacing: 3px;
+    font-size: 2.5rem;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+nav {
+    position: relative;
+    z-index: 2;
 }
 
 nav ul {
@@ -53,7 +80,7 @@ nav ul {
     justify-content: center;
     list-style: none;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 nav ul li {
@@ -64,13 +91,19 @@ nav ul li a {
     color: white;
     text-decoration: none;
     font-weight: bold;
-    transition: color 0.3s ease;
-    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem;
     display: block;
+    border: 1px solid transparent;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
 }
 
 nav ul li a:hover {
     color: #ffd700;
+    border-color: #ffd700;
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .login-section {
@@ -80,7 +113,16 @@ nav ul li a:hover {
     padding: 2rem;
     background-color: white;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.login-section h2 {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-family: 'Cinzel Decorative', 'Cinzel', serif;
+    font-size: 1.75rem;
 }
 
 .login-form {
@@ -101,6 +143,8 @@ nav ul li a:hover {
     font-weight: bold;
     color: var(--secondary-color);
     font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .form-group input {
@@ -109,6 +153,14 @@ nav ul li a:hover {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 1rem;
+    background-color: #fff;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(193, 155, 110, 0.2);
 }
 
 .btn {
@@ -119,24 +171,38 @@ nav ul li a:hover {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
     color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
     background-color: #a00000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .dashboard {
     background-color: white;
     border-radius: 8px;
     padding: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.dashboard h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 2rem;
+    font-family: 'Cinzel Decorative', 'Cinzel', serif;
+    font-size: 2rem;
 }
 
 .stats-grid {
@@ -150,37 +216,47 @@ nav ul li a:hover {
     background-color: white;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 2rem;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease;
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card i {
     font-size: 2.5rem;
-    color: var(--primary-color);
+    color: var(--accent-color);
     margin-bottom: 1rem;
 }
 
 .stat-card h3 {
-    color: var(--secondary-color);
-    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
     font-family: 'Cinzel', serif;
     font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-card p {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
 }
 
 footer {
     text-align: center;
     margin-top: 2rem;
-    padding: 1rem;
+    padding: 1.5rem;
     color: var(--secondary-color);
     background-color: white;
     border-top: 1px solid var(--border-color);
     width: 100%;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
 }
 
 @media (max-width: 768px) {
@@ -188,19 +264,25 @@ footer {
         padding: 0.5rem;
     }
 
+    header {
+        padding: 1rem;
+    }
+
     header h1 {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
     }
 
     nav ul {
         flex-direction: column;
         align-items: center;
+        gap: 0.5rem;
     }
 
     nav ul li a {
         padding: 0.75rem 1.5rem;
         width: 100%;
         text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .login-section {
@@ -211,7 +293,7 @@ footer {
 
     .form-group input {
         padding: 0.75rem;
-        font-size: 16px; /* Verhindert Zoom auf iOS */
+        font-size: 16px;
     }
 
     .btn {
@@ -224,6 +306,10 @@ footer {
     }
 
     .stat-card {
-        padding: 1rem;
+        padding: 1.5rem;
+    }
+
+    .dashboard h2 {
+        font-size: 1.5rem;
     }
 }
