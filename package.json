@@ -1,34 +1,22 @@
 {
-  "name": "dienstplan",
+  "name": "burg-dienstplan",
   "version": "1.0.0",
-  "description": "Dienstplan System",
+  "description": "Dienstplan System für Burg Hochosterwitz",
   "main": "netlify/functions/server.js",
   "scripts": {
     "start": "netlify dev",
-    "build": "mkdir -p dist && cp -r src/public/* dist/ && cp -r src/views dist/views",
-    "dev": "netlify dev"
+    "build": "netlify build"
   },
   "dependencies": {
-    "@netlify/functions": "^2.6.0",
     "bcryptjs": "^2.4.3",
-    "date-holidays": "^3.23.10",
     "dotenv": "^16.4.1",
     "ejs": "^3.1.9",
-    "express": "^4.18.3",
-    "express-session": "^1.18.0",
-    "moment": "^2.30.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
     "mongodb": "^6.3.0",
-    "mongoose": "^8.2.1",
-    "multer": "^1.4.5-lts.1",
-    "passport": "^0.7.0",
-    "passport-local": "^1.0.0",
-    "passport-jwt": "^4.0.1",
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
-    "netlify-cli": "^17.17.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "netlify-cli": "^17.15.1"
   }
 }

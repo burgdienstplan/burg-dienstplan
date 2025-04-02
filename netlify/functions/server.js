@@ -1,152 +1,122 @@
-require('dotenv').config();
 const express = require('express');
 const serverless = require('serverless-http');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const User = require('./models/user');
+const session = require('express-session');
+const { MongoClient } = require('mongodb');
+const path = require('path');
 
 const app = express();
 
-// JSON Parser
-app.use(express.json());
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+let db;
 
-// MongoDB Verbindung
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB verbunden'))
-  .catch(err => console.error('MongoDB Fehler:', err));
-
-// Status-Route
-app.get('/api/status', async (req, res) => {
+async function connectDB() {
   try {
-    // MongoDB Status prüfen
-    const dbStatus = mongoose.connection.readyState === 1 ? 'verbunden' : 'getrennt';
-    
-    // Benutzer zählen
-    const userCount = await User.countDocuments();
-    
-    // Admin-Benutzer suchen
-    const adminExists = await User.findOne({ username: 'kastellan' });
-
-    res.json({
-      status: 'OK',
-      mongodb: {
-        status: dbStatus,
-        uri: process.env.MONGODB_URI ? 'Konfiguriert' : 'Fehlt',
-        users: userCount,
-        adminExists: adminExists ? 'Ja' : 'Nein'
-      },
-      env: {
-        nodeEnv: process.env.NODE_ENV,
-        hasJwtSecret: !!process.env.JWT_SECRET,
-        hasSessionSecret: !!process.env.SESSION_SECRET
-      }
-    });
-  } catch (error) {
-    console.error('Status-Fehler:', error);
-    res.status(500).json({ 
-      status: 'Fehler',
-      error: error.message
-    });
+    const client = await MongoClient.connect(MONGODB_URI);
+    db = client.db('burgdienstplan');
+    console.log('Connected to MongoDB');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
   }
+}
+
+connectDB();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Session configuration
+app.use(session({
+  secret: 'burgHochosterwitz2025',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+// Routes
+app.get('/', (req, res) => {
+  res.render('login');
 });
 
-// Login-Route
-app.post('/api/login', async (req, res) => {
-  console.log('Login-Versuch:', req.body.username);
-  
+app.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
   
   try {
-    // Benutzer in DB suchen
-    const user = await User.findOne({ username });
+    const user = await db.collection('users').findOne({ username });
     
-    if (!user) {
-      console.log('Benutzer nicht gefunden:', username);
-      return res.status(401).json({ message: 'Ungültige Anmeldedaten' });
-    }
-    
-    // Passwort prüfen
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
-      console.log('Falsches Passwort für:', username);
-      return res.status(401).json({ message: 'Ungültige Anmeldedaten' });
-    }
-    
-    // Login erfolgreich
-    console.log('Login erfolgreich:', username);
-    
-    res.json({ 
-      message: 'Login erfolgreich',
-      user: {
+    if (user && password === user.password) { // We'll add proper password hashing later
+      req.session.user = {
+        id: user._id,
         username: user.username,
-        role: user.role,
-        name: user.name
+        role: user.role
+      };
+      
+      switch (user.role) {
+        case 'kastellan':
+          res.redirect('/kastellan/dashboard');
+          break;
+        case 'hausmeister':
+          res.redirect('/hausmeister/dashboard');
+          break;
+        case 'mitarbeiter':
+          res.redirect('/mitarbeiter/dashboard');
+          break;
+        default:
+          res.redirect('/');
       }
-    });
-  } catch (error) {
-    console.error('Login-Fehler:', error);
-    res.status(500).json({ message: 'Server-Fehler beim Login' });
-  }
-});
-
-// Admin erstellen Route
-app.post('/api/setup', async (req, res) => {
-  try {
-    // Prüfen ob bereits Benutzer existieren
-    const count = await User.countDocuments();
-    
-    if (count > 0) {
-      return res.status(400).json({ message: 'Setup bereits durchgeführt' });
+    } else {
+      res.render('login', { error: 'Ungültige Anmeldedaten' });
     }
-    
-    // Admin-Benutzer erstellen
-    const hashedPassword = await bcrypt.hash('BurgAdmin2025!', 10);
-    const admin = new User({
-      username: 'kastellan',
-      password: hashedPassword,
-      role: 'kastellan',
-      name: 'Kastellan',
-      email: 'kastellan@burghochosterwitz.at',
-      active: true
-    });
-    
-    await admin.save();
-    
-    res.json({ 
-      message: 'Admin-Benutzer erstellt',
-      username: admin.username
-    });
-  } catch (error) {
-    console.error('Setup-Fehler:', error);
-    res.status(500).json({ message: 'Fehler beim Setup' });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.render('login', { error: 'Ein Fehler ist aufgetreten' });
   }
 });
 
-// Dashboard-Route
-app.get('/api/dashboard', async (req, res) => {
-  try {
-    const stats = {
-      nextShift: 'Keine geplant',
-      maintenanceCount: '0',
-      activeEmployees: await User.countDocuments({ active: true })
-    };
-    
-    res.json(stats);
-  } catch (error) {
-    console.error('Dashboard-Fehler:', error);
-    res.status(500).json({ message: 'Fehler beim Laden des Dashboards' });
+// Protected route middleware
+const requireLogin = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect('/');
   }
+  next();
+};
+
+// Dashboard routes
+app.get('/kastellan/dashboard', requireLogin, (req, res) => {
+  if (req.session.user.role !== 'kastellan') {
+    return res.redirect('/');
+  }
+  res.render('kastellan/dashboard');
 });
 
-// Catch-all Route
-app.get('*', (req, res) => {
-  res.json({ 
-    error: 'Route nicht gefunden',
-    path: req.path
-  });
+app.get('/hausmeister/dashboard', requireLogin, (req, res) => {
+  if (req.session.user.role !== 'hausmeister') {
+    return res.redirect('/');
+  }
+  res.render('hausmeister/dashboard');
 });
 
-module.exports.handler = serverless(app);
+app.get('/mitarbeiter/dashboard', requireLogin, (req, res) => {
+  if (req.session.user.role !== 'mitarbeiter') {
+    return res.redirect('/');
+  }
+  res.render('mitarbeiter/dashboard');
+});
+
+// Logout route
+app.get('/auth/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
+});
+
+// Export the serverless app
+exports.handler = serverless(app);

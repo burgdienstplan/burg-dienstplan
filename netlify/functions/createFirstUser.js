@@ -1,55 +1,44 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const User = require('./models/user');
-require('dotenv').config();
+const { MongoClient } = require('mongodb');
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
 exports.handler = async function(event, context) {
+  let client;
+  
   try {
-    // Verbindung zur Datenbank herstellen
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-
-    // Prüfen, ob bereits Benutzer existieren
-    const existingUsers = await User.find();
-    if (existingUsers.length > 0) {
+    client = await MongoClient.connect(MONGODB_URI);
+    const db = client.db('burgdienstplan');
+    
+    // Check if admin user already exists
+    const existingUser = await db.collection('users').findOne({ username: 'admin' });
+    
+    if (existingUser) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Es existieren bereits Benutzer im System.' })
+        body: JSON.stringify({ message: 'Admin user already exists' })
       };
     }
-
-    // Admin-Benutzer erstellen
-    const hashedPassword = await bcrypt.hash('BurgAdmin2025!', 10);
-    const adminUser = new User({
-      username: 'kastellan',
-      password: hashedPassword,
-      email: 'kastellan@burghochosterwitz.at',
+    
+    // Create admin user
+    const result = await db.collection('users').insertOne({
+      username: 'admin',
+      password: 'Ratzendorf55', // We'll implement proper password hashing later
       role: 'kastellan',
-      name: 'Kastellan',
-      active: true
+      created_at: new Date()
     });
-
-    await adminUser.save();
-
+    
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
-        message: 'Admin-Benutzer wurde erfolgreich erstellt',
-        username: 'kastellan',
-        password: 'BurgAdmin2025!'
-      })
+      body: JSON.stringify({ message: 'Admin user created successfully', userId: result.insertedId })
     };
+    
   } catch (error) {
-    console.error('Fehler beim Erstellen des Admin-Benutzers:', error);
+    console.error('Error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Interner Serverfehler beim Erstellen des Admin-Benutzers.' })
+      body: JSON.stringify({ message: 'Error creating admin user' })
     };
   } finally {
-    await mongoose.disconnect();
+    if (client) await client.close();
   }
 };
