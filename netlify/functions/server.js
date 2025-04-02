@@ -3,14 +3,18 @@ const mongoose = require('mongoose');
 // MongoDB Verbindung
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
-// User Schema
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  name: String,
-  email: String
+// Dienstplan Schema
+const dienstSchema = new mongoose.Schema({
+  datum: { type: Date, required: true },
+  bereich: { type: String, enum: ['shop_eintritt', 'shop_museum', 'eintritt', 'fuehrung'], required: true },
+  mitarbeiter: { type: String, required: true },
+  zeit: {
+    von: { type: String, required: true, default: '09:00' },
+    bis: { type: String, required: true, default: '18:00' }
+  }
 });
 
-const User = mongoose.model('User', userSchema);
+const Dienst = mongoose.model('Dienst', dienstSchema);
 
 exports.handler = async function(event, context) {
   // CORS Headers
@@ -30,19 +34,51 @@ exports.handler = async function(event, context) {
     await mongoose.connect(MONGODB_URI);
     console.log('MongoDB verbunden');
 
-    // Test: Liste alle User
-    const users = await User.find();
+    // Route handling
+    switch (event.path) {
+      case '/.netlify/functions/server':
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            message: "Burg Hochosterwitz API"
+          })
+        };
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        message: "Burg Hochosterwitz API",
-        users: users,
-        path: event.path,
-        method: event.httpMethod
-      })
-    };
+      case '/.netlify/functions/server/dienste':
+        if (event.httpMethod === 'GET') {
+          const dienste = await Dienst.find();
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(dienste)
+          };
+        }
+
+        if (event.httpMethod === 'POST') {
+          const body = JSON.parse(event.body);
+          const dienst = new Dienst(body);
+          await dienst.save();
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(dienst)
+          };
+        }
+
+        return {
+          statusCode: 405,
+          headers,
+          body: JSON.stringify({ message: 'Methode nicht erlaubt' })
+        };
+
+      default:
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ message: 'Route nicht gefunden' })
+        };
+    }
   } catch (error) {
     console.error('Fehler:', error);
     return {
