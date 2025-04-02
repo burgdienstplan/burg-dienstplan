@@ -1,122 +1,116 @@
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const serverless = require('serverless-http');
-const session = require('express-session');
-const { MongoClient } = require('mongodb');
-const path = require('path');
 
 const app = express();
 
-// MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzendorf55@cluster0.ay1oe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-let db;
-
-async function connectDB() {
-  try {
-    const client = await MongoClient.connect(MONGODB_URI);
-    db = client.db('burgdienstplan');
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-  }
-}
-
-connectDB();
-
 // Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 
-// Session configuration
-app.use(session({
-  secret: 'burgHochosterwitz2025',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
-}));
+// MongoDB Verbindung
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB verbunden'))
+  .catch(err => console.error('MongoDB Fehler:', err));
 
-// Routes
-app.get('/', (req, res) => {
-  res.render('login');
+// User Schema
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['admin', 'mitarbeiter', 'museumsfuehrer'], required: true },
+  name: String,
+  email: String
 });
 
-app.post('/auth/login', async (req, res) => {
-  const { username, password } = req.body;
-  
+// Dienstplan Schema
+const dienstSchema = new mongoose.Schema({
+  datum: { type: Date, required: true },
+  bereich: { type: String, required: true },
+  mitarbeiter: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  status: { type: String, default: 'geplant' },
+  zeit: {
+    von: String,
+    bis: String
+  }
+});
+
+const User = mongoose.model('User', userSchema);
+const Dienst = mongoose.model('Dienst', dienstSchema);
+
+// Login Route
+app.post('/api/login', async (req, res) => {
   try {
-    const user = await db.collection('users').findOne({ username });
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
     
-    if (user && password === user.password) { // We'll add proper password hashing later
-      req.session.user = {
-        id: user._id,
-        username: user.username,
-        role: user.role
-      };
-      
-      switch (user.role) {
-        case 'kastellan':
-          res.redirect('/kastellan/dashboard');
-          break;
-        case 'hausmeister':
-          res.redirect('/hausmeister/dashboard');
-          break;
-        case 'mitarbeiter':
-          res.redirect('/mitarbeiter/dashboard');
-          break;
-        default:
-          res.redirect('/');
-      }
-    } else {
-      res.render('login', { error: 'Ungültige Anmeldedaten' });
+    if (!user) {
+      return res.status(401).json({ message: 'Benutzer nicht gefunden' });
     }
-  } catch (err) {
-    console.error('Login error:', err);
-    res.render('login', { error: 'Ein Fehler ist aufgetreten' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Falsches Passwort' });
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET || 'defaultSecret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({ token, user: { id: user._id, role: user.role, name: user.name } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Fehler' });
   }
 });
 
-// Protected route middleware
-const requireLogin = (req, res, next) => {
-  if (!req.session.user) {
-    return res.redirect('/');
+// Admin Benutzer erstellen
+app.post('/api/setup', async (req, res) => {
+  try {
+    const adminExists = await User.findOne({ role: 'admin' });
+    if (adminExists) {
+      return res.status(400).json({ message: 'Admin existiert bereits' });
+    }
+
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const admin = new User({
+      username: 'admin',
+      password: hashedPassword,
+      role: 'admin',
+      name: 'Administrator',
+      email: 'admin@burg.at'
+    });
+
+    await admin.save();
+    res.json({ message: 'Admin erstellt' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server Fehler' });
   }
-  next();
-};
+});
 
-// Dashboard routes
-app.get('/kastellan/dashboard', requireLogin, (req, res) => {
-  if (req.session.user.role !== 'kastellan') {
-    return res.redirect('/');
+// Dienstplan Routes
+app.get('/api/dienstplan', async (req, res) => {
+  try {
+    const dienste = await Dienst.find().populate('mitarbeiter');
+    res.json(dienste);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Fehler' });
   }
-  res.render('kastellan/dashboard');
 });
 
-app.get('/hausmeister/dashboard', requireLogin, (req, res) => {
-  if (req.session.user.role !== 'hausmeister') {
-    return res.redirect('/');
+app.post('/api/dienstplan', async (req, res) => {
+  try {
+    const dienst = new Dienst(req.body);
+    await dienst.save();
+    res.json(dienst);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Fehler' });
   }
-  res.render('hausmeister/dashboard');
 });
 
-app.get('/mitarbeiter/dashboard', requireLogin, (req, res) => {
-  if (req.session.user.role !== 'mitarbeiter') {
-    return res.redirect('/');
-  }
-  res.render('mitarbeiter/dashboard');
-});
-
-// Logout route
-app.get('/auth/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { error: 'Ein Fehler ist aufgetreten' });
-});
-
-// Export the serverless app
+// Netlify Function Handler
 exports.handler = serverless(app);
