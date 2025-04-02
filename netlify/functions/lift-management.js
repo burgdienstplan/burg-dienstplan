@@ -1,7 +1,8 @@
 const { builder } = require("@netlify/functions");
 const express = require("express");
 const mongoose = require("mongoose");
-const passport = require("passport");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 
@@ -12,11 +13,10 @@ const router = express.Router();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Datenbank-Verbindung
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// MongoDB Verbindung
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB verbunden'))
+  .catch(err => console.error('MongoDB Fehler:', err));
 
 // Multer Konfiguration für Bilduploads
 const storage = multer.memoryStorage();
@@ -126,6 +126,16 @@ router.put("/maintenance/:taskId/status", async (req, res) => {
     res.status(500).json({ error: "Fehler beim Aktualisieren des Status" });
   }
 });
+
+// Lift Schema
+const liftSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  status: { type: String, enum: ['aktiv', 'wartung', 'inaktiv'], default: 'aktiv' },
+  wartungsDatum: Date,
+  naechsteWartung: Date
+});
+
+const Lift = mongoose.model('Lift', liftSchema);
 
 // API-Routen
 app.use("/.netlify/functions/lift-management", router);
