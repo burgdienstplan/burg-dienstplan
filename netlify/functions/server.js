@@ -118,10 +118,11 @@ app.post('/dienstplan', async (req, res) => {
 
 // Netlify Function Handler
 const handler = serverless(app);
+
 exports.handler = async (event, context) => {
   // Füge den Pfad zur Event-Path hinzu
-  if (!event.path.startsWith('/.netlify/functions/')) {
-    event.path = `/.netlify/functions/server${event.path}`;
+  if (!event.path.startsWith('/')) {
+    event.path = `/${event.path}`;
   }
   return handler(event, context);
 };
