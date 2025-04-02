@@ -5,10 +5,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express", "serverless-http"]
-
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
 
 [[redirects]]
   from = "/*"
