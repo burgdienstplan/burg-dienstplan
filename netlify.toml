@@ -1,19 +1,14 @@
 [build]
-  command = "cd netlify/functions && npm install && cd ../.."
+  command = "cd netlify/functions && npm install"
   functions = "netlify/functions"
   publish = "public"
 
 [functions]
-  directory = "netlify/functions"
   node_bundler = "esbuild"
-  external_node_modules = ["express", "mongoose", "serverless-http", "bcryptjs", "jsonwebtoken", "dotenv", "cors", "moment", "moment-timezone", "ejs", "@netlify/functions", "multer"]
-  included_files = ["netlify/functions/**/*"]
+  external_node_modules = ["express", "serverless-http"]
 
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/server"
   status = 200
   force = true
-
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
