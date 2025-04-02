@@ -6,7 +6,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  external_node_modules = ["express", "mongoose", "serverless-http", "bcryptjs", "jsonwebtoken", "dotenv", "cors", "moment", "moment-timezone", "ejs"]
+  external_node_modules = ["express", "mongoose", "serverless-http", "bcryptjs", "jsonwebtoken", "dotenv", "cors", "moment", "moment-timezone", "ejs", "@netlify/functions", "multer"]
 
 [[redirects]]
   from = "/api/*"
