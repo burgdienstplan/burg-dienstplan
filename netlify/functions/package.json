@@ -2,5 +2,10 @@
   "name": "burg-dienstplan-functions",
   "version": "1.0.0",
   "description": "Netlify Functions für Burg Dienstplan",
-  "main": "server.js"
+  "main": "server.js",
+  "dependencies": {
+    "mongoose": "^8.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0"
+  }
 }
