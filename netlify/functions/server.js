@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -41,8 +40,13 @@ const dienstSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const Dienst = mongoose.model('Dienst', dienstSchema);
 
+// Root Route
+app.get('/', (req, res) => {
+  res.json({ message: 'Burg Hochosterwitz API' });
+});
+
 // Login Route
-app.post('/api/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
@@ -69,7 +73,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Admin Benutzer erstellen
-app.post('/api/setup', async (req, res) => {
+app.post('/setup', async (req, res) => {
   try {
     const adminExists = await User.findOne({ role: 'admin' });
     if (adminExists) {
@@ -93,7 +97,7 @@ app.post('/api/setup', async (req, res) => {
 });
 
 // Dienstplan Routes
-app.get('/api/dienstplan', async (req, res) => {
+app.get('/dienstplan', async (req, res) => {
   try {
     const dienste = await Dienst.find().populate('mitarbeiter');
     res.json(dienste);
@@ -102,7 +106,7 @@ app.get('/api/dienstplan', async (req, res) => {
   }
 });
 
-app.post('/api/dienstplan', async (req, res) => {
+app.post('/dienstplan', async (req, res) => {
   try {
     const dienst = new Dienst(req.body);
     await dienst.save();
@@ -113,4 +117,11 @@ app.post('/api/dienstplan', async (req, res) => {
 });
 
 // Netlify Function Handler
-exports.handler = serverless(app);
+const handler = serverless(app);
+exports.handler = async (event, context) => {
+  // Füge den Pfad zur Event-Path hinzu
+  if (!event.path.startsWith('/.netlify/functions/')) {
+    event.path = `/.netlify/functions/server${event.path}`;
+  }
+  return handler(event, context);
+};
