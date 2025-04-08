@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Mein Profil</title>
+    <style>
+        :root {
+            --burg-red: #9B0600;
+            --burg-gold: #C4A777;
+            --burg-brown: #4A3C31;
+            --burg-beige: #F5E6D3;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--burg-beige);
+        }
+        
+        .header {
+            background-color: var(--burg-red);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .logo {
+            height: 50px;
+        }
+        
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-white {
+            background-color: white;
+            color: var(--burg-red);
+        }
+        
+        .btn-white:hover {
+            background-color: var(--burg-gold);
+            color: white;
+        }
+        
+        .content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: var(--burg-red);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--burg-brown);
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--burg-gold);
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--burg-beige);
+            padding-bottom: 10px;
+        }
+        
+        .info-label {
+            width: 150px;
+            color: var(--burg-brown);
+            font-weight: bold;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .btn-gold {
+            background-color: var(--burg-gold);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+        
+        .btn-gold:hover {
+            background-color: #B39666;
+        }
+        
+        .success-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message {
+            background-color: #f44336;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+            }
+            
+            .info-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/images/logo.jpg" alt="Burg Hochosterwitz Logo" class="logo">
+        <a href="/dashboard" class="btn btn-white">Zurück zum Dashboard</a>
+    </div>
+    
+    <div class="content">
+        <div class="success-message" id="successMessage"></div>
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="profile-card">
+            <h2>Mein Profil</h2>
+            
+            <div class="info-row">
+                <div class="info-label">Name:</div>
+                <div class="info-value" id="fullName"></div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Benutzername:</div>
+                <div class="info-value" id="username"></div>
+            </div>
+            
+            <div class="info-row">
+                <div class="info-label">Rolle:</div>
+                <div class="info-value" id="role"></div>
+            </div>
+            
+            <form id="profileForm" onsubmit="updateProfile(event)">
+                <div class="form-group">
+                    <label for="email">E-Mail</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Telefon</label>
+                    <input type="tel" id="phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="currentPassword">Aktuelles Passwort</label>
+                    <input type="password" id="currentPassword">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">Neues Passwort</label>
+                    <input type="password" id="newPassword">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Passwort bestätigen</label>
+                    <input type="password" id="confirmPassword">
+                </div>
+                
+                <button type="submit" class="btn btn-gold">Änderungen speichern</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Profildaten laden
+        async function loadProfile() {
+            try {
+                const response = await fetch('/profile');
+                const profile = await response.json();
+                
+                document.getElementById('fullName').textContent = `${profile.firstName} ${profile.lastName}`;
+                document.getElementById('username').textContent = profile.username;
+                document.getElementById('role').textContent = formatRole(profile.role);
+                document.getElementById('email').value = profile.email;
+                document.getElementById('phone').value = profile.phone || '';
+            } catch (error) {
+                console.error('Fehler beim Laden des Profils:', error);
+                showError('Fehler beim Laden des Profils');
+            }
+        }
+
+        // Profil aktualisieren
+        async function updateProfile(event) {
+            event.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                showError('Die Passwörter stimmen nicht überein');
+                return;
+            }
+            
+            const formData = {
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
+            
+            if (newPassword) {
+                formData.currentPassword = document.getElementById('currentPassword').value;
+                formData.newPassword = newPassword;
+            }
+            
+            try {
+                const response = await fetch('/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showSuccess('Profil erfolgreich aktualisiert');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Ein Fehler ist aufgetreten');
+                }
+            } catch (error) {
+                console.error('Fehler beim Aktualisieren des Profils:', error);
+                showError('Ein Fehler ist aufgetreten');
+            }
+        }
+
+        // Hilfsfunktionen
+        function formatRole(role) {
+            const roles = {
+                'kastellan': 'Kastellan',
+                'hausmeister': 'Hausmeister',
+                'museumsfuehrer': 'Museumsführer',
+                'mitarbeiter': 'Mitarbeiter'
+            };
+            return roles[role] || role;
+        }
+
+        function showSuccess(message) {
+            const element = document.getElementById('successMessage');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 3000);
+        }
+
+        function showError(message) {
+            const element = document.getElementById('errorMessage');
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 3000);
+        }
+
+        // Initial laden
+        loadProfile();
+    </script>
+</body>
+</html>

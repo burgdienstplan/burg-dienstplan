@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz Dienstplan</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Burg Hochosterwitz Dienstplan</h1>
+        <table id="dienstplan">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Bereich</th>
+                    <th>Mitarbeiter</th>
+                    <th>Von</th>
+                    <th>Bis</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Lade Dienstplan
+        fetch('/.netlify/functions/server/dienste')
+            .then(response => response.json())
+            .then(dienste => {
+                const tbody = document.querySelector('#dienstplan tbody');
+                dienste.forEach(dienst => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(dienst.datum).toLocaleDateString()}</td>
+                        <td>${dienst.bereich}</td>
+                        <td>${dienst.mitarbeiter}</td>
+                        <td>${dienst.zeit.von}</td>
+                        <td>${dienst.zeit.bis}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Fehler:', error));
+    </script>
+</body>
+</html>

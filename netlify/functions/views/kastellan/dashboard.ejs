@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kastellan Dashboard - Burg Hochosterwitz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8B4513;
+            --secondary-color: #f5e6d3;
+            --text-color: #4a4a4a;
+            --border-color: #ddd;
+        }
+        
+        body {
+            font-family: 'Cinzel', serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-color);
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        
+        .card-content {
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #6d3610;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Kastellan Dashboard</h1>
+        <div class="navbar-links">
+            <a href="/auth/logout">Ausloggen</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>Dienstplan</h2>
+                <div class="card-content">
+                    <p>Verwalten Sie den Dienstplan für alle Mitarbeiter.</p>
+                    <a href="/dienstplan" class="btn">Zum Dienstplan</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Mitarbeiterverwaltung</h2>
+                <div class="card-content">
+                    <p>Verwalten Sie Mitarbeiter und deren Berechtigungen.</p>
+                    <a href="/mitarbeiter" class="btn">Zu den Mitarbeitern</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Hausmeister-Aufgaben</h2>
+                <div class="card-content">
+                    <p>Überblick über alle Hausmeister-Aufgaben.</p>
+                    <a href="/aufgaben" class="btn">Zu den Aufgaben</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Burglift-Verwaltung</h2>
+                <div class="card-content">
+                    <p>Verwalten Sie Wartung und Reparaturen des Burglifts.</p>
+                    <a href="/lift" class="btn">Zum Burglift</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
