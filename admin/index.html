@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="../img/logo.svg" alt="Burg Hochosterwitz" class="logo">
+                <h1>Burg Hochosterwitz</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active" data-section="dienstplan">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Dienstplan</span>
+                </a>
+                <a href="#" data-section="mitarbeiter">
+                    <i class="fas fa-users"></i>
+                    <span>Mitarbeiter</span>
+                </a>
+                <a href="#" data-section="fuehrungen">
+                    <i class="fas fa-walking"></i>
+                    <span>Führungen</span>
+                </a>
+                <a href="#" data-section="einstellungen">
+                    <i class="fas fa-cog"></i>
+                    <span>Einstellungen</span>
+                </a>
+                <a href="#" data-section="chat">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Abmelden</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Dienstplan -->
+            <section id="dienstplan" class="active">
+                <div class="section-header">
+                    <div class="controls">
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <h2 id="currentMonth">April 2025</h2>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-container">
+                    <div id="dienstplanKalender" class="calendar"></div>
+                </div>
+            </section>
+
+            <!-- Mitarbeiter -->
+            <section id="mitarbeiter">
+                <div class="section-header">
+                    <h2>Mitarbeiter</h2>
+                    <button id="addMitarbeiterBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neuer Mitarbeiter
+                    </button>
+                </div>
+                <div class="mitarbeiter-liste" id="mitarbeiterListe"></div>
+            </section>
+
+            <!-- Führungen -->
+            <section id="fuehrungen">
+                <div class="section-header">
+                    <h2>Führungen</h2>
+                    <button id="addFuehrungBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neue Führung
+                    </button>
+                </div>
+                <div class="fuehrungen-liste" id="fuehrungenListe"></div>
+            </section>
+
+            <!-- Einstellungen -->
+            <section id="einstellungen">
+                <div class="section-header">
+                    <h2>Einstellungen</h2>
+                </div>
+
+                <form id="settingsForm" class="settings-container">
+                    <!-- Ruhetage -->
+                    <div class="settings-group">
+                        <h3>Ruhetage</h3>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="0"> Sonntag
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="1"> Montag
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="2"> Dienstag
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="3"> Mittwoch
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="4"> Donnerstag
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="5"> Freitag
+                            </label>
+                            <label>
+                                <input type="checkbox" name="ruhetage" value="6"> Samstag
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="settings-group">
+                        <h3>Logo</h3>
+                        <div class="logo-upload">
+                            <img id="logoPreview" src="../img/logo.svg" alt="Logo Vorschau">
+                            <input type="file" id="logoUpload" accept="image/png,image/svg+xml">
+                            <p class="help-text">PNG oder SVG, max. 1MB</p>
+                        </div>
+                    </div>
+
+                    <!-- Benutzerdefinierte Einstellungen -->
+                    <div class="settings-group">
+                        <div class="group-header">
+                            <h3>Benutzerdefinierte Einstellungen</h3>
+                            <button type="button" id="addSettingBtn" class="btn-primary">
+                                <i class="fas fa-plus"></i> Neue Einstellung
+                            </button>
+                        </div>
+                        <div id="customSettings"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Speichern</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Chat -->
+            <section id="chat">
+                <div class="section-header">
+                    <h2>Mitarbeiter-Chat</h2>
+                </div>
+                <div class="chat-container">
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input">
+                        <form id="chatForm" class="chat-form">
+                            <input type="text" id="chatInput" placeholder="Nachricht eingeben..." required>
+                            <button type="submit">
+                                <i class="fas fa-paper-plane"></i>
+                                Senden
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Dienst Modal -->
+    <div id="dienstModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dienst zuweisen</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="dienstForm">
+                <div class="form-group">
+                    <label for="position">Position</label>
+                    <select id="position" name="position" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="mitarbeiter">Mitarbeiter</label>
+                    <select id="mitarbeiter" name="mitarbeiter" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mitarbeiter Modal -->
+    <div id="mitarbeiterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Mitarbeiter</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="mitarbeiterForm">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Benutzername</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Passwort</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="rolle">Rolle</label>
+                    <select id="rolle" name="rolle" required>
+                        <option value="">Bitte wählen...</option>
+                        <option value="mitarbeiter">Mitarbeiter</option>
+                        <option value="museumsfuehrer">Museumsführer</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Führungen Modal -->
+    <div id="fuehrungModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Neue Führung</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="fuehrungForm">
+                <div class="form-group">
+                    <label for="gruppenname">Gruppenname</label>
+                    <input type="text" id="gruppenname" required>
+                </div>
+                <div class="form-group">
+                    <label for="datum">Datum</label>
+                    <input type="date" id="datum" required>
+                </div>
+                <div class="form-group">
+                    <label for="uhrzeit">Uhrzeit</label>
+                    <input type="time" id="uhrzeit" required>
+                </div>
+                <div class="form-group">
+                    <label for="personenanzahl">Personenanzahl</label>
+                    <input type="number" id="personenanzahl" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="sprache">Sprache</label>
+                    <select id="sprache" required>
+                        <option value="Deutsch">Deutsch</option>
+                        <option value="Englisch">Englisch</option>
+                        <option value="Italienisch">Italienisch</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Einstellungen Modal -->
+    <div id="settingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Neue Einstellung</h3>
+                <button type="button" class="modal-close">&times;</button>
+            </div>
+            <form id="settingForm">
+                <div class="form-group">
+                    <label for="settingName">Name der Einstellung</label>
+                    <input type="text" id="settingName" required>
+                </div>
+                <div class="form-group">
+                    <label for="settingValue">Wert</label>
+                    <input type="text" id="settingValue" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/admin/auth.js"></script>
+    <script src="../js/admin/navigation.js"></script>
+    <script src="../js/admin/mitarbeiter.js"></script>
+    <script src="../js/admin/dienstplan.js"></script>
+    <script src="../js/admin/fuehrungen.js"></script>
+    <script src="../js/admin/einstellungen.js"></script>
+    <script src="../js/admin/chat.js"></script>
+</body>
+</html>

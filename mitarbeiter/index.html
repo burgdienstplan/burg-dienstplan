@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitarbeiter - Burg Hochosterwitz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/mitarbeiter.css">
+</head>
+<body>
+    <div class="mitarbeiter-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>Burg Hochosterwitz</h2>
+                <p id="userName">Mitarbeiter</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="active" data-section="dienstplan">
+                    <i class="fas fa-calendar"></i> Mein Dienstplan
+                </li>
+                <li data-section="vorschlaege">
+                    <i class="fas fa-clock"></i> Dienstvorschläge
+                </li>
+                <li data-section="urlaub">
+                    <i class="fas fa-umbrella-beach"></i> Urlaub
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Abmelden</button>
+            </div>
+        </nav>
+
+        <!-- Hauptinhalt -->
+        <main class="content">
+            <!-- Dienstplan Bereich -->
+            <section id="dienstplan" class="active">
+                <div class="section-header">
+                    <h1>Mein Dienstplan</h1>
+                    <div class="controls">
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <h2 id="currentMonth">April 2025</h2>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="actions">
+                        <button id="exportBtn" class="btn-secondary">
+                            <i class="fas fa-file-export"></i>
+                            Meine Dienste exportieren
+                        </button>
+                    </div>
+                </div>
+                <div class="calendar-container">
+                    <div class="calendar" id="dienstplanKalender"></div>
+                </div>
+            </section>
+
+            <!-- Dienstvorschläge Bereich -->
+            <section id="vorschlaege" class="hidden">
+                <div class="section-header">
+                    <h1>Dienstvorschläge</h1>
+                    <button id="addVorschlagBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neuer Vorschlag
+                    </button>
+                </div>
+                <div class="vorschlaege-liste" id="vorschlaegeListe"></div>
+            </section>
+
+            <!-- Urlaub Bereich -->
+            <section id="urlaub" class="hidden">
+                <div class="section-header">
+                    <h1>Urlaubsanfragen</h1>
+                    <button id="addUrlaubBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neue Anfrage
+                    </button>
+                </div>
+                <div class="urlaub-liste" id="urlaubListe"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="vorschlagModal" class="modal">
+        <div class="modal-content">
+            <h2>Dienstvorschlag</h2>
+            <form id="vorschlagForm">
+                <div class="form-group">
+                    <label for="datum">Datum</label>
+                    <input type="date" id="datum" required>
+                </div>
+                <div class="form-group">
+                    <label for="position">Position</label>
+                    <select id="position" required>
+                        <option value="shop_eintritt">Shop Eintritt</option>
+                        <option value="museums_shop">Museums Shop</option>
+                        <option value="eintritt_fuehrungen">Eintritt Führungen</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary modal-close">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="urlaubModal" class="modal">
+        <div class="modal-content">
+            <h2>Urlaubsanfrage</h2>
+            <form id="urlaubForm">
+                <div class="form-group">
+                    <label for="von">Von</label>
+                    <input type="date" id="von" required>
+                </div>
+                <div class="form-group">
+                    <label for="bis">Bis</label>
+                    <input type="date" id="bis" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary modal-close">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/mitarbeiter/main.js"></script>
+    <script src="../js/mitarbeiter/dienstplan.js"></script>
+    <script src="../js/mitarbeiter/export.js"></script>
+    <script src="../js/mitarbeiter/vorschlaege.js"></script>
+    <script src="../js/mitarbeiter/urlaub.js"></script>
+</body>
+</html>
