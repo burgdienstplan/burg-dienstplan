@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Mitarbeiterverwaltung</title>
+    <style>
+        :root {
+            --burg-red: #9B0600;
+            --burg-gold: #C4A777;
+            --burg-brown: #4A3C31;
+            --burg-beige: #F5E6D3;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: var(--burg-beige);
+        }
+        
+        .header {
+            background-color: var(--burg-red);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .logo {
+            height: 50px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-white {
+            background-color: white;
+            color: var(--burg-red);
+        }
+        
+        .btn-white:hover {
+            background-color: var(--burg-gold);
+            color: white;
+        }
+        
+        .btn-gold {
+            background-color: var(--burg-gold);
+            color: white;
+        }
+        
+        .btn-gold:hover {
+            background-color: white;
+            color: var(--burg-red);
+        }
+        
+        .content {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        h2 {
+            color: var(--burg-red);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .employee-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--burg-beige);
+            padding-bottom: 10px;
+        }
+        
+        .employee-name {
+            color: var(--burg-brown);
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .employee-role {
+            color: var(--burg-red);
+            font-style: italic;
+        }
+        
+        .employee-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        .status-active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .status-inactive {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .employee-details {
+            margin-bottom: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        
+        .detail-label {
+            width: 100px;
+            color: var(--burg-brown);
+            font-weight: bold;
+        }
+        
+        .employee-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .btn-edit {
+            background-color: var(--burg-gold);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background-color: #B39666;
+        }
+        
+        .btn-toggle {
+            background-color: var(--burg-red);
+            color: white;
+        }
+        
+        .btn-toggle:hover {
+            background-color: #7A0500;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 28px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--burg-brown);
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--burg-gold);
+            border-radius: 4px;
+        }
+        
+        .form-group select[multiple] {
+            height: 100px;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .employee-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                margin: 20px;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/images/logo.jpg" alt="Burg Hochosterwitz Logo" class="logo">
+        <div class="header-buttons">
+            <button onclick="showNewEmployeeModal()" class="btn btn-gold">Neuer Mitarbeiter</button>
+            <a href="/kastellan/dashboard" class="btn btn-white">Zurück zum Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="content">
+        <h2>Mitarbeiterverwaltung</h2>
+        
+        <div class="employee-grid" id="employeeGrid">
+            <!-- Wird durch JavaScript gefüllt -->
+        </div>
+    </div>
+    
+    <!-- Modal für neuen/bearbeiten Mitarbeiter -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">Neuer Mitarbeiter</h3>
+            <form id="employeeForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="employeeId">
+                <div class="form-group">
+                    <label for="firstName">Vorname</label>
+                    <input type="text" id="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Nachname</label>
+                    <input type="text" id="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-Mail</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Telefon</label>
+                    <input type="tel" id="phone">
+                </div>
+                <div class="form-group">
+                    <label for="username">Benutzername</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Passwort</label>
+                    <input type="password" id="password">
+                </div>
+                <div class="form-group">
+                    <label for="role">Rolle</label>
+                    <select id="role" required>
+                        <option value="mitarbeiter">Mitarbeiter</option>
+                        <option value="museumsfuehrer">Museumsführer</option>
+                        <option value="hausmeister">Hausmeister</option>
+                    </select>
+                </div>
+                <div class="form-group" id="positionsGroup">
+                    <label for="positions">Positionen</label>
+                    <select id="positions" multiple>
+                        <option value="shop_eintritt">Shop Eintritt</option>
+                        <option value="eintritt">Eintritt</option>
+                        <option value="shop_museum">Shop Museum</option>
+                        <option value="fuehrung">Führung</option>
+                    </select>
+                </div>
+                <div class="form-group" id="languagesGroup" style="display: none;">
+                    <label for="languages">Sprachen</label>
+                    <select id="languages" multiple>
+                        <option value="deutsch">Deutsch</option>
+                        <option value="englisch">Englisch</option>
+                        <option value="italienisch">Italienisch</option>
+                        <option value="französisch">Französisch</option>
+                    </select>
+                </div>
+                <div class="form-group" id="specialToursGroup" style="display: none;">
+                    <label for="specialTours">Spezielle Führungen</label>
+                    <select id="specialTours" multiple>
+                        <option value="standard">Standard</option>
+                        <option value="historisch">Historisch</option>
+                        <option value="architektur">Architektur</option>
+                        <option value="kinder">Kinder</option>
+                        <option value="nacht">Nacht</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-gold">Speichern</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mitarbeiter laden
+        async function loadEmployees() {
+            try {
+                const response = await fetch('/employees');
+                const employees = await response.json();
+                displayEmployees(employees);
+            } catch (error) {
+                console.error('Fehler beim Laden der Mitarbeiter:', error);
+            }
+        }
+
+        // Mitarbeiter anzeigen
+        function displayEmployees(employees) {
+            const grid = document.getElementById('employeeGrid');
+            grid.innerHTML = employees.map(employee => `
+                <div class="employee-card">
+                    <div class="employee-header">
+                        <div>
+                            <div class="employee-name">${employee.firstName} ${employee.lastName}</div>
+                            <div class="employee-role">${formatRole(employee.role)}</div>
+                        </div>
+                        <span class="employee-status ${employee.isActive ? 'status-active' : 'status-inactive'}">
+                            ${employee.isActive ? 'Aktiv' : 'Inaktiv'}
+                        </span>
+                    </div>
+                    <div class="employee-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Email:</span>
+                            <span>${employee.email}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Telefon:</span>
+                            <span>${employee.phone || '-'}</span>
+                        </div>
+                        ${employee.role === 'museumsfuehrer' ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Sprachen:</span>
+                                <span>${formatList(employee.languages)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Führungen:</span>
+                                <span>${formatList(employee.specialTours)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="detail-row">
+                            <span class="detail-label">Positionen:</span>
+                            <span>${formatList(employee.positions)}</span>
+                        </div>
+                    </div>
+                    <div class="employee-actions">
+                        <button onclick="editEmployee('${employee._id}')" class="action-btn btn-edit">Bearbeiten</button>
+                        <button onclick="toggleStatus('${employee._id}')" class="action-btn btn-toggle">
+                            ${employee.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Formatierungshilfen
+        function formatRole(role) {
+            const roles = {
+                'kastellan': 'Kastellan',
+                'hausmeister': 'Hausmeister',
+                'museumsfuehrer': 'Museumsführer',
+                'mitarbeiter': 'Mitarbeiter'
+            };
+            return roles[role] || role;
+        }
+
+        function formatList(list) {
+            if (!list || !list.length) return '-';
+            return list.map(item => item.charAt(0).toUpperCase() + item.slice(1)).join(', ');
+        }
+
+        // Modal Funktionen
+        function showNewEmployeeModal() {
+            document.getElementById('modalTitle').textContent = 'Neuer Mitarbeiter';
+            document.getElementById('employeeForm').reset();
+            document.getElementById('employeeId').value = '';
+            document.getElementById('employeeModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('employeeModal').style.display = 'none';
+        }
+
+        // Rolle ändern Event
+        document.getElementById('role').addEventListener('change', function(e) {
+            const isMuseumsfuehrer = e.target.value === 'museumsfuehrer';
+            document.getElementById('languagesGroup').style.display = isMuseumsfuehrer ? 'block' : 'none';
+            document.getElementById('specialToursGroup').style.display = isMuseumsfuehrer ? 'block' : 'none';
+        });
+
+        // Formular absenden
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value,
+                positions: Array.from(document.getElementById('positions').selectedOptions).map(opt => opt.value),
+                languages: Array.from(document.getElementById('languages').selectedOptions).map(opt => opt.value),
+                specialTours: Array.from(document.getElementById('specialTours').selectedOptions).map(opt => opt.value)
+            };
+
+            const employeeId = document.getElementById('employeeId').value;
+            try {
+                const response = await fetch(employeeId ? `/employees/${employeeId}` : '/employees', {
+                    method: employeeId ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadEmployees();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Ein Fehler ist aufgetreten');
+                }
+            } catch (error) {
+                console.error('Fehler beim Speichern:', error);
+                alert('Ein Fehler ist aufgetreten');
+            }
+        }
+
+        // Mitarbeiter bearbeiten
+        async function editEmployee(id) {
+            try {
+                const response = await fetch(`/employees/${id}`);
+                const employee = await response.json();
+                
+                document.getElementById('modalTitle').textContent = 'Mitarbeiter bearbeiten';
+                document.getElementById('employeeId').value = employee._id;
+                document.getElementById('firstName').value = employee.firstName;
+                document.getElementById('lastName').value = employee.lastName;
+                document.getElementById('email').value = employee.email;
+                document.getElementById('phone').value = employee.phone || '';
+                document.getElementById('username').value = employee.username;
+                document.getElementById('password').value = '';
+                document.getElementById('role').value = employee.role;
+                
+                // Multi-Select Felder
+                setMultiSelectValues('positions', employee.positions);
+                setMultiSelectValues('languages', employee.languages);
+                setMultiSelectValues('specialTours', employee.specialTours);
+                
+                // Zeige/Verstecke Museumsführer-spezifische Felder
+                const isMuseumsfuehrer = employee.role === 'museumsfuehrer';
+                document.getElementById('languagesGroup').style.display = isMuseumsfuehrer ? 'block' : 'none';
+                document.getElementById('specialToursGroup').style.display = isMuseumsfuehrer ? 'block' : 'none';
+                
+                document.getElementById('employeeModal').style.display = 'block';
+            } catch (error) {
+                console.error('Fehler beim Laden des Mitarbeiters:', error);
+                alert('Ein Fehler ist aufgetreten');
+            }
+        }
+
+        // Status ändern
+        async function toggleStatus(id) {
+            try {
+                const response = await fetch(`/employees/${id}/toggle-status`, {
+                    method: 'PATCH'
+                });
+                
+                if (response.ok) {
+                    loadEmployees();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Ein Fehler ist aufgetreten');
+                }
+            } catch (error) {
+                console.error('Fehler beim Ändern des Status:', error);
+                alert('Ein Fehler ist aufgetreten');
+            }
+        }
+
+        // Hilfsfunktion für Multi-Select
+        function setMultiSelectValues(selectId, values) {
+            const select = document.getElementById(selectId);
+            if (select && values) {
+                Array.from(select.options).forEach(option => {
+                    option.selected = values.includes(option.value);
+                });
+            }
+        }
+
+        // Initial laden
+        loadEmployees();
+    </script>
+</body>
+</html>

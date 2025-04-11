@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Hausmeister Dashboard</title>
+    <style>
+        :root {
+            --burg-red: #9B0600;
+            --burg-gold: #C4A777;
+            --burg-brown: #4A3C31;
+            --burg-beige: #F5E6D3;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--burg-beige);
+            color: var(--burg-brown);
+        }
+        
+        .header {
+            background-color: var(--burg-red);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .logo {
+            height: 50px;
+        }
+        
+        .welcome {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 50px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .dashboard-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: var(--burg-gold);
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dashboard-card h3 {
+            color: var(--burg-brown);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .task-list {
+            margin-top: 15px;
+        }
+        
+        .task-item {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border-left: 4px solid transparent;
+            background-color: var(--burg-beige);
+            transition: all 0.3s;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .task-item.priority-urgent {
+            border-left-color: #ff0000;
+        }
+        
+        .task-item.priority-high {
+            border-left-color: #ff9800;
+        }
+        
+        .task-item.priority-medium {
+            border-left-color: #ffc107;
+        }
+        
+        .task-item.priority-low {
+            border-left-color: #4caf50;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .task-title {
+            font-weight: bold;
+        }
+        
+        .task-date {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .task-status {
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: var(--burg-gold);
+            color: white;
+        }
+        
+        .material-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--burg-beige);
+        }
+        
+        .material-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .material-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .material-quantity {
+            font-weight: bold;
+        }
+        
+        .material-quantity.low {
+            color: var(--burg-red);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--burg-gold);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background-color: #B39666;
+        }
+        
+        .btn-white {
+            background-color: white;
+            color: var(--burg-red);
+        }
+        
+        .btn-white:hover {
+            background-color: var(--burg-beige);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .welcome {
+                margin-right: 0;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="/images/logo.jpg" alt="Burg Hochosterwitz Logo" class="logo">
+        <div class="welcome">
+            <h1>Willkommen, <%= user.firstName %></h1>
+        </div>
+        <a href="/auth/logout" class="btn btn-white">Abmelden</a>
+    </div>
+    
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>Aktuelle Aufgaben</h3>
+                <div class="task-list" id="currentTasks">
+                    <!-- Wird durch JavaScript gefüllt -->
+                </div>
+                <a href="/tasks" class="btn">Alle Aufgaben anzeigen</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>Lift-Wartung</h3>
+                <div class="task-list" id="liftTasks">
+                    <!-- Wird durch JavaScript gefüllt -->
+                </div>
+                <a href="/lift" class="btn">Lift-Management</a>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>Materiallager</h3>
+                <div class="task-list" id="materials">
+                    <!-- Wird durch JavaScript gefüllt -->
+                </div>
+                <a href="/inventory" class="btn">Zum Materiallager</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard-Daten laden
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/maintenance');
+                const data = await response.json();
+                
+                // Aktuelle Aufgaben
+                const currentTasksContainer = document.getElementById('currentTasks');
+                currentTasksContainer.innerHTML = '';
+                
+                data.currentTasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = `task-item priority-${task.priority}`;
+                    taskElement.innerHTML = `
+                        <div class="task-header">
+                            <span class="task-title">${task.title}</span>
+                            <span class="task-status">${formatStatus(task.status)}</span>
+                        </div>
+                        <div class="task-date">Fällig: ${formatDate(task.dueDate)}</div>
+                    `;
+                    taskElement.onclick = () => window.location.href = `/tasks/${task._id}`;
+                    currentTasksContainer.appendChild(taskElement);
+                });
+                
+                // Lift-Aufgaben
+                const liftTasksContainer = document.getElementById('liftTasks');
+                liftTasksContainer.innerHTML = '';
+                
+                data.liftTasks.forEach(task => {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    taskElement.innerHTML = `
+                        <div class="task-header">
+                            <span class="task-title">${task.title}</span>
+                            <span class="task-status">${formatStatus(task.status)}</span>
+                        </div>
+                        <div class="task-date">Geplant: ${formatDate(task.scheduledDate)}</div>
+                    `;
+                    taskElement.onclick = () => window.location.href = `/lift/${task._id}`;
+                    liftTasksContainer.appendChild(taskElement);
+                });
+                
+                // Materiallager
+                const materialsContainer = document.getElementById('materials');
+                materialsContainer.innerHTML = '';
+                
+                data.materials.forEach(material => {
+                    const materialElement = document.createElement('div');
+                    materialElement.className = 'material-item';
+                    materialElement.innerHTML = `
+                        <div class="material-info">
+                            ${material.image ? `<img src="${material.image}" alt="${material.name}" class="material-image">` : ''}
+                            <div>
+                                <div>${material.name}</div>
+                                <div class="material-quantity ${material.quantity <= material.minQuantity ? 'low' : ''}">
+                                    ${material.quantity} ${material.unit}
+                                </div>
+                            </div>
+                        </div>
+                        ${material.quantity <= material.minQuantity ? '<div class="task-status">Nachbestellen</div>' : ''}
+                    `;
+                    materialElement.onclick = () => window.location.href = `/inventory/${material._id}`;
+                    materialsContainer.appendChild(materialElement);
+                });
+            } catch (error) {
+                console.error('Fehler beim Laden der Dashboard-Daten:', error);
+            }
+        }
+        
+        // Status formatieren
+        function formatStatus(status) {
+            const statusMap = {
+                'new': 'Neu',
+                'in_progress': 'In Arbeit',
+                'completed': 'Abgeschlossen',
+                'cancelled': 'Abgebrochen',
+                'scheduled': 'Geplant'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // Datum formatieren
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+        
+        // Initialisierung
+        loadDashboardData();
+        // Alle 5 Minuten aktualisieren
+        setInterval(loadDashboardData, 300000);
+    </script>
+</body>
+</html>

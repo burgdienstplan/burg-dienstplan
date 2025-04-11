@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burg Hochosterwitz - Dienstplan</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Burg Hochosterwitz</h1>
+            <nav id="mainNav" style="display: none;">
+                <ul>
+                    <li><a href="/dienstplan">Dienstplan</a></li>
+                    <li><a href="/mitarbeiter">Mitarbeiter</a></li>
+                    <li><a href="/wartung">Wartung</a></li>
+                    <li><a href="/logout">Abmelden</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <section class="login-section" id="loginSection">
+                <h2>Anmeldung</h2>
+                <form id="loginForm" class="login-form">
+                    <div class="form-group">
+                        <label for="username">Benutzername</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Passwort</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Anmelden</button>
+                </form>
+            </section>
+
+            <section class="dashboard" id="dashboardSection" style="display: none;">
+                <h2>Willkommen</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-calendar"></i>
+                        <h3>Nächste Schicht</h3>
+                        <p id="nextShift">Wird geladen...</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-wrench"></i>
+                        <h3>Wartungen</h3>
+                        <p id="maintenanceCount">Wird geladen...</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Aktive Mitarbeiter</h3>
+                        <p id="activeEmployees">Wird geladen...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Burg Hochosterwitz</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/.netlify/functions/server/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login erfolgreich
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('mainNav').style.display = 'block';
+                    document.getElementById('dashboardSection').style.display = 'block';
+                    loadDashboardData();
+                } else {
+                    alert(data.message || 'Benutzername oder Passwort falsch');
+                }
+            } catch (error) {
+                console.error('Login-Fehler:', error);
+                alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+            }
+        });
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/.netlify/functions/server/api/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('nextShift').textContent = data.nextShift || 'Keine geplant';
+                    document.getElementById('maintenanceCount').textContent = data.maintenanceCount || '0';
+                    document.getElementById('activeEmployees').textContent = data.activeEmployees || '0';
+                }
+            } catch (error) {
+                console.error('Dashboard-Fehler:', error);
+            }
+        }
+
+        // Prüfen ob bereits eingeloggt
+        async function checkAuth() {
+            try {
+                const response = await fetch('/.netlify/functions/server/api/check-auth');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user) {
+                        document.getElementById('loginSection').style.display = 'none';
+                        document.getElementById('mainNav').style.display = 'block';
+                        document.getElementById('dashboardSection').style.display = 'block';
+                        loadDashboardData();
+                    }
+                }
+            } catch (error) {
+                console.error('Auth-Check-Fehler:', error);
+            }
+        }
+
+        // Bei Seitenladung prüfen
+        checkAuth();
+    </script>
+</body>
+</html>
