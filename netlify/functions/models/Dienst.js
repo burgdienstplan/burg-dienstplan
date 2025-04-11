@@ -9,9 +9,12 @@ const dienstSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    schicht: {
+    startZeit: {
         type: String,
-        enum: ['früh', 'spät', 'nacht'],
+        required: true
+    },
+    endZeit: {
+        type: String,
         required: true
     },
     position: {
