@@ -3,5 +3,5 @@
 
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/admin/index.html"
   status = 200
