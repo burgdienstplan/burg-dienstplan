@@ -118,6 +118,292 @@
     margin-bottom: 2rem;
 }
 
+/* Admin Dienstplan Styles */
+
+/* Kalender Grid */
+.calendar-container {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 1rem 0;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.calendar-nav button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--burg-rot);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+}
+
+.calendar-nav button:hover {
+    color: #660000;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: white;
+}
+
+.calendar-day.weekday {
+    aspect-ratio: auto;
+    min-height: auto;
+    background-color: var(--pergament);
+    font-weight: 600;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.calendar-day.other-month {
+    background-color: #f9f9f9;
+    color: #999;
+}
+
+.day-number {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Dienste im Kalender */
+.dienste {
+    flex: 1;
+    overflow-y: auto;
+    font-size: 0.875rem;
+}
+
+.dienst {
+    background-color: var(--pergament);
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.dienst:hover {
+    transform: translateY(-2px);
+}
+
+.dienst.genehmigt {
+    background-color: var(--success);
+    color: white;
+}
+
+.dienst.abgelehnt {
+    background-color: var(--danger);
+    color: white;
+}
+
+.dienst.angefragt {
+    background-color: var(--warning);
+}
+
+.dienst .zeit {
+    font-weight: 600;
+}
+
+.dienst .position {
+    font-size: 0.8125rem;
+}
+
+.dienst .mitarbeiter {
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+/* Dienst Dialog */
+.dienst-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.dialog-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.dialog-content h3 {
+    margin-bottom: 1.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Add Dienst Button */
+.add-dienst-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--burg-rot);
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1rem;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.calendar-day:hover .add-dienst-btn {
+    opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .calendar-grid {
+        gap: 0.25rem;
+    }
+
+    .calendar-day {
+        padding: 0.25rem;
+        min-height: 80px;
+    }
+
+    .dienst {
+        padding: 0.25rem;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-container {
+        padding: 0.5rem;
+    }
+
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .calendar-nav {
+        justify-content: center;
+    }
+
+    .calendar-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .calendar-day {
+        aspect-ratio: auto;
+        min-height: auto;
+    }
+
+    .calendar-day.weekday {
+        display: none;
+    }
+
+    .calendar-day {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .day-number {
+        margin: 0;
+        padding: 0.5rem;
+        background-color: var(--pergament);
+        border-radius: 4px;
+        text-align: center;
+        min-width: 2.5rem;
+    }
+
+    .dienste {
+        padding: 0.5rem 0;
+    }
+
+    .dienst {
+        margin-bottom: 0.25rem;
+    }
+
+    .add-dienst-btn {
+        position: static;
+        opacity: 1;
+        padding: 0.5rem;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--pergament);
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        grid-template-columns: 1fr;
+    }
+
+    .day-number {
+        margin-bottom: 0.5rem;
+    }
+
+    .dialog-content {
+        padding: 1rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+}
+
 /* Dashboard Stats */
 .stats-grid {
     display: grid;

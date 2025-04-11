@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // Kalender rendern
-    function renderCalendar(date) {
+    async function renderCalendar(date) {
         const year = date.getFullYear();
         const month = date.getMonth();
 
@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
             calendarGrid.appendChild(dayElement);
         });
 
+        // Lade alle Dienste für den Monat
+        const start = firstDay.toISOString().split('T')[0];
+        const end = lastDay.toISOString().split('T')[0];
+        const dienste = await getDiensteForMonth(start, end);
+
         // Tage des vorherigen Monats
         const prevLastDay = new Date(year, month, 0).getDate();
         for (let i = firstDayIndex - 1; i >= 0; i--) {
@@ -51,41 +56,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Tage des aktuellen Monats
-        for (let day = 1; day <= lastDay.getDate(); day++) {
+        for (let i = 1; i <= lastDay.getDate(); i++) {
+            const currentDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
             
-            // Heute markieren
-            const currentDay = new Date();
-            if (day === currentDay.getDate() && 
-                month === currentDay.getMonth() && 
-                year === currentDay.getFullYear()) {
-                dayElement.classList.add('today');
-            }
-
-            dayElement.innerHTML = `<div class="day-number">${day}</div>`;
-
-            // Dienste für diesen Tag laden
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dienste = getDiensteForDate(dateStr);
+            // Dienste für diesen Tag finden
+            const tagDienste = dienste.filter(d => d.datum === currentDateStr);
             
-            dienste.forEach(dienst => {
-                const dienstElement = document.createElement('div');
-                dienstElement.className = `dienst ${dienst.status}`;
-                dienstElement.innerHTML = `
-                    <strong>${dienst.position}</strong>
-                    <span class="status-badge ${dienst.status}">${dienst.status}</span>
-                `;
-                dayElement.appendChild(dienstElement);
-            });
-
+            let dienstHTML = '<div class="day-number">' + i + '</div>';
+            
+            if (tagDienste.length > 0) {
+                dienstHTML += '<div class="dienste">';
+                tagDienste.forEach(dienst => {
+                    const statusClass = dienst.status === 'genehmigt' ? 'genehmigt' : 
+                                    dienst.status === 'abgelehnt' ? 'abgelehnt' : 
+                                    dienst.status === 'angefragt' ? 'angefragt' : '';
+                    
+                    dienstHTML += `
+                        <div class="dienst ${statusClass}">
+                            <span class="zeit">${dienst.schicht}</span>
+                            <span class="position">${dienst.position}</span>
+                        </div>
+                    `;
+                });
+                dienstHTML += '</div>';
+            }
+            
+            dayElement.innerHTML = dienstHTML;
             calendarGrid.appendChild(dayElement);
         }
 
         // Tage des nächsten Monats
-        const totalDays = calendarGrid.childElementCount;
-        const remainingDays = 42 - totalDays; // 6 Wochen × 7 Tage = 42
-        
+        const lastDayIndex = (lastDay.getDay() + 6) % 7;
+        const remainingDays = 7 - lastDayIndex - 1;
         for (let i = 1; i <= remainingDays; i++) {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day other-month';
@@ -94,15 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Dienste für ein bestimmtes Datum laden
-    function getDiensteForDate(date) {
-        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        const dienstAnfragen = JSON.parse(localStorage.getItem('dienstAnfragen') || '[]');
-        
-        return dienstAnfragen.filter(dienst => 
-            dienst.mitarbeiterId === currentUser.id && 
-            dienst.datum === date
-        );
+    // Dienste für einen Monat laden
+    async function getDiensteForMonth(start, end) {
+        try {
+            const response = await fetch(`/.netlify/functions/api/dienste?start=${start}&end=${end}`);
+            if (!response.ok) throw new Error('Fehler beim Laden der Dienste');
+            return await response.json();
+        } catch (error) {
+            console.error('Fehler:', error);
+            return [];
+        }
     }
 
     // Event-Listener für Monatswechsel

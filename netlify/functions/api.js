@@ -4,6 +4,7 @@ const serverless = require('serverless-http');
 const cors = require('cors');
 const User = require('./models/User');
 const Chat = require('./models/Chat');
+const Dienst = require('./models/Dienst');
 
 const app = express();
 
@@ -17,59 +18,6 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Steindorfer:Ratzen
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB verbunden'))
   .catch(err => console.error('MongoDB Verbindungsfehler:', err));
-
-// Schemas
-const dienstAnfrageSchema = new mongoose.Schema({
-  mitarbeiterId: String,
-  datum: String,
-  position: String,
-  status: {
-    type: String,
-    enum: ['offen', 'genehmigt', 'abgelehnt'],
-    default: 'offen'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
-
-const DienstAnfrage = mongoose.model('DienstAnfrage', dienstAnfrageSchema);
-
-// API Routes
-app.get('/api/dienstanfragen', async (req, res) => {
-  try {
-    const anfragen = await DienstAnfrage.find();
-    res.json(anfragen);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-app.post('/api/dienstanfragen', async (req, res) => {
-  try {
-    const anfrage = new DienstAnfrage(req.body);
-    const neuAnfrage = await anfrage.save();
-    res.status(201).json(neuAnfrage);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-app.put('/api/dienstanfragen/:id/status', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-    const anfrage = await DienstAnfrage.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
-    res.json(anfrage);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
 
 // Login Route
 app.post('/login', async (req, res) => {
@@ -105,6 +53,62 @@ app.post('/chat', async (req, res) => {
     res.status(201).json(newMessage);
   } catch (error) {
     res.status(500).json({ message: 'Fehler beim Speichern der Nachricht' });
+  }
+});
+
+// Dienst Routes
+app.get('/dienste', async (req, res) => {
+  try {
+    const { start, end, mitarbeiterId } = req.query;
+    let query = {};
+    
+    // Filter nach Datum
+    if (start && end) {
+      query.datum = { $gte: start, $lte: end };
+    }
+    
+    // Filter nach Mitarbeiter (optional)
+    if (mitarbeiterId) {
+      query.mitarbeiterId = mitarbeiterId;
+    }
+    
+    const dienste = await Dienst.find(query).sort({ datum: 1 });
+    res.json(dienste);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Laden der Dienste' });
+  }
+});
+
+app.post('/dienste', async (req, res) => {
+  try {
+    const { mitarbeiterId, datum, schicht, position, status, erstelltVon } = req.body;
+    const newDienst = new Dienst({
+      mitarbeiterId,
+      datum,
+      schicht,
+      position,
+      status,
+      erstelltVon
+    });
+    await newDienst.save();
+    res.status(201).json(newDienst);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Speichern des Dienstes' });
+  }
+});
+
+app.put('/dienste/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const update = req.body;
+    const dienst = await Dienst.findByIdAndUpdate(id, update, { new: true });
+    if (dienst) {
+      res.json(dienst);
+    } else {
+      res.status(404).json({ message: 'Dienst nicht gefunden' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Aktualisieren des Dienstes' });
   }
 });
 
