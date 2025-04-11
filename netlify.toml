@@ -1,14 +1,22 @@
 [build]
-  command = ""
   publish = "/"
-  functions = "netlify/functions"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/"
+  to = "/index.html"
   status = 200
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mitarbeiter/*"
+  to = "/mitarbeiter/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/hausmeister/*"
+  to = "/hausmeister/index.html"
   status = 200
