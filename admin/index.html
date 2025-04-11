@@ -3,304 +3,751 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burg Hochosterwitz - Admin Dashboard</title>
+    <title>Admin Dashboard - Burg Hochosterwitz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <div class="app-container">
+    <div class="admin-container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <img src="../img/logo.svg" alt="Burg Hochosterwitz" class="logo">
-                <h1>Burg Hochosterwitz</h1>
+            <div class="logo">
+                <h2>Burg Hochosterwitz</h2>
+                <p>Admin Dashboard</p>
             </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="active" data-section="dienstplan">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Dienstplan</span>
-                </a>
-                <a href="#" data-section="mitarbeiter">
-                    <i class="fas fa-users"></i>
-                    <span>Mitarbeiter</span>
-                </a>
-                <a href="#" data-section="fuehrungen">
-                    <i class="fas fa-walking"></i>
-                    <span>Führungen</span>
-                </a>
-                <a href="#" data-section="einstellungen">
-                    <i class="fas fa-cog"></i>
-                    <span>Einstellungen</span>
-                </a>
-                <a href="#" data-section="chat">
-                    <i class="fas fa-comments"></i>
-                    <span>Chat</span>
-                </a>
+            <nav class="admin-nav">
+                <ul>
+                    <li class="active"><a href="#dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#mitarbeiter"><i class="fas fa-users"></i> Mitarbeiter</a></li>
+                    <li><a href="#dienstplan"><i class="fas fa-calendar-alt"></i> Dienstplan</a></li>
+                    <li><a href="#anfragen"><i class="fas fa-tasks"></i> Anfragen</a></li>
+                    <li class="has-submenu">
+                        <a href="#hausmeister"><i class="fas fa-tools"></i> Hausmeister</a>
+                        <ul class="submenu">
+                            <li><a href="#hausmeister-aufgaben"><i class="fas fa-clipboard-list"></i> Aufgaben</a></li>
+                            <li><a href="#hausmeister-lift"><i class="fas fa-elevator"></i> Lift</a></li>
+                            <li><a href="#hausmeister-reparaturen"><i class="fas fa-wrench"></i> Reparaturen</a></li>
+                            <li><a href="#hausmeister-lager"><i class="fas fa-boxes"></i> Lager</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#chat"><i class="fas fa-comments"></i> Chat & Einkaufsliste</a></li>
+                </ul>
             </nav>
-            <div class="sidebar-footer">
-                <button id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Abmelden</span>
+            <div class="user-info">
+                <span id="currentUserName">Admin</span>
+                <button onclick="logout()" class="btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Abmelden
                 </button>
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
-            <!-- Dienstplan -->
-            <section id="dienstplan" class="active">
-                <div class="section-header">
-                    <div class="controls">
-                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                        <h2 id="currentMonth">April 2025</h2>
-                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <h1>Dashboard</h1>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <h3>Offene Anfragen</h3>
+                        <p id="offeneAnfragen">0</p>
                     </div>
-                </div>
-                <div class="calendar-container">
-                    <div id="dienstplanKalender" class="calendar"></div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Aktive Mitarbeiter</h3>
+                        <p id="aktiveMitarbeiter">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3>Heutige Dienste</h3>
+                        <p id="heutigeDienste">0</p>
+                    </div>
                 </div>
             </section>
 
-            <!-- Mitarbeiter -->
-            <section id="mitarbeiter">
-                <div class="section-header">
-                    <h2>Mitarbeiter</h2>
-                    <button id="addMitarbeiterBtn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Neuer Mitarbeiter
+            <!-- Mitarbeiter Section -->
+            <section id="mitarbeiter" class="section">
+                <h1>Mitarbeiter verwalten</h1>
+                <div class="section-controls">
+                    <button id="newMitarbeiterBtn" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> Neuer Mitarbeiter
                     </button>
                 </div>
-                <div class="mitarbeiter-liste" id="mitarbeiterListe"></div>
+                <div class="table-container">
+                    <table id="mitarbeiterTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Benutzername</th>
+                                <th>Rolle</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </section>
 
-            <!-- Führungen -->
-            <section id="fuehrungen">
-                <div class="section-header">
-                    <h2>Führungen</h2>
-                    <button id="addFuehrungBtn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Neue Führung
+            <!-- Dienstplan Section -->
+            <section id="dienstplan" class="section">
+                <h1>Dienstplan</h1>
+                <div class="calendar-controls">
+                    <button id="prevMonth" class="btn-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonth"></h2>
+                    <button id="nextMonth" class="btn-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button id="exportDienstplanBtn" class="btn-secondary">
+                        <i class="fas fa-download"></i> Exportieren
                     </button>
                 </div>
-                <div class="fuehrungen-liste" id="fuehrungenListe"></div>
+                <div id="calendarGrid" class="calendar-grid"></div>
             </section>
 
-            <!-- Einstellungen -->
-            <section id="einstellungen">
-                <div class="section-header">
-                    <h2>Einstellungen</h2>
+            <!-- Anfragen Section -->
+            <section id="anfragen" class="section">
+                <h1>Anfragen verwalten</h1>
+                <div class="table-container">
+                    <table id="anfragenTable">
+                        <thead>
+                            <tr>
+                                <th>Mitarbeiter</th>
+                                <th>Typ</th>
+                                <th>Datum</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
-
-                <form id="settingsForm" class="settings-container">
-                    <!-- Ruhetage -->
-                    <div class="settings-group">
-                        <h3>Ruhetage</h3>
-                        <div class="checkbox-group">
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="0"> Sonntag
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="1"> Montag
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="2"> Dienstag
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="3"> Mittwoch
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="4"> Donnerstag
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="5"> Freitag
-                            </label>
-                            <label>
-                                <input type="checkbox" name="ruhetage" value="6"> Samstag
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Logo -->
-                    <div class="settings-group">
-                        <h3>Logo</h3>
-                        <div class="logo-upload">
-                            <img id="logoPreview" src="../img/logo.svg" alt="Logo Vorschau">
-                            <input type="file" id="logoUpload" accept="image/png,image/svg+xml">
-                            <p class="help-text">PNG oder SVG, max. 1MB</p>
-                        </div>
-                    </div>
-
-                    <!-- Benutzerdefinierte Einstellungen -->
-                    <div class="settings-group">
-                        <div class="group-header">
-                            <h3>Benutzerdefinierte Einstellungen</h3>
-                            <button type="button" id="addSettingBtn" class="btn-primary">
-                                <i class="fas fa-plus"></i> Neue Einstellung
-                            </button>
-                        </div>
-                        <div id="customSettings"></div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Speichern</button>
-                    </div>
-                </form>
             </section>
 
-            <!-- Chat -->
-            <section id="chat">
-                <div class="section-header">
-                    <h2>Mitarbeiter-Chat</h2>
+            <!-- Hausmeister Aufgaben Section -->
+            <section id="hausmeister-aufgaben" class="section">
+                <h1>Hausmeister-Aufgaben</h1>
+                <div class="section-controls">
+                    <button onclick="openModal('aufgabeModal')" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neue Aufgabe
+                    </button>
                 </div>
-                <div class="chat-container">
-                    <div id="chatMessages" class="chat-messages"></div>
-                    <div class="chat-input">
-                        <form id="chatForm" class="chat-form">
-                            <input type="text" id="chatInput" placeholder="Nachricht eingeben..." required>
-                            <button type="submit">
-                                <i class="fas fa-paper-plane"></i>
-                                Senden
-                            </button>
-                        </form>
+
+                <div class="status-cards">
+                    <div class="status-card warning">
+                        <h3>Überfällige Aufgaben</h3>
+                        <ul id="ueberfaelligeAufgaben"></ul>
+                    </div>
+                    <div class="status-card">
+                        <h3>Offene Aufgaben</h3>
+                        <p id="offeneAufgabenCount">0</p>
+                    </div>
+                    <div class="status-card">
+                        <h3>Erledigte Aufgaben</h3>
+                        <p id="erledigteAufgabenCount">0</p>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="aufgabenTable">
+                        <thead>
+                            <tr>
+                                <th>Titel</th>
+                                <th>Beschreibung</th>
+                                <th>Termin</th>
+                                <th>Status</th>
+                                <th>Fotos</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Hausmeister Lift Section -->
+            <section id="hausmeister-lift" class="section">
+                <h1>Lift-Wartung</h1>
+                <div class="lift-status">
+                    <div class="status-card">
+                        <h3>Betriebsstunden</h3>
+                        <p id="liftStunden">0</p>
+                        <button onclick="addBetriebsstunden()" class="btn-primary">
+                            <i class="fas fa-plus"></i> Stunden eintragen
+                        </button>
+                    </div>
+                    <div class="status-card">
+                        <h3>Nächste Wartung</h3>
+                        <p id="naechsteWartung">-</p>
+                    </div>
+                </div>
+                
+                <div class="wartung-controls">
+                    <button onclick="openModal('wartungModal')" class="btn-primary">
+                        <i class="fas fa-tools"></i> Wartung eintragen
+                    </button>
+                    <button onclick="openModal('stoerungModal')" class="btn-secondary">
+                        <i class="fas fa-exclamation-triangle"></i> Störung melden
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <h3>Wartungshistorie</h3>
+                    <table id="wartungTable">
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Typ</th>
+                                <th>Betriebsstunden</th>
+                                <th>Beschreibung</th>
+                                <th>Techniker</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Hausmeister Reparaturen Section -->
+            <section id="hausmeister-reparaturen" class="section">
+                <h1>Lift-Reparaturen</h1>
+                <div class="section-controls">
+                    <button onclick="openModal('reparaturModal')" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neue Reparatur
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table id="reparaturTable" class="reparatur-table">
+                        <thead>
+                            <tr>
+                                <th>Start</th>
+                                <th>Ende</th>
+                                <th>Art</th>
+                                <th>Beschreibung</th>
+                                <th>Durchgeführt von</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Hausmeister Lager Section -->
+            <section id="hausmeister-lager" class="section">
+                <h1>Lager & Ersatzteile</h1>
+                
+                <div class="material-controls">
+                    <button onclick="openModal('materialModal')" class="btn-primary">
+                        <i class="fas fa-plus"></i> Neues Material
+                    </button>
+                    <button onclick="openModal('materialBewegungModal')" class="btn-secondary">
+                        <i class="fas fa-exchange-alt"></i> Ein-/Ausgang
+                    </button>
+                </div>
+
+                <div class="filter-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="materialSuche" placeholder="Material suchen...">
+                    </div>
+                    <select id="materialKategorie">
+                        <option value="">Alle Kategorien</option>
+                    </select>
+                </div>
+
+                <div class="warning-box">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Mindestbestand unterschritten</h3>
+                    <ul id="warningList"></ul>
+                </div>
+
+                <div class="table-container">
+                    <table id="materialTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Kategorie</th>
+                                <th>Interne Nr.</th>
+                                <th>Doppelmayr Nr.</th>
+                                <th>Bestand</th>
+                                <th>Mindestbestand</th>
+                                <th>Lagerort</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Chat Section -->
+            <section id="chat" class="section">
+                <div class="chat-section">
+                    <div class="section-header">
+                        <h2>Chat & Einkaufsliste</h2>
+                        <span id="currentUserName" style="display: none;">admin</span>
+                    </div>
+                    
+                    <div class="chat-main">
+                        <!-- Chat-Navigation -->
+                        <div class="chat-nav">
+                            <button class="nav-link active" data-target="chat">Chat</button>
+                            <button class="nav-link" data-target="shopping">Einkaufsliste</button>
+                        </div>
+
+                        <!-- Chat-Container -->
+                        <div class="chat-container active" id="chat">
+                            <div class="chat-messages" id="chatMessages"></div>
+                            <div class="chat-input">
+                                <input type="text" id="messageInput" placeholder="Nachricht eingeben...">
+                                <button type="button" id="sendMessageBtn" class="btn-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Einkaufsliste-Container -->
+                        <div class="chat-container" id="shopping">
+                            <div class="shopping-list">
+                                <ul id="shoppingList"></ul>
+                                <div class="shopping-input">
+                                    <input type="text" id="newShoppingItem" placeholder="Neuer Eintrag...">
+                                    <button type="button" id="addShoppingItemBtn" class="btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Dienst Modal -->
-    <div id="dienstModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Dienst zuweisen</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <form id="dienstForm">
-                <div class="form-group">
-                    <label for="position">Position</label>
-                    <select id="position" name="position" required>
-                        <option value="">Bitte wählen...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="mitarbeiter">Mitarbeiter</label>
-                    <select id="mitarbeiter" name="mitarbeiter" required>
-                        <option value="">Bitte wählen...</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary">Abbrechen</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Mitarbeiter Modal -->
+    <!-- Modals -->
     <div id="mitarbeiterModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Mitarbeiter</h3>
-                <button class="modal-close">&times;</button>
-            </div>
+            <h2>Mitarbeiter</h2>
             <form id="mitarbeiterForm">
+                <input type="hidden" id="mitarbeiterId">
                 <div class="form-group">
                     <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
+                    <input type="text" id="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="username">Benutzername</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="benutzername">Benutzername</label>
+                    <input type="text" id="benutzername" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">Passwort</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="passwort">Passwort</label>
+                    <input type="password" id="passwort">
+                    <small>Leer lassen um Passwort nicht zu ändern</small>
                 </div>
                 <div class="form-group">
                     <label for="rolle">Rolle</label>
-                    <select id="rolle" name="rolle" required>
-                        <option value="">Bitte wählen...</option>
+                    <select id="rolle" required>
                         <option value="mitarbeiter">Mitarbeiter</option>
-                        <option value="museumsfuehrer">Museumsführer</option>
+                        <option value="admin">Admin</option>
                     </select>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary">Abbrechen</button>
+                    <button type="button" class="btn-secondary" onclick="this.closest('.modal').classList.remove('active')">
+                        Abbrechen
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Führungen Modal -->
-    <div id="fuehrungModal" class="modal">
+    <div id="dienstModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Neue Führung</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <form id="fuehrungForm">
+            <button class="modal-close" onclick="closeModal('dienstModal')">×</button>
+            <h2>Dienst zuweisen</h2>
+            <form id="dienstForm">
                 <div class="form-group">
-                    <label for="gruppenname">Gruppenname</label>
-                    <input type="text" id="gruppenname" required>
+                    <label for="dienstDatum">Datum</label>
+                    <input type="date" id="dienstDatum" required>
                 </div>
                 <div class="form-group">
-                    <label for="datum">Datum</label>
-                    <input type="date" id="datum" required>
-                </div>
-                <div class="form-group">
-                    <label for="uhrzeit">Uhrzeit</label>
-                    <input type="time" id="uhrzeit" required>
-                </div>
-                <div class="form-group">
-                    <label for="personenanzahl">Personenanzahl</label>
-                    <input type="number" id="personenanzahl" min="1" required>
-                </div>
-                <div class="form-group">
-                    <label for="sprache">Sprache</label>
-                    <select id="sprache" required>
-                        <option value="Deutsch">Deutsch</option>
-                        <option value="Englisch">Englisch</option>
-                        <option value="Italienisch">Italienisch</option>
+                    <label for="dienstPosition">Position</label>
+                    <select id="dienstPosition" required>
+                        <option value="">Position auswählen...</option>
                     </select>
                 </div>
-                <div class="form-actions">
+                <div class="form-group">
+                    <label for="dienstMitarbeiter">Mitarbeiter</label>
+                    <select id="dienstMitarbeiter" required>
+                        <option value="">Mitarbeiter auswählen...</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn-secondary" onclick="closeModal('dienstModal')">Abbrechen</button>
                     <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary">Abbrechen</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Einstellungen Modal -->
-    <div id="settingModal" class="modal">
+    <div id="aufgabeModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Neue Einstellung</h3>
-                <button type="button" class="modal-close">&times;</button>
-            </div>
-            <form id="settingForm">
+            <h2>Aufgabe erstellen/bearbeiten</h2>
+            <form id="aufgabeForm">
+                <input type="hidden" id="aufgabeId">
                 <div class="form-group">
-                    <label for="settingName">Name der Einstellung</label>
-                    <input type="text" id="settingName" required>
+                    <label for="aufgabeTitel">Titel</label>
+                    <input type="text" id="aufgabeTitel" required>
                 </div>
                 <div class="form-group">
-                    <label for="settingValue">Wert</label>
-                    <input type="text" id="settingValue" required>
+                    <label for="aufgabeBeschreibung">Beschreibung</label>
+                    <textarea id="aufgabeBeschreibung" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="aufgabeTermin">Termin</label>
+                    <input type="datetime-local" id="aufgabeTermin" required>
+                </div>
+                <div class="form-group">
+                    <label for="aufgabePrioritaet">Priorität</label>
+                    <select id="aufgabePrioritaet" required>
+                        <option value="niedrig">Niedrig</option>
+                        <option value="mittel">Mittel</option>
+                        <option value="hoch">Hoch</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="aufgabeFotos">Fotos</label>
+                    <input type="file" id="aufgabeFotos" accept="image/*" multiple>
+                    <div id="fotoPreview" class="foto-preview"></div>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary">Abbrechen</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('aufgabeModal')">Abbrechen</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <h2>Status aktualisieren</h2>
+            <form id="statusForm">
+                <input type="hidden" id="statusAufgabeId">
+                <div class="form-group">
+                    <label for="aufgabeStatus">Status</label>
+                    <select id="aufgabeStatus" required>
+                        <option value="offen">Offen</option>
+                        <option value="inArbeit">In Arbeit</option>
+                        <option value="warten">Warten auf Material</option>
+                        <option value="erledigt">Erledigt</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="statusKommentar">Kommentar</label>
+                    <textarea id="statusKommentar"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="statusFotos">Neue Fotos</label>
+                    <input type="file" id="statusFotos" accept="image/*" multiple>
+                    <div id="statusFotoPreview" class="foto-preview"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('statusModal')">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="materialModal" class="modal">
+        <div class="modal-content">
+            <h2>Material hinzufügen/bearbeiten</h2>
+            <form id="materialForm">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="bezeichnung" name="bezeichnung" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kategorie</label>
+                    <select id="materialKategorieSelect" name="kategorie" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Einheit</label>
+                    <select id="einheit" name="einheit" required>
+                        <option value="Stück">Stück</option>
+                        <option value="Meter">Meter</option>
+                        <option value="Liter">Liter</option>
+                        <option value="Kilogramm">Kilogramm</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Interne Artikelnummer</label>
+                    <div class="input-with-scan">
+                        <input type="text" id="intern_nr" name="intern_nr" required>
+                        <button type="button" onclick="startScanner('intern_nr')" class="btn-icon">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Doppelmayr Artikelnummer</label>
+                    <div class="input-with-scan">
+                        <input type="text" id="doppelmayr_nr" name="doppelmayr_nr" required>
+                        <button type="button" onclick="startScanner('doppelmayr_nr')" class="btn-icon">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mindestbestand</label>
+                    <input type="number" id="mindestbestand" name="mindestbestand" min="0" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Aktueller Bestand</label>
+                    <input type="number" id="bestand" name="bestand" min="0" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Lagerort</label>
+                    <select id="materialLagerort" name="lagerort" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" onclick="closeModal('materialModal')" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="materialBewegungModal" class="modal">
+        <div class="modal-content">
+            <h2>Material Ein-/Ausgang</h2>
+            <form id="materialBewegungForm">
+                <div class="form-group">
+                    <label for="bewegungMaterial">Material</label>
+                    <select id="bewegungMaterial" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bewegungArt">Art der Bewegung</label>
+                    <select id="bewegungArt" required>
+                        <option value="eingang">Eingang</option>
+                        <option value="ausgang">Ausgang</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bewegungMenge">Menge</label>
+                    <input type="number" id="bewegungMenge" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bewegungBemerkung">Bemerkung</label>
+                    <textarea id="bewegungBemerkung" rows="3"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" onclick="closeModal('materialBewegungModal')" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Wartung Modal -->
+    <div id="wartungModal" class="modal">
+        <div class="modal-content">
+            <h2>Wartung eintragen</h2>
+            <form id="wartungForm">
+                <div class="form-group">
+                    <label for="wartungDatum">Datum</label>
+                    <input type="date" id="wartungDatum" required>
+                </div>
+                <div class="form-group">
+                    <label for="wartungTyp">Wartungstyp</label>
+                    <select id="wartungTyp" required>
+                        <option value="">Bitte wählen...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="wartungBeschreibung">Beschreibung</label>
+                    <textarea id="wartungBeschreibung" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="wartungTechniker">Techniker</label>
+                    <input type="text" id="wartungTechniker" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" onclick="closeModal('wartungModal')" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Störung Modal -->
+    <div id="stoerungModal" class="modal">
+        <div class="modal-content">
+            <h2>Störung melden</h2>
+            <form id="stoerungForm">
+                <div class="form-group">
+                    <label for="stoerungBeschreibung">Beschreibung der Störung</label>
+                    <textarea id="stoerungBeschreibung" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="stoerungPrioritaet">Priorität</label>
+                    <select id="stoerungPrioritaet" required>
+                        <option value="niedrig">Niedrig</option>
+                        <option value="mittel">Mittel</option>
+                        <option value="hoch">Hoch</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Melden</button>
+                    <button type="button" onclick="closeModal('stoerungModal')" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Betriebsstunden Modal -->
+    <div id="betriebsstundenModal" class="modal">
+        <div class="modal-content">
+            <h2>Betriebsstunden eintragen</h2>
+            <form id="betriebsstundenForm">
+                <div class="form-group">
+                    <label for="betriebsstundenAnzahl">Anzahl der Stunden</label>
+                    <input type="number" id="betriebsstundenAnzahl" min="1" max="24" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" onclick="closeModal('betriebsstundenModal')" class="btn-secondary">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reparatur Modal -->
+    <div id="reparaturModal" class="modal">
+        <div class="modal-content">
+            <h2>Neue Reparatur</h2>
+            <form id="reparaturForm">
+                <div class="form-group">
+                    <label>Art der Reparatur</label>
+                    <select name="art" required>
+                        <option value="elektrisch">Elektrisch</option>
+                        <option value="mechanisch">Mechanisch</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Start der Reparatur</label>
+                    <input type="datetime-local" name="startzeit" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Ende der Reparatur</label>
+                    <input type="datetime-local" name="endzeit">
+                </div>
+
+                <div class="form-group">
+                    <label>Beschreibung der Reparatur</label>
+                    <textarea name="beschreibung" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Durchgeführt von</label>
+                    <select name="durchgefuehrt_von" required>
+                        <optgroup label="Intern">
+                            <option value="steindorfer">Martin Steindorfer</option>
+                            <option value="gruber">Patrik Gruber</option>
+                        </optgroup>
+                        <optgroup label="Extern">
+                            <option value="dobraunig">Dobraunig (Elektriker)</option>
+                            <option value="nast">Nast (Mechaniker)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Verwendete Ersatzteile</label>
+                    <div id="ersatzteile-liste"></div>
+                    <button type="button" onclick="addErsatzteil()" class="btn-secondary">
+                        <i class="fas fa-plus"></i> Ersatzteil hinzufügen
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label>Fotos</label>
+                    <input type="file" name="fotos" accept="image/*" multiple>
+                </div>
+
+                <div class="form-group signature-pad">
+                    <label>Unterschrift</label>
+                    <canvas id="signaturePad"></canvas>
+                    <button type="button" onclick="clearSignature()" class="btn-secondary">Löschen</button>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" onclick="closeModal('reparaturModal')" class="btn-secondary">Abbrechen</button>
+                    <button type="submit" class="btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div id="scannerModal" class="modal">
+        <div class="modal-content scanner-modal">
+            <h2>Code scannen</h2>
+            <div id="scanner-container">
+                <video id="scanner-preview"></video>
+            </div>
+            <div class="scanner-controls">
+                <button onclick="closeScanner()" class="btn-secondary">
+                    <i class="fas fa-times"></i> Abbrechen
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="../js/config.js"></script>
+    <script src="../js/feiertage.js"></script>
     <script src="../js/admin/auth.js"></script>
     <script src="../js/admin/navigation.js"></script>
+    <script src="../js/admin/modal.js"></script>
+    <script src="../js/admin/dashboard.js"></script>
     <script src="../js/admin/mitarbeiter.js"></script>
     <script src="../js/admin/dienstplan.js"></script>
-    <script src="../js/admin/fuehrungen.js"></script>
-    <script src="../js/admin/einstellungen.js"></script>
+    <script src="../js/admin/anfragen.js"></script>
+    <script src="../js/admin/hausmeister.js"></script>
+    <script src="../js/admin/material.js"></script>
+    <script src="../js/admin/lift.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.5/dist/signature_pad.umd.min.js"></script>
+    <script src="../js/admin/reparaturen.js"></script>
     <script src="../js/admin/chat.js"></script>
+    <script>
+        // BarcodeDetector Polyfill für ältere Browser
+        if (!('BarcodeDetector' in window)) {
+            window.BarcodeDetector = function() {
+                this.detect = function(image) {
+                    return Promise.reject(new Error('Barcode detection not supported'));
+                };
+            };
+        }
+    </script>
 </body>
 </html>

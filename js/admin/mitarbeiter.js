@@ -1,136 +1,146 @@
-class MitarbeiterVerwaltung {
-    constructor() {
-        this.mitarbeiter = JSON.parse(localStorage.getItem('mitarbeiter') || '[]');
-        this.bindEvents();
-        this.renderListe();
-    }
+// Admin-Mitarbeiter-Verwaltung
 
-    bindEvents() {
-        // Neuer Mitarbeiter Button
-        const addBtn = document.getElementById('addMitarbeiterBtn');
-        if (addBtn) {
-            addBtn.onclick = () => {
-                const modal = document.getElementById('mitarbeiterModal');
-                document.getElementById('mitarbeiterForm').reset();
-                modal.style.display = 'block';
-            };
-        }
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM-Elemente
+    const mitarbeiterForm = document.getElementById('mitarbeiterForm');
+    const mitarbeiterTable = document.getElementById('mitarbeiterTable').querySelector('tbody');
+    const newMitarbeiterBtn = document.getElementById('newMitarbeiterBtn');
 
-        // X-Button zum Schließen
-        document.querySelectorAll('#mitarbeiterModal .modal-close').forEach(btn => {
-            btn.onclick = () => {
-                const modal = document.getElementById('mitarbeiterModal');
-                document.getElementById('mitarbeiterForm').reset();
-                modal.style.display = 'none';
-            };
+    // Event-Listener für "Neuer Mitarbeiter" Button
+    newMitarbeiterBtn.addEventListener('click', () => {
+        document.getElementById('mitarbeiterId').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('benutzername').value = '';
+        document.getElementById('passwort').value = '';
+        document.getElementById('rolle').value = 'mitarbeiter';
+        openModal('mitarbeiterModal');
+    });
+
+    // Mitarbeiter laden und anzeigen
+    function loadMitarbeiter() {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        mitarbeiterTable.innerHTML = '';
+        
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${user.name}</td>
+                <td>${user.benutzername}</td>
+                <td>${user.rolle}</td>
+                <td>
+                    <button class="btn-icon" onclick="editMitarbeiter('${user.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" onclick="deleteMitarbeiter('${user.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            mitarbeiterTable.appendChild(row);
         });
 
-        // Abbrechen-Button im Formular
-        const form = document.getElementById('mitarbeiterForm');
-        if (form) {
-            const cancelBtn = form.querySelector('.btn-secondary');
-            if (cancelBtn) {
-                cancelBtn.onclick = (e) => {
-                    e.preventDefault();
-                    const modal = document.getElementById('mitarbeiterModal');
-                    form.reset();
-                    modal.style.display = 'none';
-                };
-            }
-
-            // Speichern
-            form.onsubmit = (e) => {
-                e.preventDefault();
-                this.speichern();
-            };
+        // Dashboard-Statistik aktualisieren
+        const aktiveMitarbeiter = document.getElementById('aktiveMitarbeiter');
+        if (aktiveMitarbeiter) {
+            aktiveMitarbeiter.textContent = users.filter(u => u.rolle === 'mitarbeiter').length;
         }
-
-        // Wenn man außerhalb des Modals klickt
-        window.onclick = (e) => {
-            const modal = document.getElementById('mitarbeiterModal');
-            if (e.target === modal) {
-                document.getElementById('mitarbeiterForm').reset();
-                modal.style.display = 'none';
-            }
-        };
     }
 
-    speichern() {
-        const name = document.getElementById('name').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const rolle = document.getElementById('rolle').value;
+    // Mitarbeiter erstellen/bearbeiten
+    mitarbeiterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const id = document.getElementById('mitarbeiterId').value;
+        
+        const mitarbeiter = {
+            id: id || Date.now().toString(),
+            name: document.getElementById('name').value,
+            benutzername: document.getElementById('benutzername').value,
+            rolle: document.getElementById('rolle').value
+        };
 
-        if (!name || !username || !password || !rolle) {
-            alert('Bitte füllen Sie alle Felder aus.');
+        // Passwort nur aktualisieren wenn eines eingegeben wurde
+        const passwort = document.getElementById('passwort').value;
+        if (passwort) {
+            mitarbeiter.passwort = passwort;
+        } else if (!id) {
+            // Neuer Mitarbeiter braucht ein Passwort
+            alert('Bitte ein Passwort eingeben!');
+            return;
+        }
+        
+        if (id) {
+            // Bestehenden Mitarbeiter aktualisieren
+            const index = users.findIndex(u => u.id === id);
+            if (index !== -1) {
+                // Bestehendes Passwort beibehalten wenn keines eingegeben wurde
+                if (!passwort) {
+                    mitarbeiter.passwort = users[index].passwort;
+                }
+                users[index] = mitarbeiter;
+            }
+        } else {
+            // Prüfen ob Benutzername bereits existiert
+            if (users.some(u => u.benutzername === mitarbeiter.benutzername)) {
+                alert('Dieser Benutzername existiert bereits!');
+                return;
+            }
+            users.push(mitarbeiter);
+        }
+        
+        // Speichern
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        // Modal schließen und Formular zurücksetzen
+        closeModal('mitarbeiterModal');
+        mitarbeiterForm.reset();
+        
+        // Tabelle aktualisieren
+        loadMitarbeiter();
+    });
+
+    // Mitarbeiter bearbeiten
+    window.editMitarbeiter = function(id) {
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const mitarbeiter = users.find(u => u.id === id);
+        
+        if (mitarbeiter) {
+            document.getElementById('mitarbeiterId').value = mitarbeiter.id;
+            document.getElementById('name').value = mitarbeiter.name;
+            document.getElementById('benutzername').value = mitarbeiter.benutzername;
+            document.getElementById('passwort').value = '';
+            document.getElementById('rolle').value = mitarbeiter.rolle;
+            
+            openModal('mitarbeiterModal');
+        }
+    };
+
+    // Mitarbeiter löschen
+    window.deleteMitarbeiter = function(id) {
+        if (!confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')) {
             return;
         }
 
-        const mitarbeiter = {
-            id: Date.now().toString(),
-            name,
-            username,
-            password,
-            rolle
-        };
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const updatedUsers = users.filter(user => user.id !== id);
+        
+        // Auch alle Dienste und Anfragen des Mitarbeiters löschen
+        const dienstAnfragen = JSON.parse(localStorage.getItem('dienstAnfragen') || '[]');
+        const updatedDienstAnfragen = dienstAnfragen.filter(a => a.mitarbeiterId !== id);
+        
+        const urlaubsAnfragen = JSON.parse(localStorage.getItem('urlaubsAnfragen') || '[]');
+        const updatedUrlaubsAnfragen = urlaubsAnfragen.filter(a => a.mitarbeiterId !== id);
+        
+        // Alles speichern
+        localStorage.setItem('users', JSON.stringify(updatedUsers));
+        localStorage.setItem('dienstAnfragen', JSON.stringify(updatedDienstAnfragen));
+        localStorage.setItem('urlaubsAnfragen', JSON.stringify(updatedUrlaubsAnfragen));
+        
+        // Tabelle aktualisieren
+        loadMitarbeiter();
+    };
 
-        this.mitarbeiter.push(mitarbeiter);
-        localStorage.setItem('mitarbeiter', JSON.stringify(this.mitarbeiter));
-
-        const modal = document.getElementById('mitarbeiterModal');
-        document.getElementById('mitarbeiterForm').reset();
-        modal.style.display = 'none';
-
-        this.renderListe();
-    }
-
-    renderListe() {
-        const liste = document.getElementById('mitarbeiterListe');
-        if (!liste) return;
-
-        liste.innerHTML = this.mitarbeiter.map(m => `
-            <div class="mitarbeiter-card">
-                <div class="mitarbeiter-info">
-                    <h3>${m.name}</h3>
-                    <p><strong>Benutzername:</strong> ${m.username}</p>
-                    <p><strong>Rolle:</strong> ${m.rolle}</p>
-                </div>
-                <div class="mitarbeiter-actions">
-                    <button onclick="mitarbeiterVerwaltung.bearbeiten('${m.id}')" class="btn-icon">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="mitarbeiterVerwaltung.loeschen('${m.id}')" class="btn-icon delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    bearbeiten(id) {
-        const mitarbeiter = this.mitarbeiter.find(m => m.id === id);
-        if (!mitarbeiter) return;
-
-        const modal = document.getElementById('mitarbeiterModal');
-        document.getElementById('name').value = mitarbeiter.name;
-        document.getElementById('username').value = mitarbeiter.username;
-        document.getElementById('password').value = mitarbeiter.password;
-        document.getElementById('rolle').value = mitarbeiter.rolle;
-
-        modal.dataset.editId = id;
-        modal.style.display = 'block';
-    }
-
-    loeschen(id) {
-        if (!confirm('Möchten Sie diesen Mitarbeiter wirklich löschen?')) return;
-
-        this.mitarbeiter = this.mitarbeiter.filter(m => m.id !== id);
-        localStorage.setItem('mitarbeiter', JSON.stringify(this.mitarbeiter));
-        this.renderListe();
-    }
-}
-
-// Initialisierung
-document.addEventListener('DOMContentLoaded', () => {
-    window.mitarbeiterVerwaltung = new MitarbeiterVerwaltung();
+    // Initial laden
+    loadMitarbeiter();
 });

@@ -3,132 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mitarbeiter - Burg Hochosterwitz</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/mitarbeiter.css">
+    <title>Mitarbeiter Dashboard - Burg Hochosterwitz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mitarbeiter.css">
 </head>
 <body>
     <div class="mitarbeiter-container">
-        <!-- Sidebar Navigation -->
-        <nav class="sidebar">
-            <div class="sidebar-header">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
                 <h2>Burg Hochosterwitz</h2>
-                <p id="userName">Mitarbeiter</p>
+                <p>Mitarbeiter Portal</p>
             </div>
-            <ul class="nav-menu">
-                <li class="active" data-section="dienstplan">
-                    <i class="fas fa-calendar"></i> Mein Dienstplan
-                </li>
-                <li data-section="vorschlaege">
-                    <i class="fas fa-clock"></i> Dienstvorschläge
-                </li>
-                <li data-section="urlaub">
-                    <i class="fas fa-umbrella-beach"></i> Urlaub
-                </li>
-            </ul>
-            <div class="sidebar-footer">
-                <button id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Abmelden</button>
+            <nav>
+                <ul>
+                    <li class="active"><a href="#dienstplan"><i class="fas fa-calendar-alt"></i> Dienstplan</a></li>
+                    <li><a href="#dienst-anfragen"><i class="fas fa-clock"></i> Dienst-Anfragen</a></li>
+                    <li><a href="#urlaub"><i class="fas fa-umbrella-beach"></i> Urlaub</a></li>
+                    <li><a href="#chat"><i class="fas fa-comments"></i> Team Chat</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <span id="userName">Mitarbeiter Name</span>
+                <button class="btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Abmelden
+                </button>
             </div>
-        </nav>
+        </aside>
 
-        <!-- Hauptinhalt -->
-        <main class="content">
-            <!-- Dienstplan Bereich -->
-            <section id="dienstplan" class="active">
-                <div class="section-header">
-                    <h1>Mein Dienstplan</h1>
-                    <div class="controls">
-                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                        <h2 id="currentMonth">April 2025</h2>
-                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                    <div class="actions">
-                        <button id="exportBtn" class="btn-secondary">
-                            <i class="fas fa-file-export"></i>
-                            Meine Dienste exportieren
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dienstplan Section -->
+            <section id="dienstplan-section" class="section active">
+                <h1>Mein Dienstplan</h1>
+                <div class="calendar-controls">
+                    <button class="btn-secondary" id="prevMonth">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonth">April 2025</h2>
+                    <button class="btn-secondary" id="nextMonth">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </section>
+
+            <!-- Dienst-Anfragen Section -->
+            <section id="dienst-anfragen-section" class="section">
+                <h1>Dienst-Anfragen</h1>
+                <button class="btn-primary" onclick="openNewDienstAnfrageModal()">
+                    <i class="fas fa-plus"></i> Neue Anfrage
+                </button>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dienstAnfragenTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Urlaub Section -->
+            <section id="urlaub-section" class="section">
+                <h1>Urlaubsanträge</h1>
+                <button class="btn-primary" onclick="openNewUrlaubsantragModal()">
+                    <i class="fas fa-plus"></i> Neuer Antrag
+                </button>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Von</th>
+                                <th>Bis</th>
+                                <th>Status</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="urlaubsantraegeTable"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Chat Section -->
+            <section id="chat-section" class="section">
+                <h1>Team Chat</h1>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <textarea id="messageInput" placeholder="Nachricht eingeben..."></textarea>
+                        <button class="btn-primary" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
                 </div>
-                <div class="calendar-container">
-                    <div class="calendar" id="dienstplanKalender"></div>
-                </div>
-            </section>
-
-            <!-- Dienstvorschläge Bereich -->
-            <section id="vorschlaege" class="hidden">
-                <div class="section-header">
-                    <h1>Dienstvorschläge</h1>
-                    <button id="addVorschlagBtn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Neuer Vorschlag
-                    </button>
-                </div>
-                <div class="vorschlaege-liste" id="vorschlaegeListe"></div>
-            </section>
-
-            <!-- Urlaub Bereich -->
-            <section id="urlaub" class="hidden">
-                <div class="section-header">
-                    <h1>Urlaubsanfragen</h1>
-                    <button id="addUrlaubBtn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Neue Anfrage
-                    </button>
-                </div>
-                <div class="urlaub-liste" id="urlaubListe"></div>
             </section>
         </main>
     </div>
 
     <!-- Modals -->
-    <div id="vorschlagModal" class="modal">
+    <!-- Neue Dienst-Anfrage Modal -->
+    <div id="dienstAnfrageModal" class="modal">
         <div class="modal-content">
-            <h2>Dienstvorschlag</h2>
-            <form id="vorschlagForm">
+            <h2>Neue Dienst-Anfrage</h2>
+            <form id="dienstAnfrageForm">
                 <div class="form-group">
-                    <label for="datum">Datum</label>
-                    <input type="date" id="datum" required>
+                    <label for="dienstDatum">Datum</label>
+                    <input type="date" id="dienstDatum" required>
                 </div>
                 <div class="form-group">
-                    <label for="position">Position</label>
-                    <select id="position" required>
-                        <option value="shop_eintritt">Shop Eintritt</option>
-                        <option value="museums_shop">Museums Shop</option>
-                        <option value="eintritt_fuehrungen">Eintritt Führungen</option>
+                    <label for="dienstPosition">Position</label>
+                    <select id="dienstPosition" required>
+                        <option value="kassa">Kassa</option>
+                        <option value="fuehrung">Führung</option>
+                        <option value="shop">Shop</option>
                     </select>
                 </div>
-                <div class="button-group">
-                    <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary modal-close">Abbrechen</button>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('dienstAnfrageModal')">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="urlaubModal" class="modal">
+    <!-- Neuer Urlaubsantrag Modal -->
+    <div id="urlaubsantragModal" class="modal">
         <div class="modal-content">
-            <h2>Urlaubsanfrage</h2>
-            <form id="urlaubForm">
+            <h2>Neuer Urlaubsantrag</h2>
+            <form id="urlaubsantragForm">
                 <div class="form-group">
-                    <label for="von">Von</label>
-                    <input type="date" id="von" required>
+                    <label for="urlaubVon">Von</label>
+                    <input type="date" id="urlaubVon" required>
                 </div>
                 <div class="form-group">
-                    <label for="bis">Bis</label>
-                    <input type="date" id="bis" required>
+                    <label for="urlaubBis">Bis</label>
+                    <input type="date" id="urlaubBis" required>
                 </div>
-                <div class="button-group">
-                    <button type="submit" class="btn-primary">Speichern</button>
-                    <button type="button" class="btn-secondary modal-close">Abbrechen</button>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('urlaubsantragModal')">
+                        Abbrechen
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="../js/config.js"></script>
-    <script src="../js/mitarbeiter/main.js"></script>
-    <script src="../js/mitarbeiter/dienstplan.js"></script>
-    <script src="../js/mitarbeiter/export.js"></script>
-    <script src="../js/mitarbeiter/vorschlaege.js"></script>
-    <script src="../js/mitarbeiter/urlaub.js"></script>
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/mitarbeiter/auth.js"></script>
+    <script src="/js/mitarbeiter/navigation.js"></script>
+    <script src="/js/mitarbeiter/dienstplan.js"></script>
+    <script src="/js/mitarbeiter/dienst-anfragen.js"></script>
+    <script src="/js/mitarbeiter/urlaub.js"></script>
+    <script src="/js/mitarbeiter/chat.js"></script>
 </body>
 </html>

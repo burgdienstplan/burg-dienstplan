@@ -1,51 +1,36 @@
-// Navigation Handler
+// Admin Navigation
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Prüfe ob Benutzer eingeloggt ist
-    const user = JSON.parse(localStorage.getItem('aktuellerBenutzer'));
-    if (!user || user.rolle !== CONFIG.ROLLEN.ADMIN) {
-        window.location.href = '../index.html';
-        return;
-    }
-
-    // Navigation
-    const navLinks = document.querySelectorAll('.sidebar-nav a');
-    const sections = document.querySelectorAll('main section');
-
-    // Initial state - show first section
-    if (sections.length > 0) {
-        sections[0].classList.add('active');
-    }
-
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            // Aktiven Link ändern
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            
-            // Aktive Section ändern
-            const targetSection = link.getAttribute('data-section');
-            sections.forEach(section => {
-                if (section.id === targetSection) {
-                    section.style.display = 'block';
-                    section.classList.add('active');
-                } else {
-                    section.style.display = 'none';
-                    section.classList.remove('active');
-                }
-            });
-
-            // Aktualisiere den Kalender wenn der Dienstplan angezeigt wird
-            if (targetSection === 'dienstplan' && window.renderKalender) {
-                window.renderKalender();
-            }
-        });
+    // Hausmeister Menü auf/zu
+    const hausmeisterButton = document.querySelector('.has-submenu > a');
+    hausmeisterButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        hausmeisterButton.parentElement.classList.toggle('active');
     });
 
-    // Logout Handler
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('aktuellerBenutzer');
-        window.location.href = '../index.html';
+    // Sektionen anzeigen
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').slice(1);
+            const section = document.getElementById(targetId);
+            
+            // Navigation aktiv setzen
+            document.querySelectorAll('.admin-nav a').forEach(a => {
+                a.parentElement.classList.remove('active');
+            });
+            link.parentElement.classList.add('active');
+            
+            // Sektion anzeigen
+            if (section) {
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                section.classList.add('active');
+                
+                // Wenn es ein Untermenü-Element ist, Eltern-Element auch aktiv setzen
+                if (link.closest('.submenu')) {
+                    link.closest('.has-submenu').classList.add('active');
+                }
+            }
+        });
     });
 });

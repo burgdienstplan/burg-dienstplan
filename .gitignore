@@ -4,13 +4,8 @@ node_modules/
 # Environment variables
 .env
 
-# IDE files
-.vscode/
-.idea/
-
 # OS files
 .DS_Store
-Thumbs.db
 
 # Build files
 dist/

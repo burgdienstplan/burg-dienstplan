@@ -1,20 +1,23 @@
-// Prüfe ob Benutzer angemeldet ist
-function checkAuth() {
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+// Admin-Authentifizierung
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Prüfe ob Benutzer eingeloggt ist
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     
-    // Wenn kein Benutzer angemeldet ist oder kein Admin
-    if (!user.id || user.rolle !== 'admin') {
-        // Zurück zur Login-Seite
+    if (!currentUser || currentUser.rolle !== 'admin') {
         window.location.href = '../index.html';
         return;
     }
-}
 
-// Prüfe Auth beim Laden
-window.onload = checkAuth;
+    // Setze Benutzername
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement) {
+        userNameElement.textContent = currentUser.name;
+    }
+});
 
-// Logout-Button
-document.getElementById('logoutBtn').addEventListener('click', () => {
+// Logout-Funktion
+window.logout = function() {
     localStorage.removeItem('currentUser');
     window.location.href = '../index.html';
-});
+};

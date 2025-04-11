@@ -1,141 +1,114 @@
-class Urlaub {
-    constructor() {
-        this.user = JSON.parse(localStorage.getItem('aktuellerBenutzer'));
-        this.urlaubsanfragen = JSON.parse(localStorage.getItem('urlaubsanfragen') || '[]');
-        this.bindEvents();
-        this.loadUrlaub();
-    }
+// Urlaubsanträge-Funktionalität für Mitarbeiter
 
-    bindEvents() {
-        // Neue Urlaubsanfrage Button
-        document.getElementById('addUrlaubBtn').addEventListener('click', () => {
-            this.showUrlaubDialog();
-        });
-    }
-
-    loadUrlaub() {
-        const liste = document.getElementById('urlaubListe');
-        if (!liste) return;
-
-        // Nur eigene Anfragen anzeigen
-        const meineAnfragen = this.urlaubsanfragen.filter(a => a.mitarbeiter === this.user.name);
-        
-        liste.innerHTML = meineAnfragen.map(a => `
-            <div class="urlaub-card">
-                <div class="card-header">
-                    <h3>${this.formatDate(a.von)} - ${this.formatDate(a.bis)}</h3>
-                    <span class="status-badge ${a.status}">${this.formatStatus(a.status)}</span>
-                </div>
-                <div class="card-body">
-                    <p><strong>Tage:</strong> ${this.calculateDays(a.von, a.bis)}</p>
-                    ${a.status === 'abgelehnt' ? `<p class="ablehnungsgrund">${a.ablehnungsgrund || 'Kein Grund angegeben'}</p>` : ''}
-                </div>
-                ${a.status === 'offen' ? `
-                    <div class="card-actions">
-                        <button class="btn-delete" data-id="${a.id}">
-                            <i class="fas fa-trash"></i> Löschen
-                        </button>
-                    </div>
-                ` : ''}
-            </div>
-        `).join('');
-
-        // Event Listener für Löschen
-        liste.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (confirm('Urlaubsanfrage wirklich löschen?')) {
-                    this.deleteUrlaub(btn.dataset.id);
-                }
-            });
-        });
-    }
-
-    showUrlaubDialog() {
-        const modal = document.getElementById('urlaubModal');
-        const form = document.getElementById('urlaubForm');
-
-        // Setze Mindestdatum auf heute
-        const heute = new Date().toISOString().split('T')[0];
-        form.von.min = heute;
-        form.bis.min = heute;
-
-        // Modal anzeigen
-        modal.classList.add('active');
-
-        // Form Handler
-        const submitHandler = (e) => {
-            e.preventDefault();
-            
-            const urlaubsanfrage = {
-                id: Date.now().toString(),
-                von: e.target.von.value,
-                bis: e.target.bis.value,
-                mitarbeiter: this.user.name,
-                status: 'offen'
-            };
-
-            this.addUrlaub(urlaubsanfrage);
-
-            // Modal schließen
-            modal.classList.remove('active');
-            form.removeEventListener('submit', submitHandler);
-        };
-
-        form.addEventListener('submit', submitHandler);
-
-        // Modal schließen
-        modal.querySelector('.modal-close').addEventListener('click', () => {
-            modal.classList.remove('active');
-            form.removeEventListener('submit', submitHandler);
-        });
-
-        // Validierung für Bis-Datum
-        form.von.addEventListener('change', (e) => {
-            form.bis.min = e.target.value;
-        });
-    }
-
-    addUrlaub(urlaubsanfrage) {
-        this.urlaubsanfragen.push(urlaubsanfrage);
-        this.saveUrlaub();
-    }
-
-    deleteUrlaub(id) {
-        this.urlaubsanfragen = this.urlaubsanfragen.filter(a => a.id !== id);
-        this.saveUrlaub();
-    }
-
-    saveUrlaub() {
-        localStorage.setItem('urlaubsanfragen', JSON.stringify(this.urlaubsanfragen));
-        this.loadUrlaub();
-    }
-
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('de-DE');
-    }
-
-    calculateDays(von, bis) {
-        const start = new Date(von);
-        const end = new Date(bis);
-        const diff = Math.abs(end - start);
-        return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
-    }
-
-    formatStatus(status) {
-        switch (status) {
-            case 'offen':
-                return 'Offen';
-            case 'genehmigt':
-                return 'Genehmigt';
-            case 'abgelehnt':
-                return 'Abgelehnt';
-            default:
-                return status;
-        }
-    }
-}
-
-// Initialisierung
 document.addEventListener('DOMContentLoaded', () => {
-    new Urlaub();
+    const urlaubsantragForm = document.getElementById('urlaubsantragForm');
+    const urlaubsantraegeTable = document.getElementById('urlaubsantraegeTable');
+
+    // Urlaubsanträge laden und anzeigen
+    function loadUrlaubsantraege() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const urlaubsantraege = JSON.parse(localStorage.getItem('urlaubsAnfragen') || '[]');
+        
+        // Tabelle leeren
+        urlaubsantraegeTable.innerHTML = '';
+        
+        // Anträge des aktuellen Benutzers filtern und sortieren
+        const meineAntraege = urlaubsantraege
+            .filter(antrag => antrag.mitarbeiterId === currentUser.id)
+            .sort((a, b) => new Date(b.von) - new Date(a.von));
+
+        // Anträge in Tabelle einfügen
+        meineAntraege.forEach(antrag => {
+            const row = document.createElement('tr');
+            
+            // Formatiere Datum
+            const von = new Date(antrag.von).toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            const bis = new Date(antrag.bis).toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+
+            // Berechne Anzahl der Tage
+            const tage = Math.ceil(
+                (new Date(antrag.bis) - new Date(antrag.von)) / (1000 * 60 * 60 * 24)
+            ) + 1;
+
+            row.innerHTML = `
+                <td>${von}</td>
+                <td>${bis}</td>
+                <td>${tage}</td>
+                <td><span class="status-badge ${antrag.status}">${antrag.status}</span></td>
+                <td>
+                    ${antrag.status === 'offen' ? `
+                        <button class="btn-icon" onclick="deleteUrlaubsantrag('${antrag.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            `;
+            
+            urlaubsantraegeTable.appendChild(row);
+        });
+    }
+
+    // Neuen Urlaubsantrag erstellen
+    urlaubsantragForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        const urlaubsantraege = JSON.parse(localStorage.getItem('urlaubsAnfragen') || '[]');
+        
+        const vonDate = new Date(document.getElementById('urlaubVon').value);
+        const bisDate = new Date(document.getElementById('urlaubBis').value);
+
+        // Validierung
+        if (vonDate > bisDate) {
+            alert('Das Enddatum muss nach dem Startdatum liegen.');
+            return;
+        }
+
+        // Neuen Antrag erstellen
+        const newAntrag = {
+            id: Date.now().toString(),
+            mitarbeiterId: currentUser.id,
+            von: document.getElementById('urlaubVon').value,
+            bis: document.getElementById('urlaubBis').value,
+            status: 'offen'
+        };
+        
+        // Antrag speichern
+        urlaubsantraege.push(newAntrag);
+        localStorage.setItem('urlaubsAnfragen', JSON.stringify(urlaubsantraege));
+        
+        // Modal schließen und Formular zurücksetzen
+        closeModal('urlaubsantragModal');
+        urlaubsantragForm.reset();
+        
+        // Tabelle aktualisieren
+        loadUrlaubsantraege();
+    });
+
+    // Urlaubsantrag löschen
+    window.deleteUrlaubsantrag = function(antragId) {
+        if (!confirm('Möchten Sie diesen Urlaubsantrag wirklich löschen?')) {
+            return;
+        }
+
+        const urlaubsantraege = JSON.parse(localStorage.getItem('urlaubsAnfragen') || '[]');
+        
+        // Antrag entfernen
+        const updatedAntraege = urlaubsantraege.filter(antrag => antrag.id !== antragId);
+        localStorage.setItem('urlaubsAnfragen', JSON.stringify(updatedAntraege));
+        
+        // Tabelle aktualisieren
+        loadUrlaubsantraege();
+    };
+
+    // Initiale Anzeige
+    loadUrlaubsantraege();
 });
