@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <!-- Burg Silhouette -->
+    <path fill="#8B0000" d="
+        M 100,20 
+        L 180,60 
+        L 180,180 
+        L 20,180 
+        L 20,60 
+        Z
+    "/>
+    
+    <!-- Türme -->
+    <rect x="40" y="40" width="20" height="60" fill="#4A4A4A"/>
+    <rect x="140" y="40" width="20" height="60" fill="#4A4A4A"/>
+    <rect x="90" y="30" width="20" height="70" fill="#4A4A4A"/>
+    
+    <!-- Fenster -->
+    <rect x="95" y="50" width="10" height="20" fill="#F5E6D3"/>
+    <rect x="45" y="60" width="10" height="20" fill="#F5E6D3"/>
+    <rect x="145" y="60" width="10" height="20" fill="#F5E6D3"/>
+    
+    <!-- Tür -->
+    <rect x="85" y="120" width="30" height="60" fill="#4A4A4A"/>
+    <path d="M 85,120 L 115,120 L 100,100 Z" fill="#4A4A4A"/>
+</svg>
