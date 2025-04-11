@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const serverless = require('serverless-http');
 const cors = require('cors');
+const User = require('./models/User');
+const Chat = require('./models/Chat');
 
 const app = express();
 
@@ -66,6 +68,53 @@ app.put('/api/dienstanfragen/:id/status', async (req, res) => {
     res.json(anfrage);
   } catch (err) {
     res.status(400).json({ message: err.message });
+  }
+});
+
+// Login Route
+app.post('/login', async (req, res) => {
+  try {
+    const { benutzername, passwort } = req.body;
+    const user = await User.findOne({ benutzername, passwort });
+    
+    if (user) {
+      res.json({ success: true, user });
+    } else {
+      res.status(401).json({ success: false, message: 'Ungültige Anmeldedaten' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server-Fehler' });
+  }
+});
+
+// Chat Routes
+app.get('/chat', async (req, res) => {
+  try {
+    const messages = await Chat.find().sort({ zeitstempel: 1 });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Laden der Nachrichten' });
+  }
+});
+
+app.post('/chat', async (req, res) => {
+  try {
+    const { von, nachricht } = req.body;
+    const newMessage = new Chat({ von, nachricht });
+    await newMessage.save();
+    res.status(201).json(newMessage);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Speichern der Nachricht' });
+  }
+});
+
+// User Route
+app.get('/users', async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Fehler beim Laden der Benutzer' });
   }
 });
 

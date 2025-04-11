@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeChat();
     initializeShoppingList();
     initializeNavigation();
+    
+    // Lade initial die Nachrichten
+    loadChatMessages();
+    
+    // Aktualisiere Chat alle 10 Sekunden
+    setInterval(loadChatMessages, 10000);
 });
 
 // Navigation
@@ -52,213 +58,190 @@ function initializeChat() {
 
     // Enter-Taste
     messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            const message = messageInput.value.trim();
-            if (message) {
-                addChatMessage(message);
-                messageInput.value = '';
-                messageInput.focus();
-            }
+            sendMessageBtn.click();
         }
     });
-
-    // Lade gespeicherte Nachrichten
-    loadChatMessages();
-    
-    // Regelmäßiges Aktualisieren
-    setInterval(loadChatMessages, 5000);
 }
 
-function addChatMessage(messageText) {
+async function addChatMessage(messageText) {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const messages = JSON.parse(localStorage.getItem('chatNachrichten') || '[]');
     
-    // Neue Nachricht erstellen
-    const newMessage = {
-        id: Date.now().toString(),
-        von: currentUser.id,
-        nachricht: messageText,
-        zeitstempel: new Date().toISOString()
-    };
-    
-    // Nachricht speichern
-    messages.push(newMessage);
-    localStorage.setItem('chatNachrichten', JSON.stringify(messages));
-    
-    // Chat aktualisieren
-    loadChatMessages();
+    try {
+        // Sende Nachricht an API
+        const response = await fetch('/.netlify/functions/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                von: currentUser.id,
+                nachricht: messageText
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Fehler beim Senden der Nachricht');
+        }
+        
+        // Lade Chat neu
+        loadChatMessages();
+    } catch (error) {
+        console.error('Chat-Fehler:', error);
+        alert('Nachricht konnte nicht gesendet werden');
+    }
 }
 
-function loadChatMessages() {
+async function loadChatMessages() {
     const chatMessages = document.getElementById('chatMessages');
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const messages = JSON.parse(localStorage.getItem('chatNachrichten') || '[]');
     
-    // Chat-Container leeren
-    chatMessages.innerHTML = '';
-    
-    // Nachrichten sortieren (älteste zuerst)
-    const sortedMessages = messages.sort((a, b) => 
-        new Date(a.zeitstempel) - new Date(b.zeitstempel)
-    );
-
-    // Nachrichten anzeigen
-    sortedMessages.forEach(message => {
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('chat-message');
+    try {
+        // Lade Nachrichten von API
+        const [messagesResponse, usersResponse] = await Promise.all([
+            fetch('/.netlify/functions/api/chat'),
+            fetch('/.netlify/functions/api/users')
+        ]);
         
-        // Eigene Nachrichten anders stylen
-        if (message.von === currentUser.id) {
-            messageElement.classList.add('own-message');
+        if (!messagesResponse.ok || !usersResponse.ok) {
+            throw new Error('Fehler beim Laden der Daten');
         }
+        
+        const messages = await messagesResponse.json();
+        const users = await usersResponse.json();
+        
+        // Chat-Container leeren
+        chatMessages.innerHTML = '';
+        
+        // Nachrichten anzeigen
+        messages.forEach(message => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+            
+            // Eigene Nachrichten anders stylen
+            if (message.von === currentUser.id) {
+                messageElement.classList.add('own-message');
+            }
 
-        // Formatiere Zeitstempel
-        const zeit = new Date(message.zeitstempel).toLocaleTimeString('de-DE', {
-            hour: '2-digit',
-            minute: '2-digit'
+            // Formatiere Zeitstempel
+            const zeit = new Date(message.zeitstempel).toLocaleTimeString('de-DE', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Hole Benutzernamen
+            const sender = users.find(user => user.id === message.von);
+            const senderName = sender ? sender.name : 'Unbekannt';
+
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="sender">${senderName}</span>
+                    <span class="time">${zeit}</span>
+                </div>
+                <div class="message-content">${message.nachricht}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
         });
 
-        // Hole Benutzernamen
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const sender = users.find(user => user.id === message.von);
-        const senderName = sender ? sender.name : 'Unbekannt';
-
-        messageElement.innerHTML = `
-            <div class="message-header">
-                <span class="sender">${senderName}</span>
-                <span class="time">${zeit}</span>
-            </div>
-            <div class="message-content">${message.nachricht}</div>
-        `;
-        
-        chatMessages.appendChild(messageElement);
-    });
-
-    // Scroll zum Ende
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Scroll zum Ende
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch (error) {
+        console.error('Chat-Fehler:', error);
+        chatMessages.innerHTML = '<div class="error-message">Fehler beim Laden der Nachrichten</div>';
+    }
 }
 
 // Einkaufsliste Funktionalität
 function initializeShoppingList() {
-    const newShoppingItem = document.getElementById('newShoppingItem');
-    const addShoppingItemBtn = document.getElementById('addShoppingItemBtn');
-
-    if (!newShoppingItem || !addShoppingItemBtn) {
-        console.error('Einkaufslisten-Elemente nicht gefunden');
-        return;
+    const addItemBtn = document.getElementById('addItemBtn');
+    const itemInput = document.getElementById('itemInput');
+    
+    if (addItemBtn && itemInput) {
+        addItemBtn.addEventListener('click', addShoppingItem);
+        itemInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addShoppingItem();
+            }
+        });
     }
-
-    // Plus-Button
-    addShoppingItemBtn.addEventListener('click', () => {
-        addShoppingItem();
-    });
-
-    // Enter-Taste
-    newShoppingItem.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addShoppingItem();
-        }
-    });
-
-    // Lade gespeicherte Einträge
+    
     loadShoppingList();
 }
 
 function addShoppingItem() {
-    const input = document.getElementById('newShoppingItem');
-    const item = input.value.trim();
+    const itemInput = document.getElementById('itemInput');
+    const item = itemInput.value.trim();
     
     if (item) {
-        const items = JSON.parse(localStorage.getItem('shoppingList') || '[]');
-        if (!items.includes(item)) {
-            items.push(item);
-            localStorage.setItem('shoppingList', JSON.stringify(items));
-            
-            const shoppingList = document.getElementById('shoppingList');
-            const li = createShoppingListItem(item);
-            shoppingList.appendChild(li);
-
-            // System-Nachricht im Chat
-            addSystemMessage(`[Einkaufsliste] Neuer Eintrag: ${item}`);
-        }
+        const items = JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
+        items.push({
+            id: Date.now().toString(),
+            text: item,
+            erledigt: false
+        });
         
-        input.value = '';
-        input.focus();
+        localStorage.setItem('einkaufsliste', JSON.stringify(items));
+        itemInput.value = '';
+        loadShoppingList();
     }
 }
 
 function removeShoppingItem(item) {
-    const items = JSON.parse(localStorage.getItem('shoppingList') || '[]');
-    const index = items.indexOf(item);
-    
-    if (index > -1) {
-        items.splice(index, 1);
-        localStorage.setItem('shoppingList', JSON.stringify(items));
-        loadShoppingList();
-        addSystemMessage(`[Einkaufsliste] Eintrag entfernt: ${item}`);
-    }
+    const items = JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
+    const updatedItems = items.filter(i => i.id !== item.id);
+    localStorage.setItem('einkaufsliste', JSON.stringify(updatedItems));
+    loadShoppingList();
 }
 
 function loadShoppingList() {
     const shoppingList = document.getElementById('shoppingList');
-    if (!shoppingList) return;
-
-    const items = JSON.parse(localStorage.getItem('shoppingList') || '[]');
-    shoppingList.innerHTML = '';
+    const items = JSON.parse(localStorage.getItem('einkaufsliste') || '[]');
     
+    shoppingList.innerHTML = '';
     items.forEach(item => {
-        const li = createShoppingListItem(item);
-        shoppingList.appendChild(li);
+        const itemElement = createShoppingListItem(item);
+        shoppingList.appendChild(itemElement);
     });
 }
 
 function createShoppingListItem(item) {
-    const li = document.createElement('li');
-    const itemSpan = document.createElement('span');
-    itemSpan.textContent = item;
+    const itemElement = document.createElement('div');
+    itemElement.classList.add('shopping-item');
+    if (item.erledigt) itemElement.classList.add('done');
     
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.type = 'button';
-    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
-    deleteBtn.onclick = () => removeShoppingItem(item);
+    itemElement.innerHTML = `
+        <span class="item-text">${item.text}</span>
+        <button class="remove-btn" onclick="removeShoppingItem(${JSON.stringify(item)})">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
     
-    li.appendChild(itemSpan);
-    li.appendChild(deleteBtn);
-    return li;
+    return itemElement;
 }
 
 // Hilfsfunktionen
 function addSystemMessage(message) {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message system';
-    messageDiv.innerHTML = `
-        <span>${getCurrentTime()}</span>
-        <p>${message}</p>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // Speichern
     const messages = JSON.parse(localStorage.getItem('chatNachrichten') || '[]');
-    messages.push({
-        time: getCurrentTime(),
-        message: message,
-        type: 'system'
-    });
+    
+    const systemMessage = {
+        id: Date.now().toString(),
+        von: 'system',
+        nachricht: message,
+        zeitstempel: new Date().toISOString()
+    };
+    
+    messages.push(systemMessage);
     localStorage.setItem('chatNachrichten', JSON.stringify(messages));
+    
+    loadChatMessages();
 }
 
 function getCurrentTime() {
-    const now = new Date();
-    return now.toLocaleTimeString('de-DE', { 
-        hour: '2-digit', 
+    return new Date().toLocaleTimeString('de-DE', {
+        hour: '2-digit',
         minute: '2-digit'
     });
 }
