@@ -3,48 +3,65 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     
-    // Debug: Zeige gespeicherte Benutzer
-    console.log('Gespeicherte Benutzer:', localStorage.getItem('users'));
-    
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const benutzername = document.getElementById('benutzername').value;
             const passwort = document.getElementById('passwort').value;
             
-            // Debug: Zeige Login-Versuch
-            console.log('Login-Versuch:', { benutzername, passwort });
-            
-            // Benutzer aus localStorage laden
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            console.log('Gefundene Benutzer:', users);
-            
-            const user = users.find(u => u.benutzername === benutzername && u.passwort === passwort);
-            
-            if (user) {
-                // Login erfolgreich
-                console.log('Login erfolgreich:', user);
-                localStorage.setItem('currentUser', JSON.stringify(user));
+            try {
+                // API-Login
+                const response = await fetch('/.netlify/functions/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ benutzername, passwort })
+                });
                 
-                // Weiterleitung basierend auf Rolle
-                if (user.rolle === 'admin') {
-                    window.location.href = '/admin/index.html';
-                } else if (user.rolle === 'hausmeister') {
-                    window.location.href = '/hausmeister/index.html';
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Login erfolgreich
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    
+                    // Weiterleitung basierend auf Rolle
+                    if (data.user.rolle === 'admin') {
+                        window.location.href = '/admin/index.html';
+                    } else if (data.user.rolle === 'hausmeister') {
+                        window.location.href = '/hausmeister/index.html';
+                    } else {
+                        window.location.href = '/mitarbeiter/index.html';
+                    }
                 } else {
-                    window.location.href = '/mitarbeiter/index.html';
+                    // Login fehlgeschlagen
+                    alert('Falscher Benutzername oder Passwort');
                 }
-            } else {
-                // Login fehlgeschlagen
-                console.log('Login fehlgeschlagen');
-                alert('Falscher Benutzername oder Passwort');
+            } catch (error) {
+                console.error('Login-Fehler:', error);
+                // Fallback auf localStorage wenn API nicht erreichbar
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.benutzername === benutzername && u.passwort === passwort);
+                
+                if (user) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    if (user.rolle === 'admin') {
+                        window.location.href = '/admin/index.html';
+                    } else if (user.rolle === 'hausmeister') {
+                        window.location.href = '/hausmeister/index.html';
+                    } else {
+                        window.location.href = '/mitarbeiter/index.html';
+                    }
+                } else {
+                    alert('Falscher Benutzername oder Passwort');
+                }
             }
         });
     }
 });
 
-// Logout-Funktion (wird von anderen Seiten aufgerufen)
+// Logout-Funktion
 function logout() {
     localStorage.removeItem('currentUser');
     window.location.href = '/index.html';
