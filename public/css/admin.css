@@ -121,131 +121,156 @@
 /* Admin Dienstplan Styles */
 
 /* Kalender Grid */
-.calendar-container {
+.kalender-container {
     background: white;
-    padding: 1rem;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin: 1rem 0;
 }
 
-.calendar-header {
+.kalender-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    margin-bottom: 20px;
 }
 
-.calendar-nav {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.calendar-nav button {
-    background: none;
+.kalender-header button {
+    background: #007bff;
+    color: white;
     border: none;
-    font-size: 1.5rem;
-    color: var(--burg-rot);
+    padding: 8px 16px;
+    border-radius: 4px;
     cursor: pointer;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
 }
 
-.calendar-nav button:hover {
-    color: #660000;
+.kalender-header button:hover {
+    background: #0056b3;
 }
 
-.calendar-grid {
+.kalender-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-    margin-top: 1rem;
+    gap: 10px;
 }
 
-.calendar-day {
-    aspect-ratio: 1;
-    border: 1px solid #ddd;
-    padding: 0.5rem;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    background: white;
-}
-
-.calendar-day.weekday {
-    aspect-ratio: auto;
-    min-height: auto;
-    background-color: var(--pergament);
-    font-weight: 600;
+.wochentag {
     text-align: center;
-    padding: 0.5rem;
-}
-
-.calendar-day.other-month {
-    background-color: #f9f9f9;
-    color: #999;
-}
-
-.day-number {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-/* Dienste im Kalender */
-.dienste {
-    flex: 1;
-    overflow-y: auto;
-    font-size: 0.875rem;
-}
-
-.dienst {
-    background-color: var(--pergament);
-    padding: 0.5rem;
+    font-weight: bold;
+    padding: 10px;
+    background: #f8f9fa;
     border-radius: 4px;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
+}
+
+.tag {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    min-height: 120px;
+}
+
+.tag.heute {
+    border: 2px solid #007bff;
+}
+
+.tag.feiertag, .tag.sonntag {
+    background: #f8f9fa;
+}
+
+.tag.leer {
+    background: #f8f9fa;
+    border: none;
+}
+
+.datum {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.positionen {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 5px;
 }
 
-.dienst:hover {
-    transform: translateY(-2px);
+.position {
+    padding: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
 }
 
-.dienst.genehmigt {
-    background-color: var(--success);
+/* Status-Farben */
+.position.geplant {
+    background: #ffd700;
+}
+
+.position.angefragt {
+    background: #ff9800;
+}
+
+.position.genehmigt {
+    background: #4caf50;
     color: white;
 }
 
-.dienst.abgelehnt {
-    background-color: var(--danger);
+.position.abgelehnt {
+    background: #f44336;
     color: white;
 }
 
-.dienst.angefragt {
-    background-color: var(--warning);
+/* Dialog-Styles */
+.dienst-dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-.dienst .zeit {
-    font-weight: 600;
+.dienst-dialog::backdrop {
+    background: rgba(0,0,0,0.5);
 }
 
-.dienst .position {
-    font-size: 0.8125rem;
+.dienst-dialog h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
 }
 
-.dienst .mitarbeiter {
-    font-size: 0.75rem;
-    opacity: 0.9;
+.dienst-dialog select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.dienst-dialog .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dienst-dialog button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.dienst-dialog button[type="submit"] {
+    background: #28a745;
+    color: white;
+}
+
+.dienst-dialog button.cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.dienst-dialog button.delete {
+    background: #dc3545;
+    color: white;
 }
 
 /* Dienst Dialog */
