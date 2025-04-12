@@ -33,17 +33,10 @@ const CONFIG = {
     DEFAULT_USERS: [
         {
             id: '1',
-            name: 'Admin',
+            name: 'Martin Steindorfer',
             benutzername: 'admin',
             passwort: 'admin123',
             rolle: 'admin'
-        },
-        {
-            id: '2',
-            name: 'Test Mitarbeiter',
-            benutzername: 'test',
-            passwort: 'test123',
-            rolle: 'mitarbeiter'
         }
     ],
 
