@@ -126,6 +126,8 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-x: auto; /* Horizontales Scrollen ermöglichen */
+    max-width: 100%; /* Volle Breite nutzen */
 }
 
 .kalender-header {
@@ -133,6 +135,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    padding: 0 10px;
 }
 
 .kalender-header button {
@@ -142,6 +145,7 @@
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
+    white-space: nowrap;
 }
 
 .kalender-header button:hover {
@@ -150,8 +154,9 @@
 
 .kalender-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(140px, 1fr)); /* Mindestbreite für Tage */
     gap: 10px;
+    min-width: 980px; /* 7 Tage × 140px */
 }
 
 .wochentag {
@@ -167,6 +172,7 @@
     border-radius: 4px;
     padding: 10px;
     min-height: 120px;
+    background: white;
 }
 
 .tag.heute {
@@ -226,6 +232,8 @@
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 500px;
 }
 
 .dienst-dialog::backdrop {
@@ -273,58 +281,20 @@
     color: white;
 }
 
-/* Dienst Dialog */
-.dienst-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    padding: 1rem;
-}
-
-.dialog-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    max-width: 500px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.dialog-content h3 {
-    margin-bottom: 1.5rem;
-}
-
-.button-group {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-/* Add Dienst Button */
-.add-dienst-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: none;
-    border: none;
-    color: var(--burg-rot);
-    cursor: pointer;
-    padding: 0.25rem;
-    font-size: 1rem;
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
-}
-
-.calendar-day:hover .add-dienst-btn {
-    opacity: 1;
+/* Mobile Optimierungen */
+@media (max-width: 1024px) {
+    .kalender-container {
+        padding: 10px;
+    }
+    
+    .kalender-header {
+        margin-bottom: 10px;
+    }
+    
+    /* Horizontales Scrollen für den Kalender */
+    .kalender-grid {
+        min-width: 980px; /* Fixe Mindestbreite */
+    }
 }
 
 /* Responsive Design */
