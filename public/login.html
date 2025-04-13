@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Burg Hochosterwitz</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--pergament);
+        }
+
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header img {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        .login-header h1 {
+            color: var(--burgrot);
+            margin: 0;
+        }
+
+        .login-header p {
+            color: var(--steingrau);
+            margin-top: 0.5rem;
+        }
+
+        .pin-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pin-display {
+            margin-bottom: 1rem;
+        }
+
+        .pin-display input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 0.5rem;
+        }
+
+        .pin-button {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pin-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .pin-button.clear {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .pin-button.submit {
+            background-color: var(--burgrot);
+            color: white;
+        }
+
+        .error-message {
+            color: #f44336;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+
+        .copyright {
+            position: fixed;
+            bottom: 1rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: var(--steingrau);
+            font-size: 0.8rem;
+        }
+
+        .copyright a {
+            color: var(--burgrot);
+            text-decoration: none;
+        }
+
+        .copyright a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <img src="img/logo.svg" alt="Burg Hochosterwitz" class="logo">
+                <h1>Willkommen</h1>
+                <p>Bitte melden Sie sich an</p>
+            </div>
+
+            <form id="loginForm" class="pin-form">
+                <div class="pin-display">
+                    <input type="password" id="pin" name="pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" autocomplete="off" readonly>
+                </div>
+
+                <div class="pin-pad">
+                    <button type="button" class="pin-button" data-value="1">1</button>
+                    <button type="button" class="pin-button" data-value="2">2</button>
+                    <button type="button" class="pin-button" data-value="3">3</button>
+                    <button type="button" class="pin-button" data-value="4">4</button>
+                    <button type="button" class="pin-button" data-value="5">5</button>
+                    <button type="button" class="pin-button" data-value="6">6</button>
+                    <button type="button" class="pin-button" data-value="7">7</button>
+                    <button type="button" class="pin-button" data-value="8">8</button>
+                    <button type="button" class="pin-button" data-value="9">9</button>
+                    <button type="button" class="pin-button clear" data-action="clear">
+                        <i class="fas fa-backspace"></i>
+                    </button>
+                    <button type="button" class="pin-button" data-value="0">0</button>
+                    <button type="submit" class="pin-button submit" data-action="submit">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

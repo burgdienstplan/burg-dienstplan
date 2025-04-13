@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Burg Hochosterwitz</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin: 2rem auto;
+        }
+
+        .logo {
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            color: var(--burg-rot);
+            margin: 0;
+        }
+
+        .logo p {
+            font-size: 1.2rem;
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin: 1rem auto;
+            max-width: 300px;
+        }
+
+        .pin-display {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .pin-digit {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--burg-rot);
+            background: white;
+        }
+
+        .pin-digit.filled {
+            background: var(--burg-rot);
+        }
+
+        .pin-button {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pin-button:hover {
+            background: #f5f5f5;
+        }
+
+        .pin-button:active {
+            background: #eee;
+            transform: scale(0.98);
+        }
+
+        .pin-button.clear {
+            background: #ffebee;
+            color: var(--burg-rot);
+        }
+
+        .pin-button.enter {
+            background: var(--burg-rot);
+            color: white;
+            grid-column: span 3;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .lockout-message {
+            color: var(--error-color);
+            margin-top: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 0;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .pin-pad {
+                gap: 0.75rem;
+            }
+
+            .pin-button {
+                padding: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="logo">
+                <h1>Burg Hochosterwitz</h1>
+                <p>Dienstplan-System</p>
+            </div>
+            <div id="pinDisplay" class="pin-display">
+                <div class="pin-digit"></div>
+                <div class="pin-digit"></div>
+                <div class="pin-digit"></div>
+                <div class="pin-digit"></div>
+            </div>
+            <div class="pin-pad">
+                <button class="pin-button" data-value="1">1</button>
+                <button class="pin-button" data-value="2">2</button>
+                <button class="pin-button" data-value="3">3</button>
+                <button class="pin-button" data-value="4">4</button>
+                <button class="pin-button" data-value="5">5</button>
+                <button class="pin-button" data-value="6">6</button>
+                <button class="pin-button" data-value="7">7</button>
+                <button class="pin-button" data-value="8">8</button>
+                <button class="pin-button" data-value="9">9</button>
+                <button class="pin-button clear" data-value="clear">
+                    <i class="fas fa-backspace"></i>
+                </button>
+                <button class="pin-button" data-value="0">0</button>
+                <button class="pin-button enter" data-value="enter">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+            <div id="errorMessage" class="error-message">
+                Ungültiger PIN. Noch <span id="versuche">3</span> Versuche.
+            </div>
+            <div id="lockoutMessage" class="lockout-message">
+                Zu viele Fehlversuche. Bitte warten Sie <span id="lockoutTime">5</span> Minuten.
+            </div>
+            <div style="margin-top: 2rem; font-size: 0.8rem; color: #666;">
+                2025 Burg Hochosterwitz<br>
+                Programmiert von Martin Steindorfer
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

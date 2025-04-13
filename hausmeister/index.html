@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hausmeister Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/hausmeister.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Hausmeister Dashboard</h1>
+            <div class="user-info">
+                <span id="userName"></span>
+                <button onclick="logout()" class="btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Abmelden
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="dashboard-cards">
+                <!-- Offene Aufgaben -->
+                <div class="dashboard-card">
+                    <div class="card-header warning">
+                        <i class="fas fa-tasks"></i>
+                        <h2>Offene Aufgaben</h2>
+                    </div>
+                    <div class="card-content">
+                        <div id="offeneAufgaben" class="task-list">
+                            <!-- Wird dynamisch gefüllt -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lift Reparaturen -->
+                <div class="dashboard-card">
+                    <div class="card-header danger">
+                        <i class="fas fa-tools"></i>
+                        <h2>Lift Reparaturen</h2>
+                    </div>
+                    <div class="card-content">
+                        <div id="liftReparaturen" class="task-list">
+                            <!-- Wird dynamisch gefüllt -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aufgaben Details -->
+            <div class="task-details">
+                <div class="task-filters">
+                    <button class="btn-primary active" data-filter="all">Alle</button>
+                    <button class="btn-primary" data-filter="offen">Offen</button>
+                    <button class="btn-primary" data-filter="inArbeit">In Arbeit</button>
+                    <button class="btn-primary" data-filter="warten">Warten auf Material</button>
+                    <button class="btn-primary" data-filter="erledigt">Erledigt</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Titel</th>
+                                <th>Beschreibung</th>
+                                <th>Termin</th>
+                                <th>Status</th>
+                                <th>Fotos</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aufgabenListe">
+                            <!-- Wird dynamisch gefüllt -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Status Update Modal -->
+    <div id="statusModal" class="modal">
+        <div class="modal-content">
+            <h2>Status aktualisieren</h2>
+            <form id="statusForm">
+                <input type="hidden" id="statusAufgabeId">
+                <div class="form-group">
+                    <label for="aufgabeStatus">Status</label>
+                    <select id="aufgabeStatus" required>
+                        <option value="offen">Offen</option>
+                        <option value="inArbeit">In Arbeit</option>
+                        <option value="warten">Warten auf Material</option>
+                        <option value="erledigt">Erledigt</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="statusKommentar">Kommentar</label>
+                    <textarea id="statusKommentar"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="statusFotos">Neue Fotos</label>
+                    <input type="file" id="statusFotos" accept="image/*" multiple>
+                    <div id="statusFotoPreview" class="foto-preview"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Speichern</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal('statusModal')">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/modal.js"></script>
+    <script src="../js/hausmeister/dashboard.js"></script>
+</body>
+</html>
